@@ -5,7 +5,7 @@ import QRCodeScanner, { Event } from 'react-native-qrcode-scanner'
 import QRCodeMask from './components/qrcodeMask';
 import { Button, Overlay, Input, Divider } from 'react-native-elements';
 import { useScreenDimensions } from './hooks/layout';
-import { DecryptCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING } from 'react-native-azure-iotcentral-client';
+import { DecryptCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING,IOTC_EVENTS } from 'react-native-azure-iotcentral-client';
 import { useTheme } from '@react-navigation/native';
 import { IoTCContext } from './contexts/iotc';
 import { Loader } from './components/loader';
@@ -47,6 +47,7 @@ function QRCode() {
             iotc.setModelId(creds.modelId);
         }
         iotc.setLogging(IOTC_LOGGING.ALL);
+        iotc.on(IOTC_EVENTS.Properties,)
         await iotc.connect();
         connect(iotc); //assign client to context
     }
@@ -92,7 +93,6 @@ const style = StyleSheet.create({
         marginHorizontal: 30
     },
     header: {
-        color: 'red'
     },
     center: {
         position: 'absolute',

@@ -10,6 +10,7 @@ import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import Registration from "./Registration";
 import { StackNavigationProp, HeaderTitle } from "@react-navigation/stack";
 import { NavigationScreens } from "./types";
+import { IoTCContext } from "./contexts/iotc";
 
 
 const Stack = createNativeStackNavigator();
@@ -27,8 +28,19 @@ type ProfileItem = {
 
 export default function Settings({ navigation: parent, route: parentRoute }) {
     const { mode, toggle } = useContext(ThemeContext);
+    const { simulate, simulated: centralSimulated } = useContext(IoTCContext);
     const { colors, dark } = useTheme();
     const insets = useSafeAreaInsets()
+
+
+    const updateUIItems = function (title: string, val: any) {
+        setItems(current => (current.map(i => {
+            if (i.title === title) {
+                i = { ...i, value: val };
+            }
+            return i;
+        })));
+    }
 
     const [items, setItems] = useState<ProfileItem[]>([
         {
@@ -42,17 +54,24 @@ export default function Settings({ navigation: parent, route: parentRoute }) {
             }
         },
         {
+            title: 'Simulation Mode',
+            icon: dark ? 'sync-outline' : 'sync',
+            action: {
+                type: 'switch',
+                fn: (val) => {
+                    updateUIItems('Simulation Mode', val);
+                    simulate(val);
+                }
+            },
+            value: centralSimulated
+        },
+        {
             title: 'Dark Mode',
             icon: dark ? 'moon-outline' : 'moon',
             action: {
                 type: 'switch',
                 fn: (val) => {
-                    setItems(current => (current.map(i => {
-                        if (i.title === 'Dark Mode') {
-                            i = { ...i, value: val };
-                        }
-                        return i;
-                    })));
+                    updateUIItems('Dark Mode', val);
                     toggle();
                 }
             },

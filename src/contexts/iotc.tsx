@@ -4,29 +4,35 @@ import { IIoTCClient } from "react-native-azure-iotcentral-client";
 
 
 export type CentralClient = IIoTCClient | null | undefined;
-
+type ICentralState = { simulated: boolean, clientId: string | null, client: CentralClient };
 
 
 export type IIoTCContext = {
+    simulated: boolean,
+    clientId: string | null,
     client: CentralClient,
     connect: (client: CentralClient) => void,
-    disconnect: () => void
+    disconnect: () => void,
+    simulate: (val: boolean) => void
 }
 
 
 
-const initialState: { client: CentralClient } = {
-    client: undefined
+const initialState: ICentralState = {
+    clientId: null,
+    client: undefined,
+    simulated: false
 }
 
 export const IoTCContext = React.createContext<IIoTCContext>({
     ...initialState,
     connect: (client: CentralClient) => { },
-    disconnect: () => { }
+    disconnect: () => { },
+    simulate: (val: boolean) => { }
 });
 const { Provider } = IoTCContext;
 const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [state, setState] = useState<{ client: CentralClient }>(initialState);
+    const [state, setState] = useState<ICentralState>(initialState);
     return (
         <Provider value={{
             ...state,
@@ -35,6 +41,9 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             },
             disconnect: () => {
                 setState(current => ({ ...current, client: undefined }))
+            },
+            simulate: (val: boolean) => {
+                setState(current => ({ ...current, simulated: val }));
             }
         }}>
             {children}

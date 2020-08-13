@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
 import { View, Platform } from 'react-native';
-import Sensors from './Sensors';
 import Settings from './Settings';
 import ThemeProvider, { ThemeContext, ThemeMode } from './contexts/theme';
 import { NavigationContainer, DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';

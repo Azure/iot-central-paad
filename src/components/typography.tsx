@@ -29,19 +29,20 @@ function normalize(size: number) {
 export function Headline(props: Props) {
     const { children, style, ...textProps } = props;
     const { colors } = useTheme();
-    return (<ELText style={[style, { fontSize: normalize(20), fontWeight: 'bold', color: colors.text }]}>{props.children}</ELText>)
+    return (<ELText style={[{ fontSize: normalize(20), fontWeight: 'bold', color: colors.text }, style]}>{props.children}</ELText>)
 }
 
 export function Text(props: Props) {
     const { children, style, ...textProps } = props;
     const { colors } = useTheme();
 
-    return (<ELText style={[style, { fontSize: normalize(14), fontStyle: 'normal',color: colors.text }]}>{props.children}</ELText>)
+    return (<ELText style={[{ fontSize: normalize(14), fontStyle: 'normal', color: colors.text }, style]}>{props.children}</ELText>)
 }
+
 
 export function Name(props: Props) {
     const { children, style, ...textProps } = props;
     const { colors } = useTheme();
 
-    return (<ELText style={[style, { fontSize: normalize(14), fontWeight: 'bold', color: colors.text, fontStyle: 'normal', letterSpacing: 1.15 }]}>{props.children}</ELText>)
+    return (<ELText style={[{ fontSize: normalize(14), fontWeight: 'bold', color: colors.text, fontStyle: 'normal', letterSpacing: 1.15 }, style]}>{props.children}</ELText>)
 }
