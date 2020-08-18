@@ -38,7 +38,9 @@
 			</dict>
 		</dict>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string></string>
+		<string>IoT Central PaD needs access your location</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<true/>
 		<key>NSCameraUsageDescription</key>
 		<string>IoT Central PaD needs access to your camera for scanning QR codes</string>
 		<key>UILaunchStoryboardName</key>

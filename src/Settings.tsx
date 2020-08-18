@@ -11,6 +11,7 @@ import Registration from "./Registration";
 import { StackNavigationProp, HeaderTitle } from "@react-navigation/stack";
 import { NavigationScreens } from "./types";
 import { IoTCContext } from "./contexts/iotc";
+import { useSimulation } from "./hooks/iotc";
 
 
 const Stack = createNativeStackNavigator();
@@ -28,7 +29,7 @@ type ProfileItem = {
 
 export default function Settings({ navigation: parent, route: parentRoute }) {
     const { mode, toggle } = useContext(ThemeContext);
-    const { simulate, simulated: centralSimulated } = useContext(IoTCContext);
+    const [centralSimulated, simulate] = useSimulation();
     const { colors, dark } = useTheme();
     const insets = useSafeAreaInsets()
 
@@ -58,9 +59,9 @@ export default function Settings({ navigation: parent, route: parentRoute }) {
             icon: dark ? 'sync-outline' : 'sync',
             action: {
                 type: 'switch',
-                fn: (val) => {
+                fn: async (val) => {
                     updateUIItems('Simulation Mode', val);
-                    simulate(val);
+                    await simulate(val);
                 }
             },
             value: centralSimulated
@@ -119,7 +120,7 @@ export default function Settings({ navigation: parent, route: parentRoute }) {
 
                             return (<ScrollView style={{ flex: 1 }}>
                                 {items.map((item, index) => (
-                                    <ListItem key={index} title={item.title} leftIcon={{ name: item.icon, type: 'ionicon', color: colors.text }} bottomDivider
+                                    <ListItem key={`setting-${index}`} title={item.title} leftIcon={{ name: item.icon, type: 'ionicon', color: colors.text }} bottomDivider
                                         containerStyle={{ backgroundColor: colors.card }}
                                         titleStyle={{ color: colors.text }} rightElement={item.action ? getRightElement(item) : undefined} chevron={item.action && item.action.type === 'expand' ? true : false}
                                         onPress={item.action && item.action.type === 'expand' ? item.action.fn.bind(null, nav) : undefined}

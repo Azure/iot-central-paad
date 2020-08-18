@@ -5,10 +5,12 @@ import QRCodeScanner, { Event } from 'react-native-qrcode-scanner'
 import QRCodeMask from './components/qrcodeMask';
 import { Button, Overlay, Input, Divider } from 'react-native-elements';
 import { useScreenDimensions } from './hooks/layout';
-import { DecryptCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING,IOTC_EVENTS } from 'react-native-azure-iotcentral-client';
+import { DecryptCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING, IOTC_EVENTS } from 'react-native-azure-iotcentral-client';
 import { useTheme } from '@react-navigation/native';
 import { IoTCContext } from './contexts/iotc';
 import { Loader } from './components/loader';
+import { getDeviceInfo } from './properties/deviceInfo';
+import { useIoTCentralClient } from './hooks/iotc';
 
 export default function Registration() {
     const [showqr, setshowqr] = useState(false);
@@ -29,7 +31,7 @@ function QRCode() {
     const [encKey, setEncKey] = useState(null);
     const [qrdata, setQrdata] = useState(null);
     const { colors } = useTheme();
-    const { client, connect } = useContext(IoTCContext);
+    const [client, register] = useIoTCentralClient();
     const [loading, setLoading] = useState(false);
 
     const onRead = async function (e: Event) {
@@ -39,17 +41,20 @@ function QRCode() {
 
     const connectIoTC = async function () {
         setLoading(true);
-        const creds = DecryptCredentials(qrdata, encKey);
-        console.log(creds);
-        // start connection
-        let iotc = new IoTCClient(creds.deviceId, creds.scopeId, IOTC_CONNECT.DEVICE_KEY, creds.deviceKey);
-        if (creds.modelId) {
-            iotc.setModelId(creds.modelId);
-        }
-        iotc.setLogging(IOTC_LOGGING.ALL);
-        iotc.on(IOTC_EVENTS.Properties,)
-        await iotc.connect();
-        connect(iotc); //assign client to context
+        await register(qrdata, encKey);
+        // const creds = DecryptCredentials(qrdata, encKey);
+        // if (creds) {
+        //     // start connection
+        //     let iotc = new IoTCClient(creds.deviceId, creds.scopeId, IOTC_CONNECT.DEVICE_KEY, creds.deviceKey);
+        //     if (creds.modelId) {
+        //         iotc.setModelId(creds.modelId);
+        //     }
+        //     iotc.setLogging(IOTC_LOGGING.ALL);
+        //     // iotc.on(IOTC_EVENTS.Properties,)
+        //     await iotc.connect();
+        //     connect(iotc); //assign client to context
+        //     await iotc.sendProperty(await getDeviceInfo());
+        // }
     }
 
     useEffect(() => {
@@ -74,7 +79,7 @@ function QRCode() {
             />
             <Overlay isVisible={prompt} onBackdropPress={showPrompt.bind(null, false)} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: screen.width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
                 <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-                    {loading && <Loader />}
+                    {loading && <Loader message={'Loading ...'}/>}
                     {!loading && <><Text>Please provide the password to decrypt credentials</Text>
                         <Input placeholder='Password' value={encKey} onChangeText={val => setEncKey(val)} inputStyle={{ color: colors.text }} />
                         <Divider />

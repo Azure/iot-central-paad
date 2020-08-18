@@ -31,7 +31,6 @@ export default class Battery extends EventEmitter implements ISensor {
             //@ts-ignore
             this.currentRun = setInterval(async function (this: ISensor) {
                 const val = Math.floor((await this.run()) * 100);
-                console.log(val)
                 this.emit(DATA_AVAILABLE_EVENT, this.id, val);
             }.bind(this), this.interval);
         }

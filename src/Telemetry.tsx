@@ -5,13 +5,18 @@ import { IoTCContext } from './contexts/iotc';
 import Registration from './Registration';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card } from './components/card';
-import { IconProps } from 'react-native-elements';
+import { IconProps, Overlay } from 'react-native-elements';
 import Battery from './sensors/battery';
 import { ISensor, DATA_AVAILABLE_EVENT } from './sensors';
 import Gyroscope from './sensors/gyroscope';
 import Accelerometer from './sensors/accelerometer';
 import Barometer from './sensors/barometer';
 import Magnetometer from './sensors/magnetometer';
+import GeoLocation from './sensors/geolocation';
+import { useIoTCentralClient, useSimulation } from './hooks/iotc';
+import { useTheme } from '@react-navigation/native';
+import { Loader } from './components/loader';
+import { useScreenDimensions } from './hooks/layout';
 
 type SensorProps = {
     id: string,
@@ -36,7 +41,8 @@ const sensorMap: { [id in keyof typeof AVAILABLE_SENSORS]?: ISensor } = {
     [AVAILABLE_SENSORS.GYROSCOPE]: new Gyroscope(AVAILABLE_SENSORS.GYROSCOPE),
     [AVAILABLE_SENSORS.ACCELEROMETER]: new Accelerometer(AVAILABLE_SENSORS.ACCELEROMETER),
     [AVAILABLE_SENSORS.BAROMETER]: new Barometer(AVAILABLE_SENSORS.BAROMETER),
-    [AVAILABLE_SENSORS.MAGNETOMETER]: new Magnetometer(AVAILABLE_SENSORS.MAGNETOMETER)
+    [AVAILABLE_SENSORS.MAGNETOMETER]: new Magnetometer(AVAILABLE_SENSORS.MAGNETOMETER),
+    [AVAILABLE_SENSORS.GEOLOCATION]: new GeoLocation(AVAILABLE_SENSORS.GEOLOCATION)
 }
 
 
@@ -53,8 +59,12 @@ export default function Telemetry() {
         }
     }));
 
-    const { client, simulated: centralSimulated } = useContext(IoTCContext);
+    // const { client, simulated: centralSimulated } = useContext(IoTCContext);
+    const [simulated] = useSimulation();
+    const [client] = useIoTCentralClient();
     const insets = useSafeAreaInsets();
+    const { screen } = useScreenDimensions();
+    const { colors } = useTheme();
 
     const sendTelemetryData = async function (id: string, value: any) {
         if (!client.isConnected()) {
@@ -73,12 +83,12 @@ export default function Telemetry() {
                     ios: 'ionicon'
                 })
             },
-            enabled: centralSimulated, // TODO: auto-enable based on settings
+            enabled: true, // TODO: auto-enable based on settings
             simulated: false
         },
         {
             id: AVAILABLE_SENSORS.GYROSCOPE,
-            enabled: centralSimulated, // TODO: auto-enable based on settings
+            enabled: true, // TODO: auto-enable based on settings
             icon: {
                 name: 'compass-outline',
                 type: Platform.select({
@@ -90,7 +100,7 @@ export default function Telemetry() {
         },
         {
             id: AVAILABLE_SENSORS.MAGNETOMETER,
-            enabled: centralSimulated, // TODO: auto-enable based on settings
+            enabled: true, // TODO: auto-enable based on settings
             icon: {
                 name: 'magnet-outline',
                 type: Platform.select({
@@ -102,27 +112,28 @@ export default function Telemetry() {
         },
         {
             id: AVAILABLE_SENSORS.BAROMETER,
-            enabled: centralSimulated, // TODO: auto-enable based on settings
+            enabled: true, // TODO: auto-enable based on settings
             icon: {
                 name: 'weather-partly-cloudy',
                 type: 'material-community'
             },
             simulated: false
         },
-        // {
-        //     id: AVAILABLE_SENSORS.GEOLOCATION,
-        //     enabled: simulated, // TODO: auto-enable based on settings
-        //     icon: {
-        //         name: 'location-outline',
-        //         type: Platform.select({
-        //             android: 'material-community',
-        //             ios: 'ionicon'
-        //         })
-        //     }
-        // },
+        {
+            id: AVAILABLE_SENSORS.GEOLOCATION,
+            enabled: true, // TODO: auto-enable based on settings
+            icon: {
+                name: 'location-outline',
+                type: Platform.select({
+                    android: 'material-community',
+                    ios: 'ionicon'
+                })
+            },
+            simulated: false
+        },
         {
             id: AVAILABLE_SENSORS.BATTERY,
-            enabled: centralSimulated, // TODO: auto-enable based on settings,
+            enabled: true, // TODO: auto-enable based on settings,
             simulated: false,
             icon: {
                 name: Platform.select({
@@ -148,31 +159,48 @@ export default function Telemetry() {
     }
 
     // TODO: remove and better handle simulation
+    // useEffect(() => {
+    //     if (centralSimulated) {
+    //         setData(current => (current.map(({ ...sensor }) => {
+    //             sensorMap[sensor.id].enable(true);
+    //             sensorMap[sensor.id].addListener(DATA_AVAILABLE_EVENT, updateUXValue);
+    //             sensor.enabled = true;
+    //             return sensor;
+    //         })));
+    //     }
+    // }, [centralSimulated]);
+    // // if (client) {
+    // //     return (<Text>Connected!</Text>)
+    // // }
     useEffect(() => {
-        if (centralSimulated) {
-            setData(current => (current.map(({ ...sensor }) => {
-                sensorMap[sensor.id].enable(true);
-                sensorMap[sensor.id].addListener(DATA_AVAILABLE_EVENT, updateUXValue);
-                sensor.enabled = true;
-                return sensor;
-            })));
+        Object.values(sensorMap).forEach(s => {
+            s.addListener(DATA_AVAILABLE_EVENT, updateUXValue);
+            s.enable(true);
+        });
+    }, []);
+
+    if (!simulated) {
+        if (client === null) {
+            return <Registration />
         }
-    }, [centralSimulated]);
-    // if (client) {
-    //     return (<Text>Connected!</Text>)
-    // }
-    if (!client && !centralSimulated) {
-        return <Registration />
+
+        if (client === undefined || (client && !client.isConnected())) {
+            return (
+
+                <View style={{ justifyContent: 'center', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
+                    <Loader message={'Connecting to IoT Central ...'} />
+                </View>)
+        }
     }
 
     return (<View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}>
 
         <FlatList numColumns={2} data={data} renderItem={(item) => {
             let val = item.item.value;
-            if (val && val.x && val.y && val.z) {
-                val = Object.values(val).map((v: number) => Math.round(v * 100) / 100).join(',');
-            }
-            return <Card key={item.index} title={sensorMap[item.item.id].name} value={val} unit={item.item.unit}
+            // if (val && val.x && val.y && val.z) {
+            //     val = Object.values(val).map((v: number) => Math.round(v * 100) / 100).join(',');
+            // }
+            return <Card key={`telem-${item.index}`} title={sensorMap[item.item.id].name} value={val} unit={item.item.unit}
                 enabled={item.item.enabled}
                 icon={item.item.icon}
                 onToggle={() => setData(current => (current.map(({ ...sensor }) => {
@@ -185,7 +213,7 @@ export default function Telemetry() {
                         if (newValue) {
 
                             sensorMap[sensor.id].addListener(DATA_AVAILABLE_EVENT, updateUXValue);
-                            if (!centralSimulated) {
+                            if (!simulated) {
                                 sensorMap[sensor.id].addListener(DATA_AVAILABLE_EVENT, sendTelemetryData);
                             }
                         }
@@ -197,7 +225,7 @@ export default function Telemetry() {
                 onLongPress={e => console.log('longpress')} // edit card
 
             />
-        }} contentContainerStyle={{ alignItems: 'center' }} />
+        }} />
 
     </View>)
 
