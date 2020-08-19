@@ -3,13 +3,10 @@ import { Card as ElementsCard, CardProps, PricingCard, IconProps, Icon, CheckBox
 import { useTheme } from '@react-navigation/native';
 import { View, processColor, ColorValue, TouchableOpacityProperties, TouchableOpacity } from 'react-native';
 import { useScreenDimensions } from '../hooks/layout';
-import { Text, Name, Headline } from './typography';
+import { Text, Name, Headline, getRandomColor } from './typography';
 
 type EditCallback = ((value: any) => void | Promise<void>);
 
-export function getRandomColor() {
-    return processColor(`rgb(${(Math.floor(Math.random() * 256))},${(Math.floor(Math.random() * 256))},${(Math.floor(Math.random() * 256))})`);
-}
 
 export function Card(props: CardProps & TouchableOpacityProperties & { onToggle: () => void, enabled: boolean, value?: any, unit?: string, icon?: IconProps, editable?: boolean, onEdit?: EditCallback }) {
     const { containerStyle, enabled, onToggle, editable, onEdit, value, unit, icon, ...otherProps } = props;

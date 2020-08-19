@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text as ELText } from 'react-native-elements';
-import { TextProperties, Dimensions, Platform, PixelRatio } from 'react-native';
+import { TextProperties, Dimensions, Platform, PixelRatio, processColor } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 
 
@@ -45,4 +45,8 @@ export function Name(props: Props) {
     const { colors } = useTheme();
 
     return (<ELText style={[{ fontSize: normalize(14), fontWeight: 'bold', color: colors.text, fontStyle: 'normal', letterSpacing: 1.15 }, style]}>{props.children}</ELText>)
+}
+
+export function getRandomColor() {
+    return processColor(`rgb(${(Math.floor(Math.random() * 256))},${(Math.floor(Math.random() * 256))},${(Math.floor(Math.random() * 256))})`);
 }

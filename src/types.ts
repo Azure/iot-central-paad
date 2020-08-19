@@ -1,3 +1,5 @@
+import { LineData, LineValue, LineDatasetConfig } from "react-native-charts-wrapper";
+
 export const Screens = {
     'HOME_SCREEN': 'Home',
     'TELEMETRY_SCREEN': 'Telemetry',
@@ -28,3 +30,23 @@ export type NavigationScreens = {
 }
 
 export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
+
+
+/**
+ * Chart typings
+ */
+export interface ExtendedLineData extends LineData {
+    dataSets: {
+        itemId: string,
+        values?: Array<number | LineValue>,
+        label?: string,
+        config?: LineDatasetConfig
+    }[]
+}
+
+export type ItemData = {
+    id: string,
+    value: any
+}
+
+export type ChartUpdateCallback = (itemdata: ItemData) => void;

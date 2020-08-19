@@ -30,8 +30,8 @@ export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
     return [simulated, setSimulated];
 }
 
-export function useTelemetry(): { telemetryData: SensorProps[], getTelemetryName: (id: string) => string, set: (id: string, data: Partial<SensorProps>) => void, addListener: (...args: any[]) => void } {
-    const { telemetryData, updateTelemetry, getTelemetryName, addListener } = useContext(IoTCContext);
+export function useTelemetry(): { telemetryData: SensorProps[], getTelemetryName: (id: string) => string, set: (id: string, data: Partial<SensorProps>) => void, addListener: (...args: any[]) => void, removeListener: (...args: any[]) => void } {
+    const { telemetryData, updateTelemetry, getTelemetryName, addListener, removeListener } = useContext(IoTCContext);
 
     const set = function (id: string, data: Partial<SensorProps>) {
         updateTelemetry(current => (current.map(({ ...sensor }) => {
@@ -42,5 +42,5 @@ export function useTelemetry(): { telemetryData: SensorProps[], getTelemetryName
         })));
     }
 
-    return { telemetryData, getTelemetryName, set, addListener };
+    return { telemetryData, getTelemetryName, set, addListener, removeListener };
 }

@@ -1,0 +1,484 @@
+{
+  "@id": "urn:testapplucaM3:Phone_51c:1",
+  "@type": "CapabilityModel",
+  "implements": [
+    {
+      "@id": "urn:testapplucaM3:Phone_51c:c5gntojhs:1",
+      "@type": "InterfaceInstance",
+      "displayName": {
+        "en": "Telemetry"
+      },
+      "name": "Phone_1yo",
+      "schema": {
+        "@id": "urn:testapplucaM3:telemetry:1",
+        "@type": "Interface",
+        "displayName": {
+          "en": "Telemetry"
+        },
+        "contents": [
+          {
+            "@id": "urn:testapplucaM3:telemetry:battery:1",
+            "@type": "Telemetry",
+            "displayName": {
+              "en": "Battery Level"
+            },
+            "name": "battery",
+            "schema": "integer",
+            "unit": "percent"
+          },
+          {
+            "@id": "urn:testapplucaM3:telemetry:accelerometer:1",
+            "@type": [
+              "Telemetry",
+              "SemanticType/Acceleration"
+            ],
+            "displayName": {
+              "en": "Accelerometer"
+            },
+            "name": "accelerometer",
+            "schema": "vector"
+          },
+          {
+            "@id": "urn:testapplucaM3:telemetry:magnetometer:1",
+            "@type": [
+              "Telemetry",
+              "SemanticType/Velocity"
+            ],
+            "displayName": {
+              "en": "Magnetometer"
+            },
+            "name": "magnetometer",
+            "schema": "vector"
+          },
+          {
+            "@id": "urn:testapplucaM3:telemetry:barometer:1",
+            "@type": [
+              "Telemetry",
+              "SemanticType/Pressure"
+            ],
+            "displayName": {
+              "en": "Barometer"
+            },
+            "name": "barometer",
+            "schema": "double"
+          },
+          {
+            "@id": "urn:testapplucaM3:telemetry:geolocation:1",
+            "@type": [
+              "Telemetry",
+              "SemanticType/Location"
+            ],
+            "displayName": {
+              "en": "Location"
+            },
+            "name": "geolocation",
+            "schema": "geopoint"
+          },
+          {
+            "@id": "urn:testapplucaM3:telemetry:gyroscope:1",
+            "@type": "Telemetry",
+            "displayName": {
+              "en": "Gyroscope"
+            },
+            "name": "gyroscope",
+            "schema": "double"
+          }
+        ]
+      }
+    },
+    {
+      "@id": "urn:testapplucaM3:Phone_51c:frdsawspp:2",
+      "@type": "InterfaceInstance",
+      "name": "DeviceInformation_5ce",
+      "schema": {
+        "@id": "urn:azureiot:DeviceManagement:DeviceInformation:1",
+        "@type": "Interface",
+        "displayName": {
+          "en": "Device information"
+        },
+        "contents": [
+          {
+            "@id": "urn:azureiot:DeviceManagement:DeviceInformation:manufacturer:1",
+            "@type": "Property",
+            "comment": "Company name of the device manufacturer. This could be the same as the name of the original equipment manufacturer (OEM). Ex. Contoso.",
+            "displayName": {
+              "en": "Manufacturer"
+            },
+            "name": "manufacturer",
+            "schema": "string"
+          },
+          {
+            "@id": "urn:azureiot:DeviceManagement:DeviceInformation:model:1",
+            "@type": "Property",
+            "comment": "Device model name or ID. Ex. Surface Book 2.",
+            "displayName": {
+              "en": "Device model"
+            },
+            "name": "model",
+            "schema": "string"
+          },
+          {
+            "@id": "urn:azureiot:DeviceManagement:DeviceInformation:swVersion:1",
+            "@type": "Property",
+            "comment": "Version of the software on your device. This could be the version of your firmware. Ex. 1.3.45",
+            "displayName": {
+              "en": "Software version"
+            },
+            "name": "swVersion",
+            "schema": "string"
+          },
+          {
+            "@id": "urn:azureiot:DeviceManagement:DeviceInformation:osName:1",
+            "@type": "Property",
+            "comment": "Name of the operating system on the device. Ex. Windows 10 IoT Core.",
+            "displayName": {
+              "en": "Operating system name"
+            },
+            "name": "osName",
+            "schema": "string"
+          },
+          {
+            "@id": "urn:azureiot:DeviceManagement:DeviceInformation:processorArchitecture:1",
+            "@type": "Property",
+            "comment": "Architecture of the processor on the device. Ex. x64 or ARM.",
+            "displayName": {
+              "en": "Processor architecture"
+            },
+            "name": "processorArchitecture",
+            "schema": "string"
+          },
+          {
+            "@id": "urn:azureiot:DeviceManagement:DeviceInformation:processorManufacturer:1",
+            "@type": "Property",
+            "comment": "Name of the manufacturer of the processor on the device. Ex. Intel.",
+            "displayName": {
+              "en": "Processor manufacturer"
+            },
+            "name": "processorManufacturer",
+            "schema": "string"
+          },
+          {
+            "@id": "urn:azureiot:DeviceManagement:DeviceInformation:totalStorage:1",
+            "@type": "Property",
+            "comment": "Total available storage on the device in kilobytes. Ex. 2048000 kilobytes.",
+            "displayName": {
+              "en": "Total storage"
+            },
+            "name": "totalStorage",
+            "displayUnit": {
+              "en": "kilobytes"
+            },
+            "schema": "long"
+          },
+          {
+            "@id": "urn:azureiot:DeviceManagement:DeviceInformation:totalMemory:1",
+            "@type": "Property",
+            "comment": "Total available memory on the device in kilobytes. Ex. 256000 kilobytes.",
+            "displayName": {
+              "en": "Total memory"
+            },
+            "name": "totalMemory",
+            "displayUnit": {
+              "en": "kilobytes"
+            },
+            "schema": "long"
+          }
+        ]
+      }
+    },
+    {
+      "@id": "urn:testapplucaM3:Phone_51c:9zvysnk3x:1",
+      "@type": "InterfaceInstance",
+      "displayName": {
+        "en": "Properties"
+      },
+      "name": "PhoneV3_6yo",
+      "schema": {
+        "@id": "urn:testapplucaM3:phone_properties:1",
+        "@type": "Interface",
+        "displayName": {
+          "en": "Properties"
+        },
+        "contents": [
+          {
+            "@id": "urn:testapplucaM3:phone_properties:readOnlyProp:1",
+            "@type": "Property",
+            "displayName": {
+              "en": "ReadOnlyProp"
+            },
+            "name": "readOnlyProp",
+            "schema": "string"
+          },
+          {
+            "@id": "urn:testapplucaM3:phone_properties:writeableProp:1",
+            "@type": "Property",
+            "displayName": {
+              "en": "WriteableProp"
+            },
+            "name": "writeableProp",
+            "writable": true,
+            "schema": "string"
+          }
+        ]
+      }
+    },
+    {
+      "@id": "urn:testapplucaM3:Phone_51c:c9byrrwpy:1",
+      "@type": "InterfaceInstance",
+      "displayName": {
+        "en": "Commands"
+      },
+      "name": "PhoneV3_jl",
+      "schema": {
+        "@id": "urn:testapplucaM3:phone_commands:1",
+        "@type": "Interface",
+        "displayName": {
+          "en": "Commands"
+        },
+        "contents": [
+          {
+            "@id": "urn:testapplucaM3:phone_commands:EnableDisable:1",
+            "@type": "Command",
+            "commandType": "synchronous",
+            "durable": false,
+            "request": {
+              "@id": "urn:testapplucaM3:phone_commands:EnableDisable:data:1",
+              "@type": "SchemaField",
+              "displayName": {
+                "en": "Data"
+              },
+              "name": "data",
+              "schema": {
+                "@id": "urn:testapplucaM3:phone_commands:EnableDisable:data:mzi9cgnjed:1",
+                "@type": "Object",
+                "displayName": {
+                  "en": "Object"
+                },
+                "fields": [
+                  {
+                    "@id": "urn:testapplucaM3:phone_commands:EnableDisable:data:mzi9cgnjed:item:1",
+                    "@type": "SchemaField",
+                    "displayName": {
+                      "en": "Item"
+                    },
+                    "name": "item",
+                    "schema": {
+                      "@id": "urn:testapplucaM3:phone_commands:EnableDisable:data:mzi9cgnjed:item:wevh37he71:1",
+                      "@type": "Enum",
+                      "displayName": {
+                        "en": "Enum"
+                      },
+                      "valueSchema": "string",
+                      "enumValues": [
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:EnableDisable:item:8zflsappi:battery:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Battery"
+                          },
+                          "enumValue": "battery",
+                          "name": "battery"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:EnableDisable:item:8zflsappi:accelerometer:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Accelerometer"
+                          },
+                          "enumValue": "accelerometer",
+                          "name": "accelerometer"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:EnableDisable:item:8zflsappi:magnetometer:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Magnetometer"
+                          },
+                          "enumValue": "magnetometer",
+                          "name": "magnetometer"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:EnableDisable:item:8zflsappi:barometer:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Barometer"
+                          },
+                          "enumValue": "barometer",
+                          "name": "barometer"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:EnableDisable:item:8zflsappi:geolocation:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Geolocation"
+                          },
+                          "enumValue": "geolocation",
+                          "name": "geolocation"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:EnableDisable:item:8zflsappi:gyroscope:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Gyroscope"
+                          },
+                          "enumValue": "gyroscope",
+                          "name": "gyroscope"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "@id": "urn:testapplucaM3:phone_commands:EnableDisable:data:13svwskgu6k:item:1",
+                    "@type": "SchemaField",
+                    "displayName": {
+                      "en": "Enable"
+                    },
+                    "name": "enable",
+                    "schema": "boolean"
+                  }
+                ]
+              }
+            },
+            "response": {
+              "@id": "urn:testapplucaM3:phone_commands:EnableDisable:Status:1",
+              "@type": "SchemaField",
+              "displayName": {
+                "en": "Status"
+              },
+              "name": "Status",
+              "schema": "boolean"
+            },
+            "displayName": {
+              "en": "Enable/Disable"
+            },
+            "name": "EnableDisable"
+          },
+          {
+            "@id": "urn:testapplucaM3:phone_commands:SetFrequency:1",
+            "@type": "Command",
+            "commandType": "synchronous",
+            "durable": false,
+            "request": {
+              "@id": "urn:testapplucaM3:phone_commands:SetFrequency:data:1",
+              "@type": "SchemaField",
+              "displayName": {
+                "en": "Data"
+              },
+              "name": "data",
+              "schema": {
+                "@id": "urn:testapplucaM3:phone_commands:SetFrequency:data:mzi9cgnjed:1",
+                "@type": "Object",
+                "displayName": {
+                  "en": "Object"
+                },
+                "fields": [
+                  {
+                    "@id": "urn:testapplucaM3:phone_commands:SetFrequency:data:mzi9cgnjed:item:1",
+                    "@type": "SchemaField",
+                    "displayName": {
+                      "en": "Item"
+                    },
+                    "name": "item",
+                    "schema": {
+                      "@id": "urn:testapplucaM3:phone_commands:SetFrequency:data:mzi9cgnjed:item:wevh37he71:1",
+                      "@type": "Enum",
+                      "displayName": {
+                        "en": "Enum"
+                      },
+                      "valueSchema": "string",
+                      "enumValues": [
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:SetFrequency:item:8zflsappi:battery:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Battery"
+                          },
+                          "enumValue": "battery",
+                          "name": "battery"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:SetFrequency:item:8zflsappi:accelerometer:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Accelerometer"
+                          },
+                          "enumValue": "accelerometer",
+                          "name": "accelerometer"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:SetFrequency:item:8zflsappi:magnetometer:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Magnetometer"
+                          },
+                          "enumValue": "magnetometer",
+                          "name": "magnetometer"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:SetFrequency:item:8zflsappi:barometer:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Barometer"
+                          },
+                          "enumValue": "barometer",
+                          "name": "barometer"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:SetFrequency:item:8zflsappi:geolocation:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Geolocation"
+                          },
+                          "enumValue": "geolocation",
+                          "name": "geolocation"
+                        },
+                        {
+                          "@id": "urn:testapplucaM3:phone_commands:SetFrequency:item:8zflsappi:gyroscope:1",
+                          "@type": "EnumValue",
+                          "displayName": {
+                            "en": "Gyroscope"
+                          },
+                          "enumValue": "gyroscope",
+                          "name": "gyroscope"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "@id": "urn:testapplucaM3:phone_commands:SetFrequency:data:13svwskgu6k:item:1",
+                    "@type": "SchemaField",
+                    "displayName": {
+                      "en": "Frequency"
+                    },
+                    "name": "frequency",
+                    "schema": "integer",
+                    "description": "Number of seconds between each telemetry event for the specific sensor"
+                  }
+                ]
+              }
+            },
+            "response": {
+              "@id": "urn:testapplucaM3:phone_commands:SetFrequency:Status:1",
+              "@type": "SchemaField",
+              "displayName": {
+                "en": "Status"
+              },
+              "name": "Status",
+              "schema": "boolean"
+            },
+            "displayName": {
+              "en": "SetFrequency"
+            },
+            "name": "SetFrequency"
+          }
+        ]
+      }
+    }
+  ],
+  "displayName": {
+    "en": "Phone"
+  },
+  "@context": [
+    "http://azureiot.com/v1/contexts/IoTModel.json"
+  ]
+}

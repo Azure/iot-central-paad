@@ -17,6 +17,7 @@
 		2D02E4BD1E0B4A84006451C7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		2DCD954D1E0B4F2C00145EB5 /* iotc_pad_clientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* iotc_pad_clientTests.m */; };
+		4A5A4A3724ED7C3F00BA047B /* Charts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5A4A3624ED7C3F00BA047B /* Charts.swift */; };
 		802714A29D9E72F5D6E7B32B /* libPods-iotc_pad_client.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E818A578F9707EF32E951CD9 /* libPods-iotc_pad_client.a */; };
 		EE5836D55FDB441F0E43B00C /* libPods-iotc_pad_client-iotc_pad_clientTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6359BF3742A767F34047A49 /* libPods-iotc_pad_client-iotc_pad_clientTests.a */; };
 /* End PBXBuildFile section */
@@ -69,6 +70,8 @@
 		4A00AD0024D4758500D7246B /* EvilIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = EvilIcons.ttf; sourceTree = "<group>"; };
 		4A00AD0124D4758500D7246B /* SimpleLineIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = SimpleLineIcons.ttf; sourceTree = "<group>"; };
 		4A00AD0224D4758500D7246B /* MaterialIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MaterialIcons.ttf; sourceTree = "<group>"; };
+		4A5A4A3524ED7C3E00BA047B /* iotc_pad_client-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iotc_pad_client-Bridging-Header.h"; sourceTree = "<group>"; };
+		4A5A4A3624ED7C3F00BA047B /* Charts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Charts.swift; sourceTree = "<group>"; };
 		59B61E7C671997EB8073C62D /* libPods-iotc_pad_client-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iotc_pad_client-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		70121AAECEF4C36ADCFE9775 /* libPods-iotc_pad_client-tvOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iotc_pad_client-tvOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		765D6CC23FA5AD61FF50BA9F /* Pods-iotc_pad_client-tvOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iotc_pad_client-tvOSTests.debug.xcconfig"; path = "Target Support Files/Pods-iotc_pad_client-tvOSTests/Pods-iotc_pad_client-tvOSTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -197,6 +200,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				4A5A4A3624ED7C3F00BA047B /* Charts.swift */,
 				4A00ACF224D4758500D7246B /* Fonts */,
 				13B07FAE1A68108700A75B9A /* iotc_pad_client */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
@@ -204,6 +208,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				F61E41959201EB49CA346E36 /* Pods */,
+				4A5A4A3524ED7C3E00BA047B /* iotc_pad_client-Bridging-Header.h */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -335,7 +340,7 @@
 					};
 					13B07F861A680F5B00A75B9A = {
 						DevelopmentTeam = 32R2QHB9WJ;
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1160;
 					};
 					2D02E47A1E0B4A5D006451C7 = {
 						CreatedOnToolsVersion = 8.2.1;
@@ -692,6 +697,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A5A4A3724ED7C3F00BA047B /* Charts.swift in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);
@@ -734,6 +740,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 38E6E52D390F2EA71C40E32B /* Pods-iotc_pad_client-iotc_pad_clientTests.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				DEVELOPMENT_TEAM = 32R2QHB9WJ;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -758,6 +765,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BF8D16749BAE9A0EE911B017 /* Pods-iotc_pad_client-iotc_pad_clientTests.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
 				DEVELOPMENT_TEAM = 32R2QHB9WJ;
@@ -793,6 +801,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = iotc_pad_client;
+				SWIFT_OBJC_BRIDGING_HEADER = "iotc_pad_client-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -816,6 +825,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = iotc_pad_client;
+				SWIFT_OBJC_BRIDGING_HEADER = "iotc_pad_client-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

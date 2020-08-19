@@ -133,7 +133,8 @@ export type IIoTCContext = ICentralState & {
     disconnect: () => Promise<void>,
     updateTelemetry: (fn: (currentData: SensorProps[]) => SensorProps[]) => void,
     getTelemetryName: (id: string) => string,
-    addListener: (eventname: string, listener: (...args: any[]) => void) => void
+    addListener: (eventname: string, listener: (...args: any[]) => void) => void,
+    removeListener: (eventname: string, listener: (...args: any[]) => void) => void,
 }
 
 
@@ -149,7 +150,8 @@ export const IoTCContext = React.createContext<IIoTCContext>({
     disconnect: () => Promise.resolve(),
     updateTelemetry: () => { },
     getTelemetryName: (id: string) => '',
-    addListener: () => { }
+    addListener: () => { },
+    removeListener: () => { },
 
 });
 
@@ -205,6 +207,9 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             getTelemetryName: (id: string) => (sensorMap[id].name),
             addListener: (eventname: string, listener: (...args: any[]) => void) => {
                 Object.values(sensorMap).forEach(s => s.addListener(eventname, listener));
+            },
+            removeListener: (eventname: string, listener: (...args: any[]) => void) => {
+                Object.values(sensorMap).forEach(s => s.removeListener(eventname, listener));
             },
             connect: async (credentials: IoTCCredentials) => {
 

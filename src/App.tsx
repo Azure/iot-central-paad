@@ -20,6 +20,7 @@ import IoTCProvider, { IoTCContext } from './contexts/iotc';
 import { Loader } from './components/loader';
 import StorageProvider, { StorageContext } from './contexts/storage';
 import { useSimulation } from './hooks/iotc';
+import Insight from './Insight';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createNativeStackNavigator();
@@ -45,6 +46,7 @@ function Navigation() {
             <Stack.Screen name='root' options={({ navigation }) => ({
                 headerTitle: null, headerLeft: Logo, headerRight: Profile.bind(null, navigation.navigate)
             })} component={Root} />
+            <Stack.Screen name='Insight' component={Insight}/>
             <Stack.Screen name='Settings' options={({ navigation, route }) => ({
                 stackAnimation: 'flip',
                 headerLeft: BackButton.bind(null, navigation.goBack, 'Settings')

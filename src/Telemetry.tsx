@@ -14,7 +14,7 @@ import Barometer from './sensors/barometer';
 import Magnetometer from './sensors/magnetometer';
 import GeoLocation from './sensors/geolocation';
 import { useIoTCentralClient, useSimulation, useTelemetry } from './hooks/iotc';
-import { useTheme } from '@react-navigation/native';
+import { useTheme, useNavigation } from '@react-navigation/native';
 import { Loader } from './components/loader';
 import { useScreenDimensions } from './hooks/layout';
 import { IoTCClient } from 'react-native-azure-iotcentral-client';
@@ -39,7 +39,8 @@ export default function Telemetry() {
     const insets = useSafeAreaInsets();
     const { screen } = useScreenDimensions();
     const { colors } = useTheme();
-    const {telemetryData, getTelemetryName, set, addListener} = useTelemetry();
+    const { telemetryData, getTelemetryName, set, addListener } = useTelemetry();
+    const navigation = useNavigation();
 
     const sendTelemetryData = async function (id: string, value: any) {
         await client.sendTelemetry({ [id]: value });
@@ -75,6 +76,9 @@ export default function Telemetry() {
                 icon={item.item.icon}
                 onToggle={() => set(item.item.id, { enabled: !item.item.enabled })}
                 onLongPress={e => console.log('longpress')} // edit card
+                onPress={e => navigation.navigate('Insight', {
+                    telemetryId: item.item.id
+                })}
 
             />
         }} />
