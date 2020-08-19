@@ -1,15 +1,17 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Card as ElementsCard, CardProps, PricingCard, IconProps, Icon, CheckBox, Input, Button } from 'react-native-elements'
 import { useTheme } from '@react-navigation/native';
 import { View, processColor, ColorValue, TouchableOpacityProperties, TouchableOpacity } from 'react-native';
 import { useScreenDimensions } from '../hooks/layout';
 import { Text, Name, Headline } from './typography';
 
+type EditCallback = ((value: any) => void | Promise<void>);
+
 export function getRandomColor() {
     return processColor(`rgb(${(Math.floor(Math.random() * 256))},${(Math.floor(Math.random() * 256))},${(Math.floor(Math.random() * 256))})`);
 }
 
-export function Card(props: CardProps & TouchableOpacityProperties & { onToggle: () => void, enabled: boolean, value?: any, unit?: string, icon?: IconProps, editable?: boolean, onEdit?: () => void }) {
+export function Card(props: CardProps & TouchableOpacityProperties & { onToggle: () => void, enabled: boolean, value?: any, unit?: string, icon?: IconProps, editable?: boolean, onEdit?: EditCallback }) {
     const { containerStyle, enabled, onToggle, editable, onEdit, value, unit, icon, ...otherProps } = props;
     const { dark, colors } = useTheme();
     const { screen } = useScreenDimensions();
@@ -49,10 +51,14 @@ export function Card(props: CardProps & TouchableOpacityProperties & { onToggle:
     </TouchableOpacity>)
 }
 
-function getValue(value: any, enabled: boolean, editable: boolean, onEdit: (() => void) | undefined, textColor: string) {
+function getValue(value: any, enabled: boolean, editable: boolean, onEdit: EditCallback | undefined, textColor: string) {
     const [edited, setEdited] = useState(value);
 
-    if (!enabled || !value) {
+    useEffect(() => {
+        setEdited(value);
+    }, [value])
+
+    if (!enabled || edited === null || edited === undefined) {
         return (null);
     }
 
@@ -68,7 +74,7 @@ function getValue(value: any, enabled: boolean, editable: boolean, onEdit: (() =
     if (editable && onEdit) {
         return <View style={{ flex: 1, flexDirection: 'row' }}>
             <Input value={edited.toString()} onChangeText={setEdited} inputStyle={{ color: textColor }} keyboardType={typeof (value) === 'number' ? 'numeric' : 'default'} containerStyle={{ flex: 1 }} />
-            <Button title='Send' onPress={onEdit} type='clear' />
+            <Button title='Send' onPress={e => onEdit(edited)} type='clear' />
         </View>
     }
     else {

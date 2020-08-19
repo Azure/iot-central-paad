@@ -9,7 +9,6 @@ import { DecryptCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING, IOTC_EVENTS
 import { useTheme } from '@react-navigation/native';
 import { IoTCContext } from './contexts/iotc';
 import { Loader } from './components/loader';
-import { getDeviceInfo } from './properties/deviceInfo';
 import { useIoTCentralClient } from './hooks/iotc';
 
 export default function Registration() {
@@ -79,7 +78,7 @@ function QRCode() {
             />
             <Overlay isVisible={prompt} onBackdropPress={showPrompt.bind(null, false)} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: screen.width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
                 <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-                    {loading && <Loader message={'Loading ...'}/>}
+                    {loading && <Loader message={'Loading ...'} />}
                     {!loading && <><Text>Please provide the password to decrypt credentials</Text>
                         <Input placeholder='Password' value={encKey} onChangeText={val => setEncKey(val)} inputStyle={{ color: colors.text }} />
                         <Divider />

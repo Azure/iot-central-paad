@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { IoTCCredentials } from "react-native-azure-iotcentral-client";
 import * as Keychain from 'react-native-keychain';
+import { StateUpdater } from "../types";
 
 const USERNAME = 'IOTC_PAD_CLIENT';
 
@@ -27,9 +28,10 @@ export const StorageContext = React.createContext<IStorageContext>({
 });
 const { Provider } = StorageContext;
 
-const retrieveStorage = async function (update: React.Dispatch<React.SetStateAction<IStorageState>>) {
+const retrieveStorage = async function (update: StateUpdater<IStorageState>) {
     const data = await Keychain.getGenericPassword();
     if (data && data.password) {
+        console.log(data.password);
         update(JSON.parse(data.password) as IStorageState)
     }
     else {
@@ -60,12 +62,22 @@ const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
         <Provider value={{
             ...state,
             save: async (param) => {
-                console.log('saving');
                 if (typeof param === 'function') {
-                    setState(current => param(current));
+                    setState(current => {
+                        const newState = param(current);
+                        if (current.dark != newState.dark || current.simulated != newState.simulated || JSON.stringify(newState.credentials) !== JSON.stringify(current.credentials)) {
+                            dirty.current = true;
+                        }
+                        return { ...current, ...newState };
+                    });
                 }
                 else {
-                    setState(param);
+                    setState(current => {
+                        if (current.dark != param.dark || current.simulated != param.simulated || JSON.stringify(param.credentials) !== JSON.stringify(current.credentials)) {
+                            dirty.current = true;
+                        }
+                        return { ...current, ...param }
+                    });
                 }
                 dirty.current = true;
             },

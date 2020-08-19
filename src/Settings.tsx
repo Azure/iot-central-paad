@@ -3,7 +3,7 @@ import { ThemeContext, ThemeMode } from "./contexts/theme";
 import React from 'react';
 import { View, Text, Button, Switch, ScrollView, Platform } from 'react-native';
 import { useTheme, useNavigation, RouteProp, getFocusedRouteNameFromRoute, CommonActions } from "@react-navigation/native";
-import { useScreenIcon } from "./hooks/navigation";
+import { useScreenIcon } from "./hooks/common";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ListItem, Icon } from "react-native-elements";
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';

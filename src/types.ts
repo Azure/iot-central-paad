@@ -26,3 +26,5 @@ type valueof<T> = T[keyof T];
 export type NavigationScreens = {
     [k in valueof<typeof Screens>]: NavigationParams | undefined
 }
+
+export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;

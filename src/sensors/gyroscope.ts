@@ -6,13 +6,11 @@ import { gyroscope, setUpdateIntervalForType, SensorTypes } from "react-native-s
 export default class Gyroscope extends EventEmitter implements ISensor {
 
     private enabled: boolean;
-    private interval: number;
     private simulated: boolean;
     private currentRun: any;
 
-    constructor(public id: string) {
+    constructor(public id: string, private interval: number) {
         super();
-        this.interval = 5000;
         setUpdateIntervalForType(SensorTypes.gyroscope, this.interval);
         this.enabled = false;
         this.simulated = false;
@@ -22,11 +20,12 @@ export default class Gyroscope extends EventEmitter implements ISensor {
     name: string = 'Gyroscope';
 
     enable(val: boolean): void {
-        console.log(`Enabling ${this.id}: ${val}`);
+        if (this.enabled === val) {
+            return;
+        }
         this.enabled = val;
         if (!this.enabled && this.currentRun) {
             this.currentRun.unsubscribe();
-            this.removeAllListeners();
         }
         else {
             this.currentRun = gyroscope.subscribe(function ({ x, y, z, timestamp }) {
@@ -35,12 +34,11 @@ export default class Gyroscope extends EventEmitter implements ISensor {
         }
     }
     sendInterval(val: number) {
+        if (this.interval === val) {
+            return;
+        }
         this.interval = val;
-        // update interval
-        // if (this.enabled && this.currentRun) {
-        //     this.enable(false);
-        //     this.enable(true);
-        // }
+        setUpdateIntervalForType(SensorTypes.gyroscope, this.interval);
     }
     simulate(val: boolean): void {
         this.simulated = val;

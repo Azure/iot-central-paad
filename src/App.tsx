@@ -5,7 +5,7 @@ import ThemeProvider, { ThemeContext, ThemeMode } from './contexts/theme';
 import { NavigationContainer, DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Screens, NavigationScreens, NavigationParams } from './types';
-import { useScreenIcon } from './hooks/navigation';
+import { useScreenIcon } from './hooks/common';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import LogoIcon from './assets/IotcLogo.svg';
@@ -61,7 +61,6 @@ function Root() {
     // connect client if credentials are retrieved
     useEffect(() => {
         if (!simulated) {
-            console.log(`Credentials changed: ${JSON.stringify(credentials)}`);
             connect(credentials);
         }
     }, [credentials, simulated]);

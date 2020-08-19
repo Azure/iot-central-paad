@@ -6,13 +6,11 @@ import Geolocation from '@react-native-community/geolocation';
 export default class GeoLocation extends EventEmitter implements ISensor {
 
     private enabled: boolean;
-    private interval: number;
     private simulated: boolean;
     private currentRun: number;
 
-    constructor(public id: string) {
+    constructor(public id: string, private interval: number) {
         super();
-        this.interval = 5000;
         this.enabled = false;
         this.simulated = false;
         this.currentRun = -1;
@@ -21,10 +19,12 @@ export default class GeoLocation extends EventEmitter implements ISensor {
     name: string = 'GeoLocation';
 
     enable(val: boolean): void {
+        if (this.enabled === val) {
+            return;
+        }
         this.enabled = val;
         if (!this.enabled && this.currentRun) {
             clearInterval(this.currentRun);
-            this.removeAllListeners();
         }
         else {
             //@ts-ignore
@@ -35,6 +35,9 @@ export default class GeoLocation extends EventEmitter implements ISensor {
         }
     }
     sendInterval(val: number) {
+        if (this.interval === val) {
+            return;
+        }
         this.interval = val;
         // update interval
         if (this.enabled && this.currentRun) {
