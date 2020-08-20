@@ -22,7 +22,17 @@ export function Card(props: CardProps & TouchableOpacityProperties & { onToggle:
         height: 200,
         padding: 25,
         margin: 10,
-        borderRadius: 20
+        borderRadius: 20,
+        ...(!dark ? {
+            shadowColor: "'rgba(0, 0, 0, 0.14)'",
+            shadowOffset: {
+                width: 0,
+                height: 3,
+            },
+            shadowOpacity: 0.8,
+            shadowRadius: 3.84,
+            elevation: 5
+        } : {})
     }}
         {...otherProps}
     ><View style={{ flex: 1, position: 'relative' }}>
