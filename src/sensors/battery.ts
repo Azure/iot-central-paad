@@ -64,7 +64,7 @@ export default class Battery extends EventEmitter implements ISensor {
         }
         else {
             intId = setInterval(async function (this: Battery) {
-                this.emit(DATA_AVAILABLE_EVENT, this.id, await DeviceInfo.getBatteryLevel());
+                this.emit(DATA_AVAILABLE_EVENT, this.id, Math.floor((await DeviceInfo.getBatteryLevel()) * 100));
             }.bind(this), this.interval);
         }
         this.currentRun = {

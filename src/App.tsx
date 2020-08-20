@@ -49,7 +49,14 @@ function Navigation() {
             <Stack.Screen name='root' options={({ navigation }) => ({
                 headerTitle: null, headerLeft: Logo, headerRight: Profile.bind(null, navigation.navigate)
             })} component={Root} />
-            <Stack.Screen name='Insight' component={Insight} />
+            <Stack.Screen name='Insight' component={Insight} options={({ navigation, route }) => {
+                if (route.params) {
+                    let params = route.params as NavigationParams;
+                    if (params.title) {
+                        return { headerTitle: params.title }
+                    }
+                }
+            }} />
             <Stack.Screen name='Settings' options={({ navigation, route }) => ({
                 stackAnimation: 'flip',
                 headerLeft: BackButton.bind(null, navigation.goBack, 'Settings')

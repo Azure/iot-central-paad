@@ -17,7 +17,7 @@ import { useIoTCentralClient, useSimulation, useTelemetry } from './hooks/iotc';
 import { useTheme, useNavigation } from '@react-navigation/native';
 import { Loader } from './components/loader';
 import { useScreenDimensions } from './hooks/layout';
-import { IoTCClient } from 'react-native-azure-iotcentral-client';
+import { camelToName } from './components/typography';
 
 
 
@@ -43,7 +43,9 @@ export default function Telemetry() {
     const navigation = useNavigation();
 
     const sendTelemetryData = async function (id: string, value: any) {
-        await client.sendTelemetry({ [id]: value });
+        if (client.isConnected()) {
+            await client.sendTelemetry({ [id]: value });
+        }
     }
     useEffect(() => {
         if (!simulated && client && client.isConnected()) {
@@ -77,7 +79,8 @@ export default function Telemetry() {
                 onToggle={() => set(item.item.id, { enabled: !item.item.enabled })}
                 onLongPress={e => console.log('longpress')} // edit card
                 onPress={e => navigation.navigate('Insight', {
-                    telemetryId: item.item.id
+                    telemetryId: item.item.id,
+                    title: camelToName(item.item.id)
                 })}
 
             />

@@ -35,12 +35,14 @@ export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
 /**
  * Chart typings
  */
+
+export type CustomLineDatasetConfig = LineDatasetConfig & { rgbcolor: string };
 export interface ExtendedLineData extends LineData {
     dataSets: {
         itemId: string,
         values?: Array<number | LineValue>,
         label?: string,
-        config?: LineDatasetConfig
+        config?: CustomLineDatasetConfig
     }[]
 }
 

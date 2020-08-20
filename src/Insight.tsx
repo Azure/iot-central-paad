@@ -1,11 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, StyleSheet, processColor } from 'react-native';
-import { LineChart, LineDatasetConfig } from 'react-native-charts-wrapper';
-import { getRandomColor, Text } from './components/typography';
-import { ExtendedLineData, ItemData } from './types';
+import { LineChart } from 'react-native-charts-wrapper';
+import { getRandomColor, Text, getNegativeColor, LightenDarkenColor } from './components/typography';
+import { ExtendedLineData, ItemData, CustomLineDatasetConfig } from './types';
 import { useTelemetry } from './hooks/iotc';
 import { DATA_AVAILABLE_EVENT } from './sensors';
 import { useTheme } from '@react-navigation/native';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import { useScreenDimensions } from './hooks/layout';
+
 
 
 
@@ -18,6 +21,7 @@ const footer = 'This view is showing real-time data from the paired device or Go
 
 export default function Insight({ route, navigation }) {
     const { telemetryData, addListener, removeListener } = useTelemetry();
+    const { screen } = useScreenDimensions();
     const { colors } = useTheme();
     const [start, setStart] = useState<number>(Date.now());
     const [data, setData] = useState<ExtendedLineData>({
@@ -54,7 +58,8 @@ export default function Insight({ route, navigation }) {
 
                 if (!currentItemData) {
                     // current item is not in the dataset yet
-                    return { ...currentDataSet, dataSets: [...currentDataSet.dataSets, ...[{ itemId: itemdata.id, values: [newSample], label: itemdata.id, config: { color: getRandomColor() } as LineDatasetConfig }]] };
+                    const rgbcolor = getRandomColor();
+                    return { ...currentDataSet, dataSets: [...currentDataSet.dataSets, ...[{ itemId: itemdata.id, values: [newSample], label: itemdata.id, config: { color: processColor(rgbcolor), rgbcolor: rgbcolor } as CustomLineDatasetConfig }]] };
                 }
                 return {
                     ...currentDataSet,
@@ -88,7 +93,8 @@ export default function Insight({ route, navigation }) {
                     extraOffsets={{ bottom: 20 }}
                     legend={{
                         wordWrapEnabled: true,
-                        textColor: processColor(colors.text)
+                        textColor: processColor(colors.text),
+                        textSize: 16
                     }}
                     xAxis={{
                         position: 'BOTTOM',
@@ -98,19 +104,44 @@ export default function Insight({ route, navigation }) {
                         since: start,
                         valueFormatterPattern: 'HH:mm:ss',
                         timeUnit: 'MILLISECONDS',
-                        axisLineColor: processColor(colors.text),
+                        drawAxisLines: false,
+                        drawGridLines: false,
                         textColor: processColor(colors.text)
                     }}
                     yAxis={{
                         right: {
-                            axisLineColor: processColor(colors.text),
-                            textColor: processColor(colors.text)    
+                            drawAxisLines: false,
+                            textColor: processColor(colors.text)
                         },
-                        left: { enabled: false }
+                        left: {
+                            drawAxisLines: false,
+                            textColor: processColor(colors.text)
+                        }
                     }}
                     data={data} />
                 <View style={style.summary}>
-                    <View style={{ flexDirection: 'row' }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
+                        {data.dataSets.map((d, i) => {
+                            const val = d.values[d.values.length - 1]['y'];
+                            let fill = (val > 1 || val < -1) ? val : Math.abs(val * 1000);
+                            return (<AnimatedCircularProgress key={`circle-${i}`}
+                                size={screen.width / 5}
+                                width={5}
+                                fill={fill}
+                                tintColor={d.config ? d.config.rgbcolor : getRandomColor()}
+                                onAnimationComplete={() => console.log('onAnimationComplete')}
+                                backgroundColor={d.config ? LightenDarkenColor(d.config.rgbcolor, 90, true) : getRandomColor()}
+                                rotation={360}>
+                                {(fill) => {
+                                    const strVal = `${val}`;
+                                    return (
+                                        <Text>
+                                            {strVal.length > 6 ? `${strVal.substring(0, 6)}...` : strVal}
+                                        </Text>
+                                    )
+                                }}
+                            </AnimatedCircularProgress>)
+                        })}
 
                     </View>
                 </View>
@@ -125,7 +156,7 @@ const style = StyleSheet.create({
     chart: {
         flex: 1,
         marginTop: 30,
-        marginHorizontal: 30
+        marginHorizontal: 10
     },
     chartBox: {
         flex: 2
