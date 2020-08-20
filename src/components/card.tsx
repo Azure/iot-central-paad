@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Card as ElementsCard, CardProps, PricingCard, IconProps, Icon, CheckBox, Input, Button } from 'react-native-elements'
+import { CardProps, IconProps, Icon, CheckBox, Input, Button } from 'react-native-elements'
 import { useTheme } from '@react-navigation/native';
 import { View, processColor, ColorValue, TouchableOpacityProperties, TouchableOpacity } from 'react-native';
 import { useScreenDimensions } from '../hooks/layout';

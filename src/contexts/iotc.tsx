@@ -2,7 +2,6 @@ import React, { useReducer, useState, useEffect } from "react";
 import { IIoTCClient, IoTCCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING } from "react-native-azure-iotcentral-client";
 import { IconProps } from "react-native-elements";
 import { Platform } from "react-native";
-import DeviceInfo from 'react-native-device-info';
 import { ISensor, DATA_AVAILABLE_EVENT } from "../sensors";
 import Battery from "../sensors/battery";
 import Gyroscope from "../sensors/gyroscope";
@@ -10,10 +9,8 @@ import Accelerometer from "../sensors/accelerometer";
 import Barometer from "../sensors/barometer";
 import Magnetometer from "../sensors/magnetometer";
 import GeoLocation from "../sensors/geolocation";
+import { defaults } from './defaults';
 
-
-// const emulator = DeviceInfo.isEmulatorSync();
-const emulator = false;
 
 export type SensorProps = {
     id: string,
@@ -34,86 +31,6 @@ const AVAILABLE_SENSORS = {
     GYROSCOPE: 'gyroscope'
 }
 
-const defaultSensors: SensorProps[] = [
-    {
-        id: AVAILABLE_SENSORS.ACCELEROMETER,
-        interval: 5000,
-        icon: {
-            name: 'rocket-outline',
-            type: Platform.select({
-                android: 'material-community',
-                ios: 'ionicon'
-            })
-        },
-        enabled: true, // TODO: auto-enable based on settings
-        simulated: emulator
-    },
-    {
-        id: AVAILABLE_SENSORS.GYROSCOPE,
-        interval: 5000,
-        enabled: true, // TODO: auto-enable based on settings
-        icon: {
-            name: 'compass-outline',
-            type: Platform.select({
-                android: 'material-community',
-                ios: 'ionicon'
-            })
-        },
-        simulated: emulator
-    },
-    {
-        id: AVAILABLE_SENSORS.MAGNETOMETER,
-        interval: 5000,
-        enabled: true, // TODO: auto-enable based on settings
-        icon: {
-            name: 'magnet-outline',
-            type: Platform.select({
-                android: 'material-community',
-                ios: 'ionicon'
-            })
-        },
-        simulated: emulator
-    },
-    {
-        id: AVAILABLE_SENSORS.BAROMETER,
-        interval: 5000,
-        enabled: true, // TODO: auto-enable based on settings
-        icon: {
-            name: 'weather-partly-cloudy',
-            type: 'material-community'
-        },
-        simulated: emulator
-    },
-    {
-        id: AVAILABLE_SENSORS.GEOLOCATION,
-        interval: 5000,
-        enabled: true, // TODO: auto-enable based on settings
-        icon: {
-            name: 'location-outline',
-            type: Platform.select({
-                android: 'material-community',
-                ios: 'ionicon'
-            })
-        },
-        simulated: emulator
-    },
-    {
-        id: AVAILABLE_SENSORS.BATTERY,
-        interval: 5000,
-        enabled: true, // TODO: auto-enable based on settings,
-        simulated: emulator,
-        icon: {
-            name: Platform.select({
-                android: 'battery-medium',
-                ios: 'battery-half-sharp'
-            }),
-            type: Platform.select({
-                android: 'material-community',
-                ios: 'ionicon'
-            })
-        }
-    }
-]
 
 const sensorMap: { [id in keyof typeof AVAILABLE_SENSORS]?: ISensor } = {
     [AVAILABLE_SENSORS.BATTERY]: new Battery(AVAILABLE_SENSORS.BATTERY, 5000),
@@ -140,7 +57,7 @@ export type IIoTCContext = ICentralState & {
 
 
 const initialState: ICentralState = {
-    telemetryData: defaultSensors,
+    telemetryData: null,
     client: undefined
 }
 
@@ -169,7 +86,83 @@ const connectClient = async function (credentials: IoTCCredentials) {
 
 const { Provider } = IoTCContext;
 const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [state, setState] = useState<ICentralState>(initialState);
+    const defaultSensors: SensorProps[] = [
+        {
+            id: AVAILABLE_SENSORS.ACCELEROMETER,
+            interval: 5000,
+            icon: {
+                name: 'rocket-outline',
+                type: Platform.select({
+                    android: 'material-community',
+                    ios: 'ionicon'
+                })
+            },
+            enabled: true, // TODO: auto-enable based on settings
+            simulated: defaults.emulator
+        },
+        {
+            id: AVAILABLE_SENSORS.GYROSCOPE,
+            interval: 5000,
+            enabled: true, // TODO: auto-enable based on settings
+            icon: {
+                name: 'compass-outline',
+                type: Platform.select({
+                    android: 'material-community',
+                    ios: 'ionicon'
+                })
+            },
+            simulated: defaults.emulator
+        },
+        {
+            id: AVAILABLE_SENSORS.MAGNETOMETER,
+            interval: 5000,
+            enabled: true, // TODO: auto-enable based on settings
+            icon: {
+                name: 'magnet-outline',
+                type: 'ionicon'
+            },
+            simulated: defaults.emulator
+        },
+        {
+            id: AVAILABLE_SENSORS.BAROMETER,
+            interval: 5000,
+            enabled: true, // TODO: auto-enable based on settings
+            icon: {
+                name: 'weather-partly-cloudy',
+                type: 'material-community'
+            },
+            simulated: defaults.emulator
+        },
+        {
+            id: AVAILABLE_SENSORS.GEOLOCATION,
+            interval: 5000,
+            enabled: true, // TODO: auto-enable based on settings
+            icon: {
+                name: 'location-outline',
+                type: 'ionicon'
+            },
+            simulated: defaults.emulator
+        },
+        {
+            id: AVAILABLE_SENSORS.BATTERY,
+            interval: 5000,
+            enabled: true, // TODO: auto-enable based on settings,
+            simulated: defaults.emulator,
+            icon: {
+                name: Platform.select({
+                    android: 'battery-medium',
+                    ios: 'battery-half-sharp'
+                }),
+                type: Platform.select({
+                    android: 'material-community',
+                    ios: 'ionicon'
+                })
+            }
+        }
+    ]
+
+    const [state, setState] = useState<ICentralState>({ client: undefined, telemetryData: defaultSensors });
+
 
     const updateValues = function (id: string, value: any) {
         setState(current => ({
@@ -184,6 +177,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     useEffect(() => {
         // update sensors
         state.telemetryData.forEach(telem => {
+            (sensorMap[telem.id] as ISensor).simulate(telem.simulated);
             (sensorMap[telem.id] as ISensor).enable(telem.enabled);
             (sensorMap[telem.id] as ISensor).sendInterval(telem.interval);
         });

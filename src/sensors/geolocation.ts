@@ -1,19 +1,19 @@
 import DeviceInfo from 'react-native-device-info';
 import { EventEmitter } from 'events';
-import { ISensor, DATA_AVAILABLE_EVENT } from './index';
+import { ISensor, DATA_AVAILABLE_EVENT, getRandom } from './index';
 import Geolocation from '@react-native-community/geolocation';
 
 export default class GeoLocation extends EventEmitter implements ISensor {
 
     private enabled: boolean;
     private simulated: boolean;
-    private currentRun: number;
+    private currentRun: any;
 
     constructor(public id: string, private interval: number) {
         super();
         this.enabled = false;
         this.simulated = false;
-        this.currentRun = -1;
+        this.currentRun = null;
     }
 
     name: string = 'GeoLocation';
@@ -24,14 +24,10 @@ export default class GeoLocation extends EventEmitter implements ISensor {
         }
         this.enabled = val;
         if (!this.enabled && this.currentRun) {
-            clearInterval(this.currentRun);
+            this.currentRun.unsubscribe();
         }
         else {
-            //@ts-ignore
-            this.currentRun = setInterval(async function (this: ISensor) {
-                const val = await this.run();
-                this.emit(DATA_AVAILABLE_EVENT, this.id, val);
-            }.bind(this), this.interval);
+            this.run();
         }
     }
     sendInterval(val: number) {
@@ -39,32 +35,50 @@ export default class GeoLocation extends EventEmitter implements ISensor {
             return;
         }
         this.interval = val;
-        // update interval
-        if (this.enabled && this.currentRun) {
+        this.enable(false);
+        this.enable(true);
+    }
+
+    simulate(val: boolean): void {
+        if (this.simulated === val) {
+            return;
+        }
+        this.simulated = val;
+        if (this.simulated && this.enabled && this.currentRun) {
             this.enable(false);
             this.enable(true);
         }
     }
-    simulate(val: boolean): void {
-        this.simulated = val;
-    }
 
     async run() {
 
+        let intId: number;
         if (this.simulated) {
-            return Promise.resolve(Math.random());
+            intId = setInterval(function (this: GeoLocation) {
+                this.emit(DATA_AVAILABLE_EVENT, this.id, { lat: getRandom(), lon: getRandom() });
+            }.bind(this), this.interval);
+
         }
-        return new Promise((resolve, reject) => {
-            Geolocation.getCurrentPosition(({ coords }) => {
-                if (coords) {
-                    resolve({ lat: coords.latitude, lon: coords.longitude });
-                }
-            }, (error) => {
-                if (error) {
-                    reject(error);
-                }
-            });
-        });
+        else {
+            intId = setInterval(function () {
+                Geolocation.getCurrentPosition(({ coords }) => {
+                    if (coords) {
+                        this.emit(DATA_AVAILABLE_EVENT, { lat: coords.latitude, lon: coords.longitude });
+                    }
+                }, (error) => {
+                    if (error) {
+                        // handle error
+                    }
+                });
+            }.bind(this), this.interval);
+        }
+        this.currentRun = {
+            unsubscribe: () => {
+                clearInterval(intId);
+            }
+        }
+
+
     }
 
 }

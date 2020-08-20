@@ -8,13 +8,13 @@ export default class Battery extends EventEmitter implements ISensor {
 
     private enabled: boolean;
     private simulated: boolean;
-    private currentRun: number;
+    private currentRun: any;
 
     constructor(public id: string, private interval: number) {
         super();
         this.enabled = false;
         this.simulated = false;
-        this.currentRun = -1;
+        this.currentRun = null;
     }
 
     name: string = 'Battery Level';
@@ -25,36 +25,53 @@ export default class Battery extends EventEmitter implements ISensor {
         }
         this.enabled = val;
         if (!this.enabled && this.currentRun) {
-            clearInterval(this.currentRun);
+            this.currentRun.unsubscribe();
         }
         else {
-            //@ts-ignore
-            this.currentRun = setInterval(async function (this: ISensor) {
-                const val = Math.floor((await this.run()) * 100);
-                this.emit(DATA_AVAILABLE_EVENT, this.id, val);
-            }.bind(this), this.interval);
+            this.run();
         }
     }
+
     sendInterval(val: number) {
         if (this.interval === val) {
             return;
         }
         this.interval = val;
-        // update interval
         if (this.enabled && this.currentRun) {
             this.enable(false);
             this.enable(true);
         }
     }
+
     simulate(val: boolean): void {
+        if (this.simulated === val) {
+            return;
+        }
         this.simulated = val;
+        if (this.enabled && this.currentRun) {
+            this.enable(false);
+            this.enable(true);
+        }
     }
 
     async run() {
+        let intId: number;
         if (this.simulated) {
-            return Promise.resolve(Math.random());
+            intId = setInterval(function (this: Battery) {
+                this.emit(DATA_AVAILABLE_EVENT, this.id, Math.floor(Math.random() * 100));
+            }.bind(this), this.interval);
+
         }
-        return DeviceInfo.getBatteryLevel();
+        else {
+            intId = setInterval(async function (this: Battery) {
+                this.emit(DATA_AVAILABLE_EVENT, this.id, await DeviceInfo.getBatteryLevel());
+            }.bind(this), this.interval);
+        }
+        this.currentRun = {
+            unsubscribe: () => {
+                clearInterval(intId);
+            }
+        }
     }
 
 }

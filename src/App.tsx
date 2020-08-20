@@ -1,11 +1,10 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Platform } from 'react-native';
 import Settings from './Settings';
 import ThemeProvider, { ThemeContext, ThemeMode } from './contexts/theme';
 import { NavigationContainer, DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Screens, NavigationScreens, NavigationParams } from './types';
-import { useScreenIcon } from './hooks/common';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import LogoIcon from './assets/IotcLogo.svg';
@@ -15,28 +14,32 @@ import Properties from './Properties';
 import Commands from './Commands';
 import { HeaderTitle } from '@react-navigation/stack';
 import { Text } from './components/typography'
-import Registration from './Registration';
 import IoTCProvider, { IoTCContext } from './contexts/iotc';
-import { Loader } from './components/loader';
 import StorageProvider, { StorageContext } from './contexts/storage';
-import { useSimulation } from './hooks/iotc';
 import Insight from './Insight';
+import { defaults } from './contexts/defaults';
+import { Welcome } from './Welcome';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-    return (
-        <ThemeProvider>
-            <SafeAreaProvider>
-                <StorageProvider>
-                    <IoTCProvider>
-                        <Navigation />
-                    </IoTCProvider>
-                </StorageProvider>
-            </SafeAreaProvider>
-        </ThemeProvider>
-    )
+
+    const [initialized, setInitialized] = useState(false);
+    if (initialized) {
+        return (
+            <ThemeProvider>
+                <SafeAreaProvider>
+                    <StorageProvider>
+                        <IoTCProvider>
+                            <Navigation />
+                        </IoTCProvider>
+                    </StorageProvider>
+                </SafeAreaProvider>
+            </ThemeProvider>
+        )
+    }
+    return (<Welcome setInitialized={setInitialized} />)
 }
 
 function Navigation() {
@@ -46,7 +49,7 @@ function Navigation() {
             <Stack.Screen name='root' options={({ navigation }) => ({
                 headerTitle: null, headerLeft: Logo, headerRight: Profile.bind(null, navigation.navigate)
             })} component={Root} />
-            <Stack.Screen name='Insight' component={Insight}/>
+            <Stack.Screen name='Insight' component={Insight} />
             <Stack.Screen name='Settings' options={({ navigation, route }) => ({
                 stackAnimation: 'flip',
                 headerLeft: BackButton.bind(null, navigation.goBack, 'Settings')

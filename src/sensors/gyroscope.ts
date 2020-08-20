@@ -1,6 +1,6 @@
 import DeviceInfo from 'react-native-device-info';
 import { EventEmitter } from 'events';
-import { ISensor, DATA_AVAILABLE_EVENT } from './index';
+import { ISensor, DATA_AVAILABLE_EVENT, getRandom } from './index';
 import { gyroscope, setUpdateIntervalForType, SensorTypes } from "react-native-sensors";
 
 export default class Gyroscope extends EventEmitter implements ISensor {
@@ -28,9 +28,7 @@ export default class Gyroscope extends EventEmitter implements ISensor {
             this.currentRun.unsubscribe();
         }
         else {
-            this.currentRun = gyroscope.subscribe(function ({ x, y, z, timestamp }) {
-                this.emit(DATA_AVAILABLE_EVENT, this.id, { x, y, z });
-            }.bind(this));
+            this.run();
         }
     }
     sendInterval(val: number) {
@@ -38,13 +36,45 @@ export default class Gyroscope extends EventEmitter implements ISensor {
             return;
         }
         this.interval = val;
-        setUpdateIntervalForType(SensorTypes.gyroscope, this.interval);
+        if (!this.simulated) {
+            setUpdateIntervalForType(SensorTypes.gyroscope, this.interval);
+        }
+        if (this.simulated && this.enabled && this.currentRun) {
+            this.enable(false);
+            this.enable(true);
+        }
+
+
     }
     simulate(val: boolean): void {
+        if (this.simulated === val) {
+            return;
+        }
         this.simulated = val;
+        if (this.simulated && this.enabled && this.currentRun) {
+            this.enable(false);
+            this.enable(true);
+        }
     }
 
     async run() {
+        if (this.simulated) {
+            const intId = setInterval(function (this: Gyroscope) {
+                this.emit(DATA_AVAILABLE_EVENT, this.id, { x: getRandom(), y: getRandom(), z: getRandom() });
+            }.bind(this), this.interval);
+            this.currentRun = {
+                unsubscribe: () => {
+                    clearInterval(intId);
+                }
+            }
+        }
+        else {
+            this.currentRun = gyroscope.subscribe(function ({ x, y, z, timestamp }) {
+                this.emit(DATA_AVAILABLE_EVENT, this.id, { x, y, z });
+            }.bind(this));
+        }
     }
+
+
 
 }

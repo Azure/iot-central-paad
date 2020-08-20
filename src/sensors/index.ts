@@ -14,3 +14,7 @@ export interface ISensor extends SensorId, EventEmitter {
     simulate(val: boolean): void,
     run(): Promise<any>
 }
+
+export function getRandom(): number {
+    return Math.round(Math.random() * 20) - 10
+}

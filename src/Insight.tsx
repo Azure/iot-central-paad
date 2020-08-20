@@ -104,7 +104,7 @@ export default function Insight({ route, navigation }) {
                     yAxis={{
                         right: {
                             axisLineColor: processColor(colors.text),
-                            textColor: processColor(colors.text)
+                            textColor: processColor(colors.text)    
                         },
                         left: { enabled: false }
                     }}
