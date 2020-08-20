@@ -6,7 +6,6 @@ import { IoTCContext, CentralClient } from './contexts/iotc';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card } from './components/card';
 import { useSimulation, useIoTCentralClient } from './hooks/iotc';
-import { Overlay, Text } from 'react-native-elements';
 import { Loader } from './components/loader';
 import { useTheme } from '@react-navigation/native';
 import Registration from './Registration';
@@ -14,6 +13,7 @@ import { useScreenDimensions } from './hooks/layout';
 import { IOTC_EVENTS, IIoTCProperty, IoTCClient } from 'react-native-azure-iotcentral-client';
 import { StateUpdater } from './types';
 import { getDeviceInfo } from './properties/deviceInfo';
+import { Headline, Text } from './components/typography';
 
 export const PROPERTY_CHANGED = 'PROPERTY_CHANGED';
 
@@ -91,17 +91,27 @@ export default function Properties() {
         }
     }, [client]);
 
-    if (!simulated) {
-        if (client === null) {
-            return <Registration />
-        }
 
-        if (client === undefined) {
-            return (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-                    <Loader message={'Connecting to IoT Central ...'} />
-                </View>)
-        }
+
+    if (simulated) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginHorizontal: 30 }}>
+                <Headline style={{ textAlign: 'center' }}>Simulation mode is enabled</Headline>
+                <Text style={{ textAlign: 'center' }}> Properties are not available.
+                Disable simulation mode and connect to IoT Central to work with properties.
+                </Text>
+            </View>
+        )
+    }
+    if (client === null) {
+        return <Registration />
+    }
+
+    if (client === undefined) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
+                <Loader message={'Connecting to IoT Central ...'} />
+            </View>)
     }
 
     return (<View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}>

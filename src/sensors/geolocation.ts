@@ -63,7 +63,7 @@ export default class GeoLocation extends EventEmitter implements ISensor {
             intId = setInterval(function () {
                 Geolocation.getCurrentPosition(({ coords }) => {
                     if (coords) {
-                        this.emit(DATA_AVAILABLE_EVENT, { lat: coords.latitude, lon: coords.longitude });
+                        this.emit(DATA_AVAILABLE_EVENT, this.id, { lat: coords.latitude, lon: coords.longitude });
                     }
                 }, (error) => {
                     if (error) {

@@ -44,7 +44,7 @@ export default class Barometer extends EventEmitter implements ISensor {
             this.enable(true);
         }
     }
-    
+
     simulate(val: boolean): void {
         if (this.simulated === val) {
             return;
@@ -69,7 +69,7 @@ export default class Barometer extends EventEmitter implements ISensor {
         }
         else {
             this.currentRun = barometer.subscribe(function ({ pressure }) {
-                this.emit(DATA_AVAILABLE_EVENT, this.id, { pressure });
+                this.emit(DATA_AVAILABLE_EVENT, this.id, pressure);
             }.bind(this));
         }
     }
