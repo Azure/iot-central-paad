@@ -2,11 +2,11 @@ import React, { useContext, useEffect, useState } from 'react';
 import { View, Platform } from 'react-native';
 import Settings from './Settings';
 import ThemeProvider, { ThemeContext, ThemeMode } from './contexts/theme';
-import { NavigationContainer, DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme, DefaultTheme, useTheme, Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Screens, NavigationScreens, NavigationParams } from './types';
+import { Screens, NavigationScreens, NavigationParams, NavigationProperty } from './types';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
+import { createNativeStackNavigator, NativeStackNavigationOptions } from 'react-native-screens/native-stack';
 import LogoIcon from './assets/IotcLogo.svg';
 import Telemetry from './Telemetry';
 import { Icon, colors } from 'react-native-elements';
@@ -19,9 +19,20 @@ import StorageProvider, { StorageContext } from './contexts/storage';
 import Insight from './Insight';
 import { defaults } from './contexts/defaults';
 import { Welcome } from './Welcome';
+import HealthPlatform from './HealthPlatform';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createNativeStackNavigator();
+
+const CustomDarkTheme: Theme = {
+    ...DarkTheme,
+    colors: {
+        ...DarkTheme.colors,
+        background: '#031036',
+        card: '#020b24',
+        border: '#020b24'
+    },
+};
 
 export default function App() {
 
@@ -42,22 +53,29 @@ export default function App() {
     return (<Welcome setInitialized={setInitialized} />)
 }
 
+
+
 function Navigation() {
     const { mode, theme } = useContext(ThemeContext);
     return (<NavigationContainer theme={mode === ThemeMode.DARK ? DarkTheme : DefaultTheme}>
         <Stack.Navigator>
-            <Stack.Screen name='root' options={({ navigation }) => ({
-                headerTitle: null, headerLeft: Logo, headerRight: Profile.bind(null, navigation.navigate)
+            <Stack.Screen name='root' options={({ navigation }: { navigation: NavigationProperty }) => ({
+                headerTitle: undefined, headerLeft: Logo, headerRight: Profile.bind(null, navigation.navigate)
             })} component={Root} />
-            <Stack.Screen name='Insight' component={Insight} options={({ navigation, route }) => {
+            <Stack.Screen name='Insight' component={Insight} options={({ route }) => {
+                let data: NativeStackNavigationOptions = {};
                 if (route.params) {
                     let params = route.params as NavigationParams;
                     if (params.title) {
-                        return { headerTitle: params.title }
+                        data = { ...data, headerTitle: params.title }
+                    }
+                    if (params.backTitle) {
+                        data = { ...data, headerBackTitle: params.backTitle }
                     }
                 }
+                return data;
             }} />
-            <Stack.Screen name='Settings' options={({ navigation, route }) => ({
+            <Stack.Screen name='Settings' options={({ navigation }) => ({
                 stackAnimation: 'flip',
                 headerLeft: BackButton.bind(null, navigation.goBack, 'Settings')
             })} component={Settings} />
@@ -88,6 +106,7 @@ function Root() {
         }
     })} lazy={false}>
         <Tab.Screen name={Screens.TELEMETRY_SCREEN} component={Telemetry} />
+        <Tab.Screen name={Screens.HEALTH_SCREEN} component={HealthPlatform} />
         <Tab.Screen name={Screens.PROPERTIES_SCREEN} component={Properties} />
         <Tab.Screen name={Screens.COMMANDS_SCREEN} component={Commands} />
     </Tab.Navigator>))
@@ -103,7 +122,7 @@ function Logo() {
 
 function Profile(navigate: any) {
     const { dark, colors } = useTheme();
-    return (<Icon name={Platform.select({ ios: 'settings-outline', android: 'settings' })} type={Platform.select({ ios: 'ionicon', android: 'material' })} color={colors.text} onPress={() => {
+    return (<Icon name={Platform.select({ ios: 'settings-outline', android: 'settings' }) as string} type={Platform.select({ ios: 'ionicon', android: 'material' })} color={colors.text} onPress={() => {
         navigate('Settings');
     }} />);
 }

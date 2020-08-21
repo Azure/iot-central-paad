@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Platform, FlatList } from 'react-native';
-import { useScreenIcon } from './hooks/common';
+import { IIcon, useScreenIcon } from './hooks/common';
 import { IoTCContext } from './contexts/iotc';
 import Registration from './Registration';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,19 +31,18 @@ export default function Telemetry() {
             name: 'chart-bar',
             type: 'material-community'
         }
-    }));
+    }) as IIcon);
 
     // const { client, simulated: centralSimulated } = useContext(IoTCContext);
     const [simulated] = useSimulation();
     const [client] = useIoTCentralClient();
     const insets = useSafeAreaInsets();
     const { screen } = useScreenDimensions();
-    const { colors } = useTheme();
     const { telemetryData, getTelemetryName, set, addListener } = useTelemetry();
     const navigation = useNavigation();
 
     const sendTelemetryData = async function (id: string, value: any) {
-        if (client.isConnected()) {
+        if (client && client.isConnected()) {
             await client.sendTelemetry({ [id]: value });
         }
     }
@@ -80,7 +79,8 @@ export default function Telemetry() {
                 onLongPress={e => console.log('longpress')} // edit card
                 onPress={e => navigation.navigate('Insight', {
                     telemetryId: item.item.id,
-                    title: camelToName(item.item.id)
+                    title: camelToName(item.item.id),
+                    backTitle: 'Telemetry'
                 })}
 
             />

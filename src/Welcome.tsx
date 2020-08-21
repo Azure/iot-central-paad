@@ -50,7 +50,7 @@ export function Welcome(props: { setInitialized: StateUpdater<boolean> }) {
     }, [animationEnded]);
 
     return (
-        <LinearGradient colors={['#3C3C41', '#136BFB']} style={style.container}>
+        <LinearGradient colors={['#041b5c', '#136BFB']} style={style.container}>
             <View style={{ flexDirection: 'row' }}>
                 <Animatable.View animation="slideOutLogo" delay={1000} onAnimationBegin={() => setAnimationStarted(true)} style={style.logo}>
                     <Logo width={100} height={100} fill={"#A13"} />

@@ -1,7 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef } from "react";
 
-type IIcon = {
+export type IIcon = {
     name: string,
     type: string
 }

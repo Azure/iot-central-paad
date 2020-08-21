@@ -18,6 +18,7 @@
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		2DCD954D1E0B4F2C00145EB5 /* iotc_pad_clientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* iotc_pad_clientTests.m */; };
 		4A5A4A3724ED7C3F00BA047B /* Charts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5A4A3624ED7C3F00BA047B /* Charts.swift */; };
+		4A5A4A3A24EFB75400BA047B /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A5A4A3924EFB75400BA047B /* HealthKit.framework */; };
 		802714A29D9E72F5D6E7B32B /* libPods-iotc_pad_client.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E818A578F9707EF32E951CD9 /* libPods-iotc_pad_client.a */; };
 		EE5836D55FDB441F0E43B00C /* libPods-iotc_pad_client-iotc_pad_clientTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6359BF3742A767F34047A49 /* libPods-iotc_pad_client-iotc_pad_clientTests.a */; };
 /* End PBXBuildFile section */
@@ -72,6 +73,8 @@
 		4A00AD0224D4758500D7246B /* MaterialIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MaterialIcons.ttf; sourceTree = "<group>"; };
 		4A5A4A3524ED7C3E00BA047B /* iotc_pad_client-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iotc_pad_client-Bridging-Header.h"; sourceTree = "<group>"; };
 		4A5A4A3624ED7C3F00BA047B /* Charts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Charts.swift; sourceTree = "<group>"; };
+		4A5A4A3824EFB75300BA047B /* iotc_pad_client.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = iotc_pad_client.entitlements; path = iotc_pad_client/iotc_pad_client.entitlements; sourceTree = "<group>"; };
+		4A5A4A3924EFB75400BA047B /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		59B61E7C671997EB8073C62D /* libPods-iotc_pad_client-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iotc_pad_client-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		70121AAECEF4C36ADCFE9775 /* libPods-iotc_pad_client-tvOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-iotc_pad_client-tvOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		765D6CC23FA5AD61FF50BA9F /* Pods-iotc_pad_client-tvOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iotc_pad_client-tvOSTests.debug.xcconfig"; path = "Target Support Files/Pods-iotc_pad_client-tvOSTests/Pods-iotc_pad_client-tvOSTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -101,6 +104,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				802714A29D9E72F5D6E7B32B /* libPods-iotc_pad_client.a in Frameworks */,
+				4A5A4A3A24EFB75400BA047B /* HealthKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,6 +147,7 @@
 		13B07FAE1A68108700A75B9A /* iotc_pad_client */ = {
 			isa = PBXGroup;
 			children = (
+				4A5A4A3824EFB75300BA047B /* iotc_pad_client.entitlements */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.m */,
@@ -157,6 +162,7 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4A5A4A3924EFB75400BA047B /* HealthKit.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				ED2971642150620600B7C4FE /* JavaScriptCore.framework */,
 				E818A578F9707EF32E951CD9 /* libPods-iotc_pad_client.a */,
@@ -789,6 +795,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = iotc_pad_client/iotc_pad_client.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 32R2QHB9WJ;
 				ENABLE_BITCODE = NO;
@@ -814,6 +821,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = iotc_pad_client/iotc_pad_client.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 32R2QHB9WJ;
 				INFOPLIST_FILE = iotc_pad_client/Info.plist;

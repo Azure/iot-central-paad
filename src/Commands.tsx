@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Platform } from 'react-native';
-import { useScreenIcon } from './hooks/common';
+import { IIcon, useScreenIcon } from './hooks/common';
 import { useSimulation, useIoTCentralClient, useTelemetry } from './hooks/iotc';
 import Registration from './Registration';
 import { Text, Headline } from './components/typography';
@@ -54,7 +54,7 @@ export default function Commands() {
             name: 'console',
             type: 'material-community'
         }
-    }));
+    }) as IIcon);
 
     const [simulated] = useSimulation();
     const [client] = useIoTCentralClient();

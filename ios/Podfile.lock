@@ -77,6 +77,8 @@ PODS:
   - OpenSSL-Universal/Static (1.0.2.19)
   - Permission-Camera (2.1.5):
     - RNPermissions
+  - RCTAppleHealthKit (0.8.0):
+    - React
   - RCTRequired (0.63.1)
   - RCTTypeSafety (0.63.1):
     - FBLazyVector (= 0.63.1)
@@ -373,6 +375,7 @@ DEPENDENCIES:
   - Folly (from `../node_modules/react-native/third-party-podspecs/Folly.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - Permission-Camera (from `../node_modules/react-native-permissions/ios/Camera.podspec`)
+  - RCTAppleHealthKit (from `../node_modules/rn-apple-healthkit`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
   - React (from `../node_modules/react-native/`)
@@ -444,6 +447,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
   Permission-Camera:
     :path: "../node_modules/react-native-permissions/ios/Camera.podspec"
+  RCTAppleHealthKit:
+    :path: "../node_modules/rn-apple-healthkit"
   RCTRequired:
     :path: "../node_modules/react-native/Libraries/RCTRequired"
   RCTTypeSafety:
@@ -537,6 +542,7 @@ SPEC CHECKSUMS:
   glog: 40a13f7840415b9a77023fbcae0f1e6f43192af3
   OpenSSL-Universal: 8b48cc0d10c1b2923617dfe5c178aa9ed2689355
   Permission-Camera: 53d46bd722aea28d796e20f05fb3cbe6cde6ccb6
+  RCTAppleHealthKit: bbb19a33c922d0c36631cd571680eed68e78c63a
   RCTRequired: d9b1a9e6fa097744ca3ede59f86a35096df7202b
   RCTTypeSafety: c227cd061983e9e964115afbc4e8730d6a6f1395
   React: 86e972a20967ee4137aa19dc48319405927c2e94

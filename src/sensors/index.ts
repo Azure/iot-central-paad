@@ -9,8 +9,8 @@ interface SensorId {
 export const DATA_AVAILABLE_EVENT = 'DATA_AVAILABLE_EVENT';
 
 export interface ISensor extends SensorId, EventEmitter {
-    enable(val: boolean): void,
-    sendInterval(val: number),
+    enable(val: boolean): void | Promise<void>,
+    sendInterval(val: number): void,
     simulate(val: boolean): void,
     run(): Promise<any>
 }

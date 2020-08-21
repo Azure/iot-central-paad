@@ -1,0 +1,98 @@
+import HealthKit from 'rn-apple-healthkit';
+import { EventEmitter } from 'events';
+import { ISensor, DATA_AVAILABLE_EVENT, getRandom } from '../index';
+import { OPTIONS, requestPermissions } from './index';
+import { barometer, setUpdateIntervalForType, SensorTypes } from "react-native-sensors";
+import { NativeAppEventEmitter } from 'react-native';
+import { HealthValue } from 'rn-apple-healthkit';
+
+export default class HealthKitSteps extends EventEmitter implements ISensor {
+
+    private enabled: boolean;
+    private simulated: boolean;
+    private currentRun: any;
+    private initialized: boolean;
+    private simulatedStepCount: number;
+
+    constructor(public id: string, private interval: number) {
+        super();
+        this.enabled = false;
+        this.simulated = false;
+        this.currentRun = null;
+        this.initialized = false;
+        this.simulatedStepCount = 0;
+    }
+
+    name: string = 'Steps';
+
+    async enable(val: boolean): Promise<void> {
+        if (!this.initialized) {
+            await requestPermissions();
+        }
+        if (this.enabled === val) {
+            return;
+        }
+        this.enabled = val;
+        if (!this.enabled && this.currentRun) {
+            this.currentRun.unsubscribe();
+        }
+        else {
+            this.run();
+        }
+    }
+    sendInterval(val: number) {
+        if (this.interval === val) {
+            return;
+        }
+        this.interval = val;
+        if (!this.simulated) {
+            setUpdateIntervalForType(SensorTypes.barometer, this.interval);
+        }
+        if (this.simulated && this.enabled && this.currentRun) {
+            this.enable(false);
+            this.enable(true);
+        }
+    }
+
+    simulate(val: boolean): void {
+        if (this.simulated === val) {
+            return;
+        }
+        this.simulated = val;
+        if (this.simulated && this.enabled && this.currentRun) {
+            this.enable(false);
+            this.enable(true);
+        }
+    }
+
+    async run() {
+        if (this.simulated) {
+            const intId = setInterval(function (this: HealthKitSteps) {
+                this.emit(DATA_AVAILABLE_EVENT, this.id, this.simulatedStepCount += 5);
+            }.bind(this), this.interval);
+            this.currentRun = {
+                unsubscribe: () => {
+                    clearInterval(intId);
+                }
+            }
+        }
+        else {
+            this.currentRun = NativeAppEventEmitter.addListener('change:steps', (data) => {
+                HealthKit.getStepCount({}, function (this: HealthKitSteps, err: string, result: HealthValue) {
+                    if (err) {
+                        console.log(`Error from Apple HealthKit:\n${(err as any).message}`);
+                        return;
+                    }
+                    this.emit(DATA_AVAILABLE_EVENT, this.id, result.value);
+                }.bind(this));
+            });
+            let currentValue = 0;
+            try {
+                currentValue = await new Promise((res, rej) => HealthKit.getStepCount({}, (err, result) => { err ? rej(err) : res(result.value); }))
+            }
+            catch (e) { }// do nothing
+            this.emit(DATA_AVAILABLE_EVENT, this.id, currentValue);
+        }
+    }
+
+}

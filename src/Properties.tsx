@@ -1,7 +1,7 @@
 
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Platform, FlatList } from 'react-native';
-import { useScreenIcon } from './hooks/common';
+import { IIcon, useScreenIcon } from './hooks/common';
 import { IoTCContext, CentralClient } from './contexts/iotc';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card } from './components/card';
@@ -11,7 +11,7 @@ import { useTheme } from '@react-navigation/native';
 import Registration from './Registration';
 import { useScreenDimensions } from './hooks/layout';
 import { IOTC_EVENTS, IIoTCProperty, IoTCClient } from 'react-native-azure-iotcentral-client';
-import { StateUpdater } from './types';
+import { StateUpdater, valueof } from './types';
 import { getDeviceInfo } from './properties/deviceInfo';
 import { Headline, Text } from './components/typography';
 
@@ -29,7 +29,7 @@ const AVAILABLE_PROPERTIES = {
     READONLY_PROP: 'readOnlyProp'
 }
 
-const propsMap: { [id in keyof typeof AVAILABLE_PROPERTIES]?: PropertiesProps } = {
+const propsMap: { [id in valueof<typeof AVAILABLE_PROPERTIES>]: PropertiesProps } = {
     [AVAILABLE_PROPERTIES.WRITEABLE_PROP]: {
         id: AVAILABLE_PROPERTIES.WRITEABLE_PROP,
         name: 'WriteableProp',
@@ -54,12 +54,14 @@ async function onPropUpdate(update: StateUpdater<PropertiesProps[]>, prop: IIoTC
 }
 
 async function initProps(client: CentralClient, properties: PropertiesProps[]) {
-    await client.sendProperty(await getDeviceInfo());
-    properties.forEach(async prop => {
-        if (prop.value) {
-            await client.sendProperty({ [prop.id]: prop.value });
-        }
-    })
+    if (client && client.isConnected()) {
+        await client.sendProperty(await getDeviceInfo());
+        properties.forEach(async prop => {
+            if (prop.value) {
+                await client.sendProperty({ [prop.id]: prop.value });
+            }
+        });
+    }
 }
 
 export default function Properties() {
@@ -72,7 +74,7 @@ export default function Properties() {
             name: 'playlist-edit',
             type: 'material-community'
         }
-    }));
+    }) as IIcon);
 
     // const [simulated] = useSimulation();
     const [client] = useIoTCentralClient();

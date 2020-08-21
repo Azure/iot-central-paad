@@ -10,6 +10,7 @@ import Barometer from "../sensors/barometer";
 import Magnetometer from "../sensors/magnetometer";
 import GeoLocation from "../sensors/geolocation";
 import { defaults } from './defaults';
+import { valueof } from "../types";
 
 
 export type SensorProps = {
@@ -32,7 +33,7 @@ const AVAILABLE_SENSORS = {
 }
 
 
-const sensorMap: { [id in keyof typeof AVAILABLE_SENSORS]?: ISensor } = {
+const sensorMap: { [id in valueof<typeof AVAILABLE_SENSORS>]: ISensor } = {
     [AVAILABLE_SENSORS.BATTERY]: new Battery(AVAILABLE_SENSORS.BATTERY, 5000),
     [AVAILABLE_SENSORS.GYROSCOPE]: new Gyroscope(AVAILABLE_SENSORS.GYROSCOPE, 5000),
     [AVAILABLE_SENSORS.ACCELEROMETER]: new Accelerometer(AVAILABLE_SENSORS.ACCELEROMETER, 5000),
@@ -46,7 +47,7 @@ type ICentralState = { telemetryData: SensorProps[], client: CentralClient };
 
 
 export type IIoTCContext = ICentralState & {
-    connect: (credentials: IoTCCredentials) => Promise<void>,
+    connect: (credentials?: IoTCCredentials) => Promise<void>,
     disconnect: () => Promise<void>,
     updateTelemetry: (fn: (currentData: SensorProps[]) => SensorProps[]) => void,
     getTelemetryName: (id: string) => string,
@@ -57,13 +58,13 @@ export type IIoTCContext = ICentralState & {
 
 
 const initialState: ICentralState = {
-    telemetryData: null,
+    telemetryData: [],
     client: undefined
 }
 
 export const IoTCContext = React.createContext<IIoTCContext>({
     ...initialState,
-    connect: (credentials: IoTCCredentials) => Promise.resolve(),
+    connect: (credentials?: IoTCCredentials) => Promise.resolve(),
     disconnect: () => Promise.resolve(),
     updateTelemetry: () => { },
     getTelemetryName: (id: string) => '',
@@ -152,7 +153,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 name: Platform.select({
                     android: 'battery-medium',
                     ios: 'battery-half-sharp'
-                }),
+                }) as string,
                 type: Platform.select({
                     android: 'material-community',
                     ios: 'ionicon'
@@ -177,9 +178,10 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     useEffect(() => {
         // update sensors
         state.telemetryData.forEach(telem => {
-            (sensorMap[telem.id] as ISensor).simulate(telem.simulated);
-            (sensorMap[telem.id] as ISensor).enable(telem.enabled);
-            (sensorMap[telem.id] as ISensor).sendInterval(telem.interval);
+            const id = telem.id as keyof typeof AVAILABLE_SENSORS;
+            (sensorMap[id] as ISensor).simulate(telem.simulated);
+            (sensorMap[id] as ISensor).enable(telem.enabled);
+            (sensorMap[id] as ISensor).sendInterval(telem.interval);
         });
     }, [state.telemetryData]);
 
@@ -205,7 +207,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             removeListener: (eventname: string, listener: (...args: any[]) => void) => {
                 Object.values(sensorMap).forEach(s => s.removeListener(eventname, listener));
             },
-            connect: async (credentials: IoTCCredentials) => {
+            connect: async (credentials?: IoTCCredentials) => {
 
                 // disconnect previous client if any
                 if (state.client) {
@@ -223,8 +225,10 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 setState(current => ({ ...current, client }));
             },
             disconnect: async () => {
-                await state.client.disconnect();
-                setState(current => ({ ...current, client: undefined }))
+                if (state.client && state.client.isConnected()) {
+                    await state.client.disconnect();
+                    setState(current => ({ ...current, client: undefined }));
+                }
             }
         }}>
             {children}

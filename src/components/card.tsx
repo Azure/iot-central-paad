@@ -58,7 +58,7 @@ export function Card(props: CardProps & TouchableOpacityProperties & { onToggle:
     </TouchableOpacity>)
 }
 
-function getValue(value: any, enabled: boolean, editable: boolean, onEdit: EditCallback | undefined, textColor: string) {
+function getValue(value: any, enabled: boolean, editable: boolean | undefined, onEdit: EditCallback | undefined, textColor: string) {
     const [edited, setEdited] = useState(value);
 
     useEffect(() => {

@@ -52,7 +52,7 @@ export default class GeoLocation extends EventEmitter implements ISensor {
 
     async run() {
 
-        let intId: number;
+        let intId: ReturnType<typeof setInterval>;
         if (this.simulated) {
             intId = setInterval(function (this: GeoLocation) {
                 this.emit(DATA_AVAILABLE_EVENT, this.id, { lat: getRandom(), lon: getRandom() });
@@ -60,7 +60,7 @@ export default class GeoLocation extends EventEmitter implements ISensor {
 
         }
         else {
-            intId = setInterval(function () {
+            intId = setInterval(function (this: GeoLocation) {
                 Geolocation.getCurrentPosition(({ coords }) => {
                     if (coords) {
                         this.emit(DATA_AVAILABLE_EVENT, this.id, { lat: coords.latitude, lon: coords.longitude });

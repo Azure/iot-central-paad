@@ -1,10 +1,12 @@
+import { StackNavigationProp } from "@react-navigation/stack";
 import { LineData, LineValue, LineDatasetConfig } from "react-native-charts-wrapper";
 
 export const Screens = {
     'HOME_SCREEN': 'Home',
     'TELEMETRY_SCREEN': 'Telemetry',
     'PROPERTIES_SCREEN': 'Properties',
-    'COMMANDS_SCREEN': 'Commands'
+    'COMMANDS_SCREEN': 'Commands',
+    'HEALTH_SCREEN': 'Health'
 }
 
 /**
@@ -12,6 +14,7 @@ export const Screens = {
  */
 export type NavigationParams = {
     title?: string,
+    backTitle?: string,
     titleColor?: string,
     headerLeft?: any,
     icon?: {
@@ -21,13 +24,15 @@ export type NavigationParams = {
 }
 
 // Type for getting the values of an object (lookup)
-type valueof<T> = T[keyof T];
+export type valueof<T> = T[keyof T];
 /**
  * Defines type of screens
  */
 export type NavigationScreens = {
     [k in valueof<typeof Screens>]: NavigationParams | undefined
 }
+
+export type NavigationProperty = StackNavigationProp<NavigationScreens, string>;
 
 export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
 
@@ -52,3 +57,23 @@ export type ItemData = {
 }
 
 export type ChartUpdateCallback = (itemdata: ItemData) => void;
+
+/**
+ * Health typings
+ */
+
+export const HealthRealTimeData = {
+    Walking: 'Walking',
+    StairClimbing: 'StairClimbing',
+    Running: 'Running',
+    Cycling: 'Cycling',
+    Workout: 'Workout'
+} as const;
+
+export type GoogleFitStepResult = {
+    source: string,
+    steps: {
+        date: string,
+        value: number
+    }[]
+}

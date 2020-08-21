@@ -27,7 +27,7 @@ type ProfileItem = {
 }
 
 
-export default function Settings({ navigation: parent, route: parentRoute }) {
+export default function Settings() {
     const { mode, toggle } = useContext(ThemeContext);
     const [centralSimulated, simulate] = useSimulation();
     const { colors, dark } = useTheme();
@@ -148,7 +148,7 @@ export default function Settings({ navigation: parent, route: parentRoute }) {
 //     return route.name;
 // }
 
-function getHeaderTitle(route) {
+function getHeaderTitle(route: any) {
     // If the focused route is not found, we need to assume it's the initial screen
     // This can happen during if there hasn't been any navigation inside the screen
     // In our case, it's "Feed" as that's the first screen inside the navigator

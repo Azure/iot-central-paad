@@ -15,6 +15,7 @@ export default class Battery extends EventEmitter implements ISensor {
         this.enabled = false;
         this.simulated = false;
         this.currentRun = null;
+
     }
 
     name: string = 'Battery Level';
@@ -55,7 +56,7 @@ export default class Battery extends EventEmitter implements ISensor {
     }
 
     async run() {
-        let intId: number;
+        let intId: ReturnType<typeof setInterval>;
         if (this.simulated) {
             intId = setInterval(function (this: Battery) {
                 this.emit(DATA_AVAILABLE_EVENT, this.id, Math.floor(Math.random() * 100));

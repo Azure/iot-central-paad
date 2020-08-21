@@ -37,6 +37,10 @@
 				</dict>
 			</dict>
 		</dict>
+		<key>NSHealthShareUsageDescription</key>
+		<string>Read and understand health data.</string>
+		<key>NSHealthUpdateUsageDescription</key>
+		<string>Share workout data with IoT Central PaaD.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>IoT Central PaD needs access your location</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

@@ -2,10 +2,11 @@ import React, { useContext, useEffect, useState } from 'react';
 import { View, StyleSheet, processColor } from 'react-native';
 import { LineChart } from 'react-native-charts-wrapper';
 import { getRandomColor, Text, getNegativeColor, LightenDarkenColor } from './components/typography';
-import { ExtendedLineData, ItemData, CustomLineDatasetConfig } from './types';
+import { ExtendedLineData, ItemData, CustomLineDatasetConfig, NavigationParams } from './types';
 import { useTelemetry } from './hooks/iotc';
 import { DATA_AVAILABLE_EVENT } from './sensors';
-import { useTheme } from '@react-navigation/native';
+import { useTheme, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { useScreenDimensions } from './hooks/layout';
 
@@ -19,7 +20,7 @@ const footer = 'This view is showing real-time data from the paired device or Go
 
 
 
-export default function Insight({ route, navigation }) {
+export default function Insight({ route }: { route: RouteProp<Record<string, NavigationParams & { telemetryId: string }>, "Insight"> }) {
     const { telemetryData, addListener, removeListener } = useTelemetry();
     const { screen } = useScreenDimensions();
     const { colors } = useTheme();
@@ -122,7 +123,10 @@ export default function Insight({ route, navigation }) {
                 <View style={style.summary}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 40 }}>
                         {data.dataSets.map((d, i) => {
-                            const val = d.values[d.values.length - 1]['y'];
+                            if (!d.values) {
+                                return (null);
+                            }
+                            const val = (d.values[d.values.length - 1] as { x: any, y: any })['y'];
                             let fill = (val > 1 || val < -1) ? val : Math.abs(val * 1000);
                             return (<AnimatedCircularProgress key={`circle-${i}`}
                                 size={screen.width / 5}
