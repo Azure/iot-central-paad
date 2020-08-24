@@ -68,7 +68,7 @@ export default class Barometer extends EventEmitter implements ISensor {
             }
         }
         else {
-            this.currentRun = barometer.subscribe(function ({ pressure }) {
+            this.currentRun = barometer.subscribe(function (this: Barometer, { pressure }: { pressure: number }) {
                 this.emit(DATA_AVAILABLE_EVENT, this.id, pressure);
             }.bind(this));
         }

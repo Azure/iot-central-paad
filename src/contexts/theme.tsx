@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Appearance } from 'react-native';
+import { valueof } from '../types';
 
 export enum ThemeMode {
     LIGHT = 0,
@@ -17,7 +18,7 @@ export interface ITheme {
     backgroundColor: string
 }
 
-const theme: { [x in ThemeMode]: ITheme } = {
+const theme: { [x in valueof<typeof ThemeMode>]: ITheme } = {
     // light
     0: {
         backgroundColor: '#FFFFFF'
@@ -45,7 +46,7 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         <Provider value={{
             ...state,
             toggle: () => {
-                setState(current => ({ ...current, mode: +!current.mode, theme: theme[+!current.mode] }));
+                setState(current => ({ ...current, mode: +!current.mode, theme: theme[+!current.mode as valueof<typeof ThemeMode>] }));
             }
         }}>
             {children}

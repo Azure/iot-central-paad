@@ -45,14 +45,14 @@
 		00E356EE1AD99517003FC87E /* iotc_pad_clientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iotc_pad_clientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* iotc_pad_clientTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = iotc_pad_clientTests.m; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* iotc_pad_client.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iotc_pad_client.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07F961A680F5B00A75B9A /* IoT Central PaaD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "IoT Central PaaD.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = iotc_pad_client/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = iotc_pad_client/AppDelegate.m; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = iotc_pad_client/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = iotc_pad_client/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = iotc_pad_client/main.m; sourceTree = "<group>"; };
 		2A48CF65F3346967B385CB5E /* Pods-iotc_pad_client-tvOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iotc_pad_client-tvOS.debug.xcconfig"; path = "Target Support Files/Pods-iotc_pad_client-tvOS/Pods-iotc_pad_client-tvOS.debug.xcconfig"; sourceTree = "<group>"; };
-		2D02E47B1E0B4A5D006451C7 /* iotc_pad_client-tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "iotc_pad_client-tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D02E47B1E0B4A5D006451C7 /* IoT Central PaaD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "IoT Central PaaD.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D02E4901E0B4A5D006451C7 /* iotc_pad_client-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "iotc_pad_client-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		38E6E52D390F2EA71C40E32B /* Pods-iotc_pad_client-iotc_pad_clientTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iotc_pad_client-iotc_pad_clientTests.debug.xcconfig"; path = "Target Support Files/Pods-iotc_pad_client-iotc_pad_clientTests/Pods-iotc_pad_client-iotc_pad_clientTests.debug.xcconfig"; sourceTree = "<group>"; };
 		4A00ACF324D4758500D7246B /* Fontisto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fontisto.ttf; sourceTree = "<group>"; };
@@ -224,9 +224,9 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* iotc_pad_client.app */,
+				13B07F961A680F5B00A75B9A /* IoT Central PaaD.app */,
 				00E356EE1AD99517003FC87E /* iotc_pad_clientTests.xctest */,
-				2D02E47B1E0B4A5D006451C7 /* iotc_pad_client-tvOS.app */,
+				2D02E47B1E0B4A5D006451C7 /* IoT Central PaaD.app */,
 				2D02E4901E0B4A5D006451C7 /* iotc_pad_client-tvOSTests.xctest */,
 			);
 			name = Products;
@@ -288,7 +288,7 @@
 			);
 			name = iotc_pad_client;
 			productName = iotc_pad_client;
-			productReference = 13B07F961A680F5B00A75B9A /* iotc_pad_client.app */;
+			productReference = 13B07F961A680F5B00A75B9A /* IoT Central PaaD.app */;
 			productType = "com.apple.product-type.application";
 		};
 		2D02E47A1E0B4A5D006451C7 /* iotc_pad_client-tvOS */ = {
@@ -309,7 +309,7 @@
 			);
 			name = "iotc_pad_client-tvOS";
 			productName = "iotc_pad_client-tvOS";
-			productReference = 2D02E47B1E0B4A5D006451C7 /* iotc_pad_client-tvOS.app */;
+			productReference = 2D02E47B1E0B4A5D006451C7 /* IoT Central PaaD.app */;
 			productType = "com.apple.product-type.application";
 		};
 		2D02E48F1E0B4A5D006451C7 /* iotc_pad_client-tvOSTests */ = {
@@ -807,7 +807,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = iotc_pad_client;
+				PRODUCT_NAME = "IoT Central PaaD";
 				SWIFT_OBJC_BRIDGING_HEADER = "iotc_pad_client-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -831,8 +831,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = iotc_pad_client;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.iotcpaad-df";
+				PRODUCT_NAME = "IoT Central PaaD";
 				SWIFT_OBJC_BRIDGING_HEADER = "iotc_pad_client-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -861,7 +861,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.iotc_pad_client-tvOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "IoT Central PaaD";
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 10.0;
@@ -890,7 +890,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.iotc_pad_client-tvOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "IoT Central PaaD";
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 10.0;

@@ -6,13 +6,12 @@ import { NavigationContainer, DarkTheme, DefaultTheme, useTheme, Theme } from '@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Screens, NavigationScreens, NavigationParams, NavigationProperty } from './types';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { createNativeStackNavigator, NativeStackNavigationOptions } from 'react-native-screens/native-stack';
 import LogoIcon from './assets/IotcLogo.svg';
 import Telemetry from './Telemetry';
 import { Icon, colors } from 'react-native-elements';
 import Properties from './Properties';
 import Commands from './Commands';
-import { HeaderTitle } from '@react-navigation/stack';
+import { createStackNavigator, HeaderTitle } from '@react-navigation/stack';
 import { Text } from './components/typography'
 import IoTCProvider, { IoTCContext } from './contexts/iotc';
 import StorageProvider, { StorageContext } from './contexts/storage';
@@ -22,7 +21,7 @@ import { Welcome } from './Welcome';
 import HealthPlatform from './HealthPlatform';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 const CustomDarkTheme: Theme = {
     ...DarkTheme,
@@ -59,11 +58,12 @@ function Navigation() {
     const { mode, theme } = useContext(ThemeContext);
     return (<NavigationContainer theme={mode === ThemeMode.DARK ? DarkTheme : DefaultTheme}>
         <Stack.Navigator>
+            {/* @ts-ignore */}
             <Stack.Screen name='root' options={({ navigation }: { navigation: NavigationProperty }) => ({
-                headerTitle: undefined, headerLeft: Logo, headerRight: Profile.bind(null, navigation.navigate)
+                headerTitle: null, headerLeft: () => (<Logo />), headerRight: () => (<Profile navigate={navigation.navigate} />)
             })} component={Root} />
             <Stack.Screen name='Insight' component={Insight} options={({ route }) => {
-                let data: NativeStackNavigationOptions = {};
+                let data = {};
                 if (route.params) {
                     let params = route.params as NavigationParams;
                     if (params.title) {
@@ -77,10 +77,10 @@ function Navigation() {
             }} />
             <Stack.Screen name='Settings' options={({ navigation }) => ({
                 stackAnimation: 'flip',
-                headerLeft: BackButton.bind(null, navigation.goBack, 'Settings')
+                headerLeft: () => (<BackButton goBack={navigation.goBack} title='Settings' />)
             })} component={Settings} />
         </Stack.Navigator>
-    </NavigationContainer>
+    </NavigationContainer >
     )
 }
 
@@ -103,8 +103,10 @@ function Root() {
             }
             const icon = (route.params as NavigationParams).icon;
             return <Icon name={icon ? icon.name : 'home'} type={icon ? icon.type : 'ionicon'} size={size} color={color} />
-        }
-    })} lazy={false}>
+        },
+    })} lazy={false} tabBarOptions={Platform.select({
+        android: { safeAreaInsets: { bottom: 0 } }
+    })}>
         <Tab.Screen name={Screens.TELEMETRY_SCREEN} component={Telemetry} />
         <Tab.Screen name={Screens.HEALTH_SCREEN} component={HealthPlatform} />
         <Tab.Screen name={Screens.PROPERTIES_SCREEN} component={Properties} />
@@ -114,21 +116,22 @@ function Root() {
 
 function Logo() {
     const { dark, colors } = useTheme();
-    return (<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }}>
+    return (<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginHorizontal: 20 }}>
         <LogoIcon width={30} fill={colors.primary} />
         <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 16, letterSpacing: 0.1 }}>Azure IoT Central</Text>
     </View>);
 }
 
-function Profile(navigate: any) {
+function Profile(props: { navigate: any }) {
     const { dark, colors } = useTheme();
-    return (<Icon name={Platform.select({ ios: 'settings-outline', android: 'settings' }) as string} type={Platform.select({ ios: 'ionicon', android: 'material' })} color={colors.text} onPress={() => {
-        navigate('Settings');
+    return (<Icon style={{ marginEnd: 20 }} name={Platform.select({ ios: 'settings-outline', android: 'settings' }) as string} type={Platform.select({ ios: 'ionicon', android: 'material' })} color={colors.text} onPress={() => {
+        props.navigate('Settings');
     }} />);
 }
 
-function BackButton(goBack: any, title: string) {
+function BackButton(props: { goBack: any, title: string }) {
     const { colors, dark } = useTheme();
+    const { goBack, title } = props;
     return (<>
         <Icon name='close' color={colors.text} onPress={goBack} />
         {Platform.OS === 'android' && <HeaderTitle style={{ marginLeft: 20 }}>{title}</HeaderTitle>}

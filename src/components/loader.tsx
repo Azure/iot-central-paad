@@ -7,7 +7,7 @@ export function Loader(props: { message: string }) {
     const { message } = props;
     return (
         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator animating={true} size={30} />
+            <ActivityIndicator animating={true} size={40} color={colors.text} />
             <Text>{message}</Text>
         </View>)
 }

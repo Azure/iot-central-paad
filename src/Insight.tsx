@@ -9,6 +9,7 @@ import { useTheme, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { useScreenDimensions } from './hooks/layout';
+import { Loader } from './components/loader';
 
 
 
@@ -82,6 +83,12 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
 
         return () => removeListener(DATA_AVAILABLE_EVENT, updateData);
     }, []);
+
+    if (data.dataSets.length === 0) {
+        return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Loader message='' />
+        </View>
+    }
 
     return (
         <View style={style.container}>

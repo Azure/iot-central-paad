@@ -60,3 +60,4 @@ buck-out/
 
 # vscode
 .vscode
+icons.json

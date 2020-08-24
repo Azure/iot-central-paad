@@ -24,10 +24,12 @@ export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
     }
 
     useEffect(() => {
-        setSimulated(simulated);
+        if (simulated !== undefined) {
+            setSimulated(simulated);
+        }
     }, [simulated])
 
-    return [simulated, setSimulated];
+    return [simulated || false, setSimulated];
 }
 
 export function useTelemetry(): { telemetryData: SensorProps[], getTelemetryName: (id: string) => string, set: (id: string, data: Partial<SensorProps>) => void, addListener: (...args: any[]) => void, removeListener: (...args: any[]) => void } {

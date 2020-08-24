@@ -6,6 +6,8 @@ interface SensorId {
     name: string
 }
 
+export type Vector = { x: number, y: number, z: number }
+
 export const DATA_AVAILABLE_EVENT = 'DATA_AVAILABLE_EVENT';
 
 export interface ISensor extends SensorId, EventEmitter {

@@ -27,8 +27,8 @@ export default function Registration() {
 function QRCode() {
     const { screen, orientation } = useScreenDimensions();
     const [prompt, showPrompt] = useState(false);
-    const [encKey, setEncKey] = useState(null);
-    const [qrdata, setQrdata] = useState(null);
+    const [encKey, setEncKey] = useState<string | undefined>(undefined);
+    const [qrdata, setQrdata] = useState<string | undefined>(undefined);
     const { colors } = useTheme();
     const [client, register] = useIoTCentralClient();
     const [loading, setLoading] = useState(false);
@@ -39,8 +39,10 @@ function QRCode() {
     }
 
     const connectIoTC = async function () {
-        setLoading(true);
-        await register(qrdata, encKey);
+        if (qrdata && encKey) {
+            setLoading(true);
+            await register(qrdata, encKey);
+        }
         // const creds = DecryptCredentials(qrdata, encKey);
         // if (creds) {
         //     // start connection

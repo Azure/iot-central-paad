@@ -1,7 +1,7 @@
 import HealthKit, { HealthKitPermissions } from 'rn-apple-healthkit';
 
 const PERMS = HealthKit.Constants.Permissions;
-const OBSERVABLES = [PERMS.StepCount, PERMS.DistanceWalkingRunning, PERMS.DistanceCycling, PERMS.BodyTemperature, PERMS.BloodPressureDiastolic, PERMS.BloodPressureSystolic];
+const OBSERVABLES = [PERMS.StepCount, PERMS.Steps, PERMS.DistanceWalkingRunning, PERMS.DistanceCycling, PERMS.BodyTemperature, PERMS.BloodPressureDiastolic, PERMS.BloodPressureSystolic];
 
 export const OPTIONS: HealthKitPermissions = {
     permissions: {
@@ -22,6 +22,7 @@ export async function requestPermissions(): Promise<void> {
                 }
                 // initialize the step count observer
                 HealthKit.initStepCountObserver({}, () => { });
+                HealthKit.setObserver({ type: 'StairClimbing' });
                 return resolve();
             });
         })

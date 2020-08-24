@@ -1,6 +1,6 @@
 import DeviceInfo from 'react-native-device-info';
 import { EventEmitter } from 'events';
-import { ISensor, DATA_AVAILABLE_EVENT, getRandom } from './index';
+import { ISensor, DATA_AVAILABLE_EVENT, getRandom, Vector } from './index';
 import { accelerometer, setUpdateIntervalForType, SensorTypes } from "react-native-sensors";
 
 export default class Accelerometer extends EventEmitter implements ISensor {
@@ -69,7 +69,7 @@ export default class Accelerometer extends EventEmitter implements ISensor {
             }
         }
         else {
-            this.currentRun = accelerometer.subscribe(function ({ x, y, z, timestamp }) {
+            this.currentRun = accelerometer.subscribe(function (this: Accelerometer, { x, y, z }: Vector) {
                 this.emit(DATA_AVAILABLE_EVENT, this.id, { x, y, z });
             }.bind(this));
         }

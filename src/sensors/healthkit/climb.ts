@@ -1,17 +1,17 @@
-import HealthKit from 'rn-apple-healthkit';
+import HealthKit, { SampleResult } from 'rn-apple-healthkit';
 import { EventEmitter } from 'events';
 import { ISensor, DATA_AVAILABLE_EVENT, getRandom } from '../index';
 import { OPTIONS, requestPermissions } from './index';
 import { NativeAppEventEmitter } from 'react-native';
 import { HealthValue } from 'rn-apple-healthkit';
 
-export default class HealthKitSteps extends EventEmitter implements ISensor {
+export default class HealthKitClimb extends EventEmitter implements ISensor {
 
     private enabled: boolean;
     private simulated: boolean;
     private currentRun: any;
     private initialized: boolean;
-    private simulatedStepCount: number;
+    private simulatedFloorsCount: number;
 
     constructor(public id: string, private interval: number) {
         super();
@@ -19,10 +19,10 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
         this.simulated = false;
         this.currentRun = null;
         this.initialized = false;
-        this.simulatedStepCount = 0;
+        this.simulatedFloorsCount = 0;
     }
 
-    name: string = 'Steps';
+    name: string = 'Floor Climbed';
 
     async enable(val: boolean): Promise<void> {
         if (!this.initialized) {
@@ -64,8 +64,8 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
 
     async run() {
         if (this.simulated) {
-            const intId = setInterval(function (this: HealthKitSteps) {
-                this.emit(DATA_AVAILABLE_EVENT, this.id, this.simulatedStepCount += 5);
+            const intId = setInterval(function (this: HealthKitClimb) {
+                this.emit(DATA_AVAILABLE_EVENT, this.id, this.simulatedFloorsCount += 1);
             }.bind(this), this.interval);
             this.currentRun = {
                 unsubscribe: () => {
@@ -74,28 +74,21 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
             }
         }
         else {
-            this.currentRun = NativeAppEventEmitter.addListener('change:steps', (data) => {
-                HealthKit.getStepCount({}, function (this: HealthKitSteps, err: string, result: HealthValue) {
+            this.currentRun = NativeAppEventEmitter.addListener('observer', (data) => {
+                HealthKit.getFlightsClimbed({}, function (this: HealthKitClimb, err: object, result: SampleResult[]) {
                     if (err) {
                         console.log(`Error from Apple HealthKit:\n${(err as any).message}`);
                         return;
                     }
-                    this.emit(DATA_AVAILABLE_EVENT, this.id, result.value);
+                    this.emit(DATA_AVAILABLE_EVENT, this.id, result);
                 }.bind(this));
             });
             let currentValue = 0;
             try {
-                currentValue = await new Promise((res, rej) => HealthKit.getStepCount({},
-                    (err, result) => {
-                        err ?
-                            rej(err)
-                            : res(result.value);
-                    }));
+                currentValue = await new Promise((res, rej) => HealthKit.getFlightsClimbed({}, (err, result) => { err ? rej(err) : res(result[result.length-1].value); }));
                 console.log(currentValue);
             }
-            catch (e) {
-                console.log(e);
-            }// do nothing
+            catch (e) { }// do nothing
             this.emit(DATA_AVAILABLE_EVENT, this.id, currentValue);
         }
     }

@@ -102,6 +102,7 @@ declare module 'rn-apple-healthkit' {
     initStepCountObserver(input: any, callback: (data?: any) => any),
     setObserver(config: { type: RealTimeData }),
     getHeartRateSamples(options: SampleOptions, callback: (err: Object, results: SampleResult[]) => void),
+    getFlightsClimbed(options: SampleOptions, callback: (err: Object, results: SampleResult[]) => void),
     getBodyTemperatureSamples(options: SampleOptions, callback: (err: Object, results: SampleResult[]) => void),
     getBloodPressureSamples(options: SampleOptions, callback: (err: Object, results: BloodPressureResult[]) => void)
   }

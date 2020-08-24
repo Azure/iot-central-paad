@@ -335,8 +335,6 @@ PODS:
     - React
   - RNReanimated (1.10.1):
     - React
-  - RNScreens (2.9.0):
-    - React
   - RNSensors (6.0.2):
     - React
   - RNSVG (12.1.0):
@@ -409,7 +407,6 @@ DEPENDENCIES:
   - RNKeychain (from `../node_modules/react-native-keychain`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
-  - RNScreens (from `../node_modules/react-native-screens`)
   - RNSensors (from `../node_modules/react-native-sensors`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
@@ -511,8 +508,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-permissions"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
-  RNScreens:
-    :path: "../node_modules/react-native-screens"
   RNSensors:
     :path: "../node_modules/react-native-sensors"
   RNSVG:
@@ -574,7 +569,6 @@ SPEC CHECKSUMS:
   RNKeychain: db956c02a018f7dd3a0ea8a6cf3087bc1894bf2b
   RNPermissions: 1888705aebcc81714efa5dbff94351e4388ae012
   RNReanimated: c2bb7438b57a3d987bb2e4e6e4bca94787e30b02
-  RNScreens: c526239bbe0e957b988dacc8d75ac94ec9cb19da
   RNSensors: 042ff055ce1debb3aede772c6671d4b9f5575c1b
   RNSVG: ce9d996113475209013317e48b05c21ee988d42e
   RNVectorIcons: da6fe858f5a65d7bbc3379540a889b0b12aa5976

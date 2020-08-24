@@ -6,15 +6,13 @@ import { useTheme, useNavigation, RouteProp, getFocusedRouteNameFromRoute, Commo
 import { useScreenIcon } from "./hooks/common";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ListItem, Icon } from "react-native-elements";
-import { createNativeStackNavigator } from 'react-native-screens/native-stack';
 import Registration from "./Registration";
-import { StackNavigationProp, HeaderTitle } from "@react-navigation/stack";
-import { NavigationScreens } from "./types";
-import { IoTCContext } from "./contexts/iotc";
+import { StackNavigationProp, HeaderTitle, createStackNavigator } from "@react-navigation/stack";
 import { useSimulation } from "./hooks/iotc";
+import { defaults } from "./contexts/defaults";
 
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 type ProfileItem = {
     title: string,
@@ -55,18 +53,6 @@ export default function Settings() {
             }
         },
         {
-            title: 'Simulation Mode',
-            icon: dark ? 'sync-outline' : 'sync',
-            action: {
-                type: 'switch',
-                fn: async (val) => {
-                    updateUIItems('Simulation Mode', val);
-                    await simulate(val);
-                }
-            },
-            value: centralSimulated
-        },
-        {
             title: 'Dark Mode',
             icon: dark ? 'moon-outline' : 'moon',
             action: {
@@ -77,7 +63,19 @@ export default function Settings() {
                 }
             },
             value: dark
-        }]);
+        }, ...(defaults.dev ? [{
+            title: 'Simulation Mode',
+            icon: dark ? 'sync-outline' : 'sync',
+            action: {
+                type: 'switch',
+                fn: async (val) => {
+                    updateUIItems('Simulation Mode', val);
+                    await simulate(val);
+                }
+            },
+            value: centralSimulated
+        } as ProfileItem] : [])
+    ]);
 
 
     function getRightElement(item: ProfileItem) {
