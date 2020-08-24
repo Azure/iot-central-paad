@@ -75,8 +75,12 @@ function Navigation() {
                 }
                 return data;
             }} />
-            <Stack.Screen name='Settings' options={({ navigation }) => ({
+            <Stack.Screen name='Settings' options={({ navigation }: { navigation: NavigationProperty }) => ({
                 stackAnimation: 'flip',
+                headerTitle: Platform.select({
+                    ios: undefined,
+                    android: ''
+                }),
                 headerLeft: () => (<BackButton goBack={navigation.goBack} title='Settings' />)
             })} component={Settings} />
         </Stack.Navigator>
@@ -116,24 +120,27 @@ function Root() {
 
 function Logo() {
     const { dark, colors } = useTheme();
-    return (<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginHorizontal: 20 }}>
+    return (<View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', marginHorizontal: 10 }}>
         <LogoIcon width={30} fill={colors.primary} />
-        <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 16, letterSpacing: 0.1 }}>Azure IoT Central</Text>
+        <Text style={{ marginStart: 10, color: colors.text, fontWeight: 'bold', fontSize: 16, letterSpacing: 0.1 }}>Azure IoT Central</Text>
     </View>);
 }
 
 function Profile(props: { navigate: any }) {
     const { dark, colors } = useTheme();
-    return (<Icon style={{ marginEnd: 20 }} name={Platform.select({ ios: 'settings-outline', android: 'settings' }) as string} type={Platform.select({ ios: 'ionicon', android: 'material' })} color={colors.text} onPress={() => {
-        props.navigate('Settings');
-    }} />);
+    return (
+        <View style={{ marginHorizontal: 10 }}>
+            <Icon style={{ marginEnd: 20 }} name={Platform.select({ ios: 'settings-outline', android: 'settings' }) as string} type={Platform.select({ ios: 'ionicon', android: 'material' })} color={colors.text} onPress={() => {
+                props.navigate('Settings');
+            }} />
+        </View>);
 }
 
 function BackButton(props: { goBack: any, title: string }) {
     const { colors, dark } = useTheme();
     const { goBack, title } = props;
-    return (<>
+    return (<View style={{ flexDirection: 'row', marginLeft: 10, alignItems: 'center' }}>
         <Icon name='close' color={colors.text} onPress={goBack} />
         {Platform.OS === 'android' && <HeaderTitle style={{ marginLeft: 20 }}>{title}</HeaderTitle>}
-    </>)
+    </View>)
 }
