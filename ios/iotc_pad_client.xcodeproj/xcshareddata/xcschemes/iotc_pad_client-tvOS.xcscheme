@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "2D02E47A1E0B4A5D006451C7"
-               BuildableName = "iotc_pad_client-tvOS.app"
+               BuildableName = "IoT Central PaaD.app"
                BlueprintName = "iotc_pad_client-tvOS"
                ReferencedContainer = "container:iotc_pad_client.xcodeproj">
             </BuildableReference>
@@ -55,7 +55,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "2D02E47A1E0B4A5D006451C7"
-            BuildableName = "iotc_pad_client-tvOS.app"
+            BuildableName = "IoT Central PaaD.app"
             BlueprintName = "iotc_pad_client-tvOS"
             ReferencedContainer = "container:iotc_pad_client.xcodeproj">
          </BuildableReference>
@@ -72,7 +72,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "2D02E47A1E0B4A5D006451C7"
-            BuildableName = "iotc_pad_client-tvOS.app"
+            BuildableName = "IoT Central PaaD.app"
             BlueprintName = "iotc_pad_client-tvOS"
             ReferencedContainer = "container:iotc_pad_client.xcodeproj">
          </BuildableReference>
