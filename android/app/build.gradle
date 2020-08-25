@@ -136,6 +136,7 @@ android {
         missingDimensionStrategy 'react-native-camera', 'general'
         versionCode 1
         versionName '1.0'
+        archivesBaseName = "$applicationId-v$versionCode($versionName)"
     }
     splits {
         abi {

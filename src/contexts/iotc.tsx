@@ -2,7 +2,7 @@ import React, { useReducer, useState, useEffect } from "react";
 import { IIoTCClient, IoTCCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING } from "react-native-azure-iotcentral-client";
 import { IconProps } from "react-native-elements";
 import { Platform } from "react-native";
-import { ISensor, DATA_AVAILABLE_EVENT } from "../sensors";
+import { ISensor, DATA_AVAILABLE_EVENT, SENSOR_UNAVAILABLE_EVENT } from "../sensors";
 import Battery from "../sensors/battery";
 import Gyroscope from "../sensors/gyroscope";
 import Accelerometer from "../sensors/accelerometer";
@@ -189,7 +189,18 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
      * Runs initially to add ux listeners to data_change event
      */
     useEffect(() => {
-        Object.values(sensorMap).forEach(s => s.addListener(DATA_AVAILABLE_EVENT, updateValues));
+        Object.values(sensorMap).forEach(s => {
+            s.addListener(DATA_AVAILABLE_EVENT, updateValues);
+            s.addListener(SENSOR_UNAVAILABLE_EVENT, (sensorId: string) => {
+                setState(current => {
+                    const index = current.telemetryData.findIndex(s => s.id === sensorId);
+                    if (index > -1) {
+                        current.telemetryData.splice(index, 1);
+                    }
+                    return current;
+                });
+            })
+        });
     }, []);
 
 

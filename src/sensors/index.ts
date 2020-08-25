@@ -9,6 +9,7 @@ interface SensorId {
 export type Vector = { x: number, y: number, z: number }
 
 export const DATA_AVAILABLE_EVENT = 'DATA_AVAILABLE_EVENT';
+export const SENSOR_UNAVAILABLE_EVENT = 'SENSOR_UNAVAILABLE_EVENT';
 
 export interface ISensor extends SensorId, EventEmitter {
     enable(val: boolean): void | Promise<void>,
