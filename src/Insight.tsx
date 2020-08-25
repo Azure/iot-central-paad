@@ -84,6 +84,7 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
         return () => removeListener(DATA_AVAILABLE_EVENT, updateData);
     }, []);
 
+
     if (data.dataSets.length === 0) {
         return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <Loader message='' />
@@ -140,7 +141,6 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
                                 width={5}
                                 fill={fill}
                                 tintColor={d.config ? d.config.rgbcolor : getRandomColor()}
-                                onAnimationComplete={() => console.log('onAnimationComplete')}
                                 backgroundColor={d.config ? LightenDarkenColor(d.config.rgbcolor, 90, true) : getRandomColor()}
                                 rotation={360}>
                                 {(fill) => {

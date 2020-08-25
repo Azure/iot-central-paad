@@ -95,6 +95,7 @@ function Root() {
     // connect client if credentials are retrieved
     useEffect(() => {
         if (!simulated) {
+            console.log('Received new credentials... connecting new client');
             connect(credentials);
         }
     }, [credentials, simulated]);

@@ -1,6 +1,6 @@
 
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Platform, FlatList } from 'react-native';
+import { View, Platform, FlatList, Alert } from 'react-native';
 import { IIcon, useScreenIcon } from './hooks/common';
 import { IoTCContext, CentralClient } from './contexts/iotc';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +14,7 @@ import { IOTC_EVENTS, IIoTCProperty, IoTCClient } from 'react-native-azure-iotce
 import { StateUpdater, valueof } from './types';
 import { getDeviceInfo } from './properties/deviceInfo';
 import { Headline, Text } from './components/typography';
+import { Overlay } from 'react-native-elements';
 
 export const PROPERTY_CHANGED = 'PROPERTY_CHANGED';
 
@@ -83,6 +84,8 @@ export default function Properties() {
     const [simulated] = useSimulation();
     const [data, setData] = useState<PropertiesProps[]>(Object.values(propsMap));
     const { colors } = useTheme();
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMsg, setAlertMsg] = useState('');
 
 
     useEffect(() => {
@@ -127,13 +130,21 @@ export default function Properties() {
                 enabled
                 editable={item.item.editable}
                 onEdit={async (value) => {
-                    await client.sendProperty({ [item.item.id]: value });
+                    try {
+                        await client.sendProperty({ [item.item.id]: value });
+                        Alert.alert('Property', `Property ${item.item.name} successfully sent to IoT Central`, [{ text: 'OK' }]);
+                    }
+                    catch (e) {
+                        Alert.alert('Property', `Property ${item.item.name} not sent to IoT Central`, [{ text: 'OK' }]);
+                    }
                 }}
                 onToggle={() => { }}
             />
         }} keyExtractor={(item, index) => `prop-${index}`} />
-
-    </View>)
+        <Overlay isVisible={showAlert} onBackdropPress={() => setShowAlert(false)}>
+            <Text>{alertMsg}</Text>
+        </Overlay>
+    </View >)
     // return (<View></View>)
 
 }

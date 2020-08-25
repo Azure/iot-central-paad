@@ -48,7 +48,7 @@ export default function Settings() {
             action: {
                 type: 'expand',
                 fn: (navigation) => {
-                    navigation.navigate('Registration');
+                    navigation.navigate('Registration', { previousScreen: 'setting_root' });
                 }
             }
         },

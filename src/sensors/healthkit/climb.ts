@@ -77,7 +77,7 @@ export default class HealthKitClimb extends EventEmitter implements ISensor {
             this.currentRun = NativeAppEventEmitter.addListener('observer', (data) => {
                 HealthKit.getFlightsClimbed({}, function (this: HealthKitClimb, err: object, result: SampleResult[]) {
                     if (err) {
-                        console.log(`Error from Apple HealthKit:\n${(err as any).message}`);
+                        console.log(`Error from Apple HealthKit - Climbs:\n${(err as any).message}`);
                         return;
                     }
                     this.emit(DATA_AVAILABLE_EVENT, this.id, result);

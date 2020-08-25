@@ -77,7 +77,7 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
             this.currentRun = NativeAppEventEmitter.addListener('change:steps', (data) => {
                 HealthKit.getStepCount({}, function (this: HealthKitSteps, err: string, result: HealthValue) {
                     if (err) {
-                        console.log(`Error from Apple HealthKit:\n${(err as any).message}`);
+                        console.log(`Error from Apple HealthKit - Steps:\n${(err as any).message}`);
                         return;
                     }
                     this.emit(DATA_AVAILABLE_EVENT, this.id, result.value);

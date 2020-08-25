@@ -77,11 +77,11 @@ export default function Telemetry() {
                 icon={item.item.icon}
                 onToggle={() => set(item.item.id, { enabled: !item.item.enabled })}
                 onLongPress={e => console.log('longpress')} // edit card
-                onPress={e => navigation.navigate('Insight', {
+                onPress={item.item.enabled ? (e) => navigation.navigate('Insight', {
                     telemetryId: item.item.id,
                     title: camelToName(item.item.id),
                     backTitle: 'Telemetry'
-                })}
+                }) : undefined}
 
             />
         }} />

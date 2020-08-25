@@ -10,6 +10,8 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { useScreenDimensions } from './hooks/layout';
 import { IOTC_EVENTS, IIoTCCommand, IIoTCCommandResponse } from 'react-native-azure-iotcentral-client';
 import { StateUpdater } from './types';
+import { colors } from 'react-native-elements';
+import { useTheme } from '@react-navigation/native';
 
 
 type CommandInfo = { timestamp: number, cmd: IIoTCCommand }[];
@@ -56,6 +58,7 @@ export default function Commands() {
         }
     }) as IIcon);
 
+    const { colors } = useTheme();
     const [simulated] = useSimulation();
     const [client] = useIoTCentralClient();
     const { set } = useTelemetry();
@@ -88,14 +91,17 @@ export default function Commands() {
                 <Loader message={'Connecting to IoT Central ...'} />
             </View>)
     }
-    return (<ScrollView style={{ flex: 1, padding: 10 }}>
-        {commands.map((c, i) => (
-            <React.Fragment key={`logf-${i}`}>
-                <Text key={`log-${i}`}>{c.timestamp} - Received:
+    return (<View style={{ flex: 1, padding: 10 }}>
+        <Text>Received commands will be logged below.</Text>
+        <ScrollView style={{ margin: 10, borderWidth: 1, borderColor: colors.border, padding: 10 }}>
+            {commands.map((c, i) => (
+                <React.Fragment key={`logf-${i}`}>
+                    <Text key={`log-${i}`}>{c.timestamp} - Received:
                     <Text key={`logdata-${i}`} style={{ color: 'green' }}>{c.cmd.name}</Text>
-                </Text>
-                <Text key={`logpayload-${i}`}>{c.cmd.requestPayload}</Text>
-            </React.Fragment>
-        ))}
-    </ScrollView>)
+                    </Text>
+                    <Text key={`logpayload-${i}`}>{c.cmd.requestPayload}</Text>
+                </React.Fragment>
+            ))}
+        </ScrollView>
+    </View>)
 }

@@ -6,15 +6,26 @@ import QRCodeMask from './components/qrcodeMask';
 import { Button, Overlay, Input, Divider } from 'react-native-elements';
 import { useScreenDimensions } from './hooks/layout';
 import { DecryptCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING, IOTC_EVENTS } from 'react-native-azure-iotcentral-client';
-import { useTheme } from '@react-navigation/native';
+import { RouteProp, useTheme } from '@react-navigation/native';
 import { IoTCContext } from './contexts/iotc';
 import { Loader } from './components/loader';
 import { useIoTCentralClient } from './hooks/iotc';
+import { NavigationParams, NavigationProperty } from './types';
 
-export default function Registration() {
+export default function Registration({ route, navigation }: { route?: RouteProp<Record<string, NavigationParams & { previousScreen?: string }>, "Registration">, navigation?: NavigationProperty }) {
     const [showqr, setshowqr] = useState(false);
+    const [client] = useIoTCentralClient();
+
     if (showqr) {
-        return <QRCode />;
+        return <QRCode onSuccess={(route && route.params.previousScreen && navigation) ? () => navigation.navigate(route.params.previousScreen as string) : undefined} />;
+    }
+    if (client) {
+        return <View style={style.container}>
+            <Text style={style.header}>Mobile device is currently registered to IoT Central with Id <Text style={{ fontWeight: 'bold' }}>"{(client as IoTCClient).id}" </Text>
+            and Scope <Text style={{ fontWeight: 'bold' }}>"{(client as IoTCClient).scopeId}".</Text>
+                {'\n'}To disconnect and register a different device, scan the associated QR Code</Text>
+            <Button type='clear' title='Scan QR code' onPress={setshowqr.bind(null, true)} />
+        </View>
     }
     return (
         <View style={style.container}>
@@ -24,7 +35,7 @@ export default function Registration() {
         </View>)
 }
 
-function QRCode() {
+function QRCode(props: { onSuccess?(): void | Promise<void> }) {
     const { screen, orientation } = useScreenDimensions();
     const [prompt, showPrompt] = useState(false);
     const [encKey, setEncKey] = useState<string | undefined>(undefined);
@@ -43,25 +54,15 @@ function QRCode() {
             setLoading(true);
             await register(qrdata, encKey);
         }
-        // const creds = DecryptCredentials(qrdata, encKey);
-        // if (creds) {
-        //     // start connection
-        //     let iotc = new IoTCClient(creds.deviceId, creds.scopeId, IOTC_CONNECT.DEVICE_KEY, creds.deviceKey);
-        //     if (creds.modelId) {
-        //         iotc.setModelId(creds.modelId);
-        //     }
-        //     iotc.setLogging(IOTC_LOGGING.ALL);
-        //     // iotc.on(IOTC_EVENTS.Properties,)
-        //     await iotc.connect();
-        //     connect(iotc); //assign client to context
-        //     await iotc.sendProperty(await getDeviceInfo());
-        // }
     }
 
     useEffect(() => {
-        if (client && loading) {
+        if (client && client.isConnected() && loading) {
             setLoading(false);
             showPrompt(false);
+            if (props.onSuccess) {
+                props.onSuccess();
+            }
         }
     }, [client, loading])
 

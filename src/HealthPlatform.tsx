@@ -53,16 +53,19 @@ export default function HealthPlatform() {
             enabled: true, // TODO: auto-enable based on settings
             simulated: defaults.emulator
         },
-        // {
-        //     id: AVAILABLE_HEALTH.FLOORS,
-        //     interval: 5000,
-        //     icon: {
-        //         name: 'stairs',
-        //         type: 'material-community'
-        //     },
-        //     enabled: true, // TODO: auto-enable based on settings
-        //     simulated: defaults.emulator
-        // }
+        ...Platform.select({
+            ios: [{
+                id: AVAILABLE_HEALTH.FLOORS,
+                interval: 5000,
+                icon: {
+                    name: 'stairs',
+                    type: 'material-community'
+                },
+                enabled: true, // TODO: auto-enable based on settings
+                simulated: defaults.emulator
+            }],
+            android: []
+        }) as SensorProps[]
     ]
 
     const [simulated] = useSimulation();
