@@ -60,7 +60,7 @@ export function Welcome(props: { setInitialized: StateUpdater<boolean> }) {
 
     return (
         <LinearGradient colors={['#041b5c', '#136BFB']} style={style.container}>
-            <View style={{ flexDirection: 'row', marginBottom: 50 }}>
+            <View style={{ flexDirection: 'row', marginBottom: 80 }}>
                 <Animatable.View ref={animation} animation="slideOutLogo" delay={1000} onAnimationBegin={() => setAnimationStarted(true)} style={style.logo}>
                     <Logo width={100} height={100} fill={'#1881e0'} />
                 </Animatable.View>
@@ -72,7 +72,7 @@ export function Welcome(props: { setInitialized: StateUpdater<boolean> }) {
                     <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 20, letterSpacing: 0.1 }}>Azure IoT Central</Text>
                 </Animatable.View> : null}
             </View>
-            <View style={{ justifyContent: 'flex-start', alignItems: 'center' }}>
+            <View style={{ alignItems: 'center' }}>
                 <Progress.CircleSnail size={Math.floor(screen.width / 8)} indeterminate={true} color='white' thickness={3} spinDuration={1000} duration={1000} />
             </View>
             {/* <Button title='Animate' onPress={() => {
