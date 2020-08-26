@@ -25,6 +25,11 @@ target 'iotc_pad_client' do
   use_flipper!
   post_install do |installer|
     flipper_post_install(installer)
+    installer.pods_project.targets.each do |target|
+      if target.name == "React-Core.common-AccessibilityResources"
+        target.remove_from_project
+      end
+    end
   end
 end
 
