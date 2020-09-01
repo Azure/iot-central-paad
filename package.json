@@ -33,6 +33,7 @@
     "react-native-google-fit": "^0.14.0",
     "react-native-keychain": "^6.1.1",
     "react-native-linear-gradient": "^2.5.6",
+    "react-native-maps": "^0.27.1",
     "react-native-permissions": "^2.1.5",
     "react-native-progress": "^4.1.2",
     "react-native-qrcode-scanner": "^1.4.1",

@@ -10,6 +10,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { useScreenDimensions } from './hooks/layout';
 import { Loader } from './components/loader';
+import Map from './components/map';
 
 
 
@@ -88,6 +89,16 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
     if (data.dataSets.length === 0) {
         return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <Loader message='' />
+        </View>
+    }
+    const geolocation = telemetryData.find(t => t.unit && t.unit === '°');
+    if (geolocation) {
+        return <View style={style.container}>
+            <Map style={{ flex: 3, margin: 10 }} location={geolocation.value} />
+            <View style={style.summary}>
+                <Text>Latitude: {geolocation.value.lat}</Text>
+                <Text>Longitude: {geolocation.value.lon}</Text>
+            </View>
         </View>
     }
 

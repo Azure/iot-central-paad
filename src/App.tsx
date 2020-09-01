@@ -22,6 +22,7 @@ import HealthPlatform from './HealthPlatform';
 import Logs from './Logs';
 import { IconProps } from 'react-native-vector-icons/Icon';
 import { IIcon } from './hooks/common';
+import Map from './components/map';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createStackNavigator();

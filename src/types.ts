@@ -66,6 +66,13 @@ export type ItemData = {
 
 export type ChartUpdateCallback = (itemdata: ItemData) => void;
 
+export type GeoCoordinates = {
+    lon: number,
+    lat: number,
+    latD?: number,
+    lonD?: number
+}
+
 /**
  * Health typings
  */

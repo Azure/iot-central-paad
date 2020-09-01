@@ -143,7 +143,8 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 name: 'location-outline',
                 type: 'ionicon'
             },
-            simulated: defaults.emulator
+            simulated: defaults.emulator,
+            unit:'°'
         },
         {
             id: AVAILABLE_SENSORS.BATTERY,
