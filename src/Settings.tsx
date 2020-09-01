@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect, useLayoutEffect } from "react";
 import { ThemeContext, ThemeMode } from "./contexts/theme";
 import React from 'react';
-import { View, Text, Button, Switch, ScrollView, Platform } from 'react-native';
+import { View, Text, Button, Switch, ScrollView, Platform, Alert } from 'react-native';
 import { useTheme, useNavigation, RouteProp, getFocusedRouteNameFromRoute, CommonActions } from "@react-navigation/native";
 import { useScreenIcon } from "./hooks/common";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,7 @@ import Registration from "./Registration";
 import { StackNavigationProp, HeaderTitle, createStackNavigator } from "@react-navigation/stack";
 import { useSimulation } from "./hooks/iotc";
 import { defaults } from "./contexts/defaults";
+import { StorageContext } from "./contexts/storage";
 
 
 const Stack = createStackNavigator();
@@ -19,7 +20,7 @@ type ProfileItem = {
     icon: string,
     value?: boolean,
     action?: {
-        type: 'switch' | 'expand',
+        type: 'switch' | 'expand' | 'select',
         fn: (...args: any) => void
     }
 }
@@ -27,6 +28,7 @@ type ProfileItem = {
 
 export default function Settings() {
     const { mode, toggle } = useContext(ThemeContext);
+    const { clear } = useContext(StorageContext);
     const [centralSimulated, simulate] = useSimulation();
     const { colors, dark } = useTheme();
     const insets = useSafeAreaInsets()
@@ -48,7 +50,7 @@ export default function Settings() {
             action: {
                 type: 'expand',
                 fn: (navigation) => {
-                    navigation.navigate('Registration', { previousScreen: 'setting_root' });
+                    navigation.navigate('Registration', { previousScreen: 'root' });
                 }
             }
         },
@@ -63,6 +65,17 @@ export default function Settings() {
                 }
             },
             value: dark
+        },
+        {
+            title: 'Clear Data',
+            icon: 'trash-outline',
+            action: {
+                type: 'select',
+                fn: async (val) => {
+                    await clear();
+                    Alert.alert('Success', 'Successfully clean data');
+                }
+            }
         }, ...(defaults.dev ? [{
             title: 'Simulation Mode',
             icon: dark ? 'sync-outline' : 'sync',

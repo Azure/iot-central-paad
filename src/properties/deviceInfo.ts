@@ -4,8 +4,8 @@ export type DeviceInfo = {
     model: string,
     swVersion: string,
     osName: string,
-    processorArchitecture: string,
-    processorManufacturer: string,
+    processorArchitecture?: string,
+    processorManufacturer?: string,
     totalStorage: number,
     totalMemory: number
 
@@ -18,8 +18,8 @@ export async function getDeviceInfo(): Promise<DeviceInfo> {
         model: DeviceInfo.getModel(),
         swVersion: DeviceInfo.getSystemVersion(),
         osName: DeviceInfo.getSystemName(),
-        processorArchitecture: '',
-        processorManufacturer: '',
+        processorArchitecture: undefined,
+        processorManufacturer: undefined,
         totalStorage: await DeviceInfo.getTotalDiskCapacity(),
         totalMemory: await DeviceInfo.getTotalMemory()
     }

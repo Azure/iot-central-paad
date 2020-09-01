@@ -5,7 +5,7 @@ export const Screens = {
     'HOME_SCREEN': 'Home',
     'TELEMETRY_SCREEN': 'Telemetry',
     'PROPERTIES_SCREEN': 'Properties',
-    'COMMANDS_SCREEN': 'Commands',
+    'LOGS_SCREEN': 'Logs',
     'HEALTH_SCREEN': 'Health'
 }
 
@@ -34,8 +34,16 @@ export type NavigationScreens = {
 
 export type NavigationProperty = StackNavigationProp<NavigationScreens, string>;
 
+
+/**
+ *  Utils
+ */
 export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
 
+export type LogItem = { eventName: string, eventData: string };
+export type TimedLog = { timestamp: number | string, logItem: LogItem }[];
+
+export const LOG_DATA = 'LOG_DATA';
 
 /**
  * Chart typings

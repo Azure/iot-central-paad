@@ -1,4 +1,4 @@
-import React, { useReducer, useState, useEffect } from "react";
+import React, { useReducer, useState, useEffect, useRef } from "react";
 import { IIoTCClient, IoTCCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING } from "react-native-azure-iotcentral-client";
 import { IconProps } from "react-native-elements";
 import { Platform } from "react-native";
@@ -10,7 +10,8 @@ import Barometer from "../sensors/barometer";
 import Magnetometer from "../sensors/magnetometer";
 import GeoLocation from "../sensors/geolocation";
 import { defaults } from './defaults';
-import { valueof } from "../types";
+import { LOG_DATA, valueof } from "../types";
+import EventLogger from "../tools/EventLogger";
 
 
 export type SensorProps = {
@@ -47,7 +48,7 @@ type ICentralState = { telemetryData: SensorProps[], client: CentralClient };
 
 
 export type IIoTCContext = ICentralState & {
-    connect: (credentials?: IoTCCredentials) => Promise<void>,
+    connect: (credentials?: IoTCCredentials | null) => Promise<void>,
     disconnect: () => Promise<void>,
     updateTelemetry: (fn: (currentData: SensorProps[]) => SensorProps[]) => void,
     getTelemetryName: (id: string) => string,
@@ -64,7 +65,7 @@ const initialState: ICentralState = {
 
 export const IoTCContext = React.createContext<IIoTCContext>({
     ...initialState,
-    connect: (credentials?: IoTCCredentials) => Promise.resolve(),
+    connect: (credentials?: IoTCCredentials | null) => Promise.resolve(),
     disconnect: () => Promise.resolve(),
     updateTelemetry: () => { },
     getTelemetryName: (id: string) => '',
@@ -73,13 +74,13 @@ export const IoTCContext = React.createContext<IIoTCContext>({
 
 });
 
-const connectClient = async function (credentials: IoTCCredentials) {
+const connectClient = async function (credentials: IoTCCredentials, eventLogger: EventLogger) {
     console.log('Connecting Iotcentral client');
-    let iotc = new IoTCClient(credentials.deviceId, credentials.scopeId, IOTC_CONNECT.DEVICE_KEY, credentials.deviceKey);
+    let iotc = new IoTCClient(credentials.deviceId, credentials.scopeId, IOTC_CONNECT.DEVICE_KEY, credentials.deviceKey, eventLogger);
     if (credentials.modelId) {
         iotc.setModelId(credentials.modelId);
     }
-    iotc.setLogging(IOTC_LOGGING.ALL);
+    // iotc.setLogging(IOTC_LOGGING.ALL);
     await iotc.connect(false);
     return iotc;
 }
@@ -163,6 +164,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     ]
 
     const [state, setState] = useState<ICentralState>({ client: undefined, telemetryData: defaultSensors });
+    const eventLogger = useRef<EventLogger>(new EventLogger(LOG_DATA));
 
 
     const updateValues = function (id: string, value: any) {
@@ -213,21 +215,38 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             },
             getTelemetryName: (id: string) => (sensorMap[id].name),
             addListener: (eventname: string, listener: (...args: any[]) => void) => {
-                Object.values(sensorMap).forEach(s => s.addListener(eventname, listener));
+                if (eventname === LOG_DATA) {
+                    eventLogger.current?.addListener(LOG_DATA, listener);
+                }
+                else {
+                    Object.values(sensorMap).forEach(s => s.addListener(eventname, listener));
+                }
             },
             removeListener: (eventname: string, listener: (...args: any[]) => void) => {
+                if (eventname === LOG_DATA) {
+                    eventLogger.current?.removeListener(LOG_DATA, listener);
+                }
                 Object.values(sensorMap).forEach(s => s.removeListener(eventname, listener));
             },
-            connect: async (credentials?: IoTCCredentials) => {
-
+            connect: async (credentials?: IoTCCredentials | null) => {
                 // disconnect previous client if any
                 if (state.client) {
                     await state.client.disconnect();
                 }
-                let client: CentralClient = null;
+                //  assign credentials object that can be undefined,null or with value.
+                //  the goal is to keep client object aligned to credentials object
+                //  cases:
+                //  a. credentials == undefined ---> client == undefined
+                //     app is not initialized yet
+                //  b. credentials == null ---> client == null
+                //     app is initialized. credentials are empty. force qr scan
+                //  c. credentials ---> client
+                //     app is initialized. credentials are valid. client connects
+
+                let client: any = credentials;
                 if (credentials) {
                     try {
-                        client = await connectClient(credentials);
+                        client = await connectClient(credentials, eventLogger.current);
                     }
                     catch (e) {
                         client = null;

@@ -12,7 +12,7 @@ import Registration from './Registration';
 import { useScreenDimensions } from './hooks/layout';
 import { IOTC_EVENTS, IIoTCProperty, IoTCClient } from 'react-native-azure-iotcentral-client';
 import { StateUpdater, valueof } from './types';
-import { getDeviceInfo } from './properties/deviceInfo';
+import { getDeviceInfo, DeviceInfo } from './properties/deviceInfo';
 import { Headline, Text } from './components/typography';
 import { Overlay } from 'react-native-elements';
 
@@ -27,7 +27,15 @@ type PropertiesProps = {
 
 const AVAILABLE_PROPERTIES = {
     WRITEABLE_PROP: 'writeableProp',
-    READONLY_PROP: 'readOnlyProp'
+    READONLY_PROP: 'readOnlyProp',
+    MANUFACTURER: 'manufacturer',
+    MODEL: 'model',
+    SW_VERSION: 'swVersion',
+    OS_NAME: 'osName',
+    PROCESSOR_ARCHITECTURE: 'processorArchitecture',
+    PROCESSOR_MANUFACTURER: 'processorManufacturer',
+    TOTAL_STORAGE: 'totalStorage',
+    TOTAL_MEMORY: 'totalMemory'
 }
 
 const propsMap: { [id in valueof<typeof AVAILABLE_PROPERTIES>]: PropertiesProps } = {
@@ -41,6 +49,46 @@ const propsMap: { [id in valueof<typeof AVAILABLE_PROPERTIES>]: PropertiesProps 
         name: 'ReadOnlyProp',
         value: 'readonly',
         editable: true
+    },
+    [AVAILABLE_PROPERTIES.MANUFACTURER]: {
+        id: AVAILABLE_PROPERTIES.MANUFACTURER,
+        name: 'Manufacturer',
+        editable: false
+    },
+    [AVAILABLE_PROPERTIES.MODEL]: {
+        id: AVAILABLE_PROPERTIES.MODEL,
+        name: 'Device Model',
+        editable: false
+    },
+    [AVAILABLE_PROPERTIES.SW_VERSION]: {
+        id: AVAILABLE_PROPERTIES.SW_VERSION,
+        name: 'Software Version',
+        editable: false
+    },
+    [AVAILABLE_PROPERTIES.OS_NAME]: {
+        id: AVAILABLE_PROPERTIES.OS_NAME,
+        name: 'OS Name',
+        editable: false
+    },
+    [AVAILABLE_PROPERTIES.PROCESSOR_ARCHITECTURE]: {
+        id: AVAILABLE_PROPERTIES.PROCESSOR_ARCHITECTURE,
+        name: 'Processor Architecture',
+        editable: false
+    },
+    [AVAILABLE_PROPERTIES.PROCESSOR_MANUFACTURER]: {
+        id: AVAILABLE_PROPERTIES.PROCESSOR_MANUFACTURER,
+        name: 'Processor Manufacturer',
+        editable: false
+    },
+    [AVAILABLE_PROPERTIES.TOTAL_STORAGE]: {
+        id: AVAILABLE_PROPERTIES.TOTAL_STORAGE,
+        name: 'Total Storage',
+        editable: false
+    },
+    [AVAILABLE_PROPERTIES.TOTAL_MEMORY]: {
+        id: AVAILABLE_PROPERTIES.TOTAL_MEMORY,
+        name: 'Total Memory',
+        editable: false
     }
 }
 
@@ -54,28 +102,26 @@ async function onPropUpdate(update: StateUpdater<PropertiesProps[]>, prop: IIoTC
     await prop.ack();
 }
 
-async function initProps(client: CentralClient, properties: PropertiesProps[]) {
+async function initProps(client: CentralClient, properties: PropertiesProps[], setProperties: StateUpdater<PropertiesProps[]>) {
     if (client && client.isConnected()) {
+        const devInfo = await getDeviceInfo();
+        Object.keys(devInfo).forEach(dInfo => {
+            const prop = properties.find(p => p.id === dInfo);
+            if (prop) {
+                prop.value = devInfo[dInfo as keyof DeviceInfo];
+            }
+        });
         await client.sendProperty(await getDeviceInfo());
         properties.forEach(async prop => {
             if (prop.value) {
                 await client.sendProperty({ [prop.id]: prop.value });
             }
         });
+        setProperties(properties);
     }
 }
 
 export default function Properties() {
-    useScreenIcon(Platform.select({
-        ios: {
-            name: 'create-outline',
-            type: 'ionicon'
-        },
-        android: {
-            name: 'playlist-edit',
-            type: 'material-community'
-        }
-    }) as IIcon);
 
     // const [simulated] = useSimulation();
     const [client] = useIoTCentralClient();
@@ -91,7 +137,7 @@ export default function Properties() {
     useEffect(() => {
         if (client && client.isConnected()) {
             client.on(IOTC_EVENTS.Properties, onPropUpdate.bind(null, setData));
-            initProps(client, data);
+            initProps(client, data, setData);
             client.fetchTwin();
         }
     }, [client]);
@@ -121,7 +167,7 @@ export default function Properties() {
 
     return (<View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}>
 
-        <FlatList numColumns={1} data={data} renderItem={(item) => {
+        <FlatList numColumns={2} data={data} renderItem={(item) => {
             let val = item.item.value;
             // if (val && val.x && val.y && val.z) {
             //     val = Object.values(val).map((v: number) => Math.round(v * 100) / 100).join(',');

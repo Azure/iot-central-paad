@@ -22,16 +22,6 @@ import { camelToName } from './components/typography';
 
 
 export default function Telemetry() {
-    useScreenIcon(Platform.select({
-        ios: {
-            name: 'stats-chart-outline',
-            type: 'ionicon'
-        },
-        android: {
-            name: 'chart-bar',
-            type: 'material-community'
-        }
-    }) as IIcon);
 
     // const { client, simulated: centralSimulated } = useContext(IoTCContext);
     const [simulated] = useSimulation();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from './components/typography';
 import QRCodeScanner, { Event } from 'react-native-qrcode-scanner'
@@ -10,11 +10,11 @@ import { RouteProp, useTheme } from '@react-navigation/native';
 import { IoTCContext } from './contexts/iotc';
 import { Loader } from './components/loader';
 import { useIoTCentralClient } from './hooks/iotc';
-import { NavigationParams, NavigationProperty } from './types';
+import { LogItem, LOG_DATA, NavigationParams, NavigationProperty } from './types';
 
 export default function Registration({ route, navigation }: { route?: RouteProp<Record<string, NavigationParams & { previousScreen?: string }>, "Registration">, navigation?: NavigationProperty }) {
     const [showqr, setshowqr] = useState(false);
-    const [client] = useIoTCentralClient();
+    const [client, disconnect] = useIoTCentralClient();
 
     if (showqr) {
         return <QRCode onSuccess={(route && route.params.previousScreen && navigation) ? () => navigation.navigate(route.params.previousScreen as string) : undefined} />;
@@ -31,7 +31,10 @@ export default function Registration({ route, navigation }: { route?: RouteProp<
         <View style={style.container}>
             <Text style={style.header}>Mobile device is not currently registered to any device in IoT Central.
             To register a device, scan the associated QR Code</Text>
-            <Button type='clear' title='Scan QR code' onPress={setshowqr.bind(null, true)} />
+            <Button type='clear' title='Scan QR code' onPress={async () => {
+                await disconnect();
+                setshowqr(true);
+            }} />
         </View>)
 }
 
@@ -41,25 +44,46 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
     const [encKey, setEncKey] = useState<string | undefined>(undefined);
     const [qrdata, setQrdata] = useState<string | undefined>(undefined);
     const { colors } = useTheme();
-    const [client, register] = useIoTCentralClient();
+    const [client, disconnect, register] = useIoTCentralClient();
+    const { addListener, removeListener } = useContext(IoTCContext);
     const [loading, setLoading] = useState(false);
+    const [loadingMsg, setLoadingMsg] = useState('Loading ...');
+
+    const clientId = useRef(client ? (client as IoTCClient).id : null);
 
     const onRead = async function (e: Event) {
         setQrdata(e.data);
         showPrompt(true);
     }
 
+    const logConnection = (item: LogItem) => {
+        setLoadingMsg(item.eventData);
+        console.log(`${item.eventName}:${item.eventData}`);
+    }
+
     const connectIoTC = async function () {
+        addListener(LOG_DATA, logConnection);
         if (qrdata && encKey) {
             setLoading(true);
-            await register(qrdata, encKey);
+            try {
+                await register(qrdata, encKey);
+            }
+            catch (ex) {
+                setLoadingMsg(ex.message);
+                setLoadingMsg(`Wrong qr value: ${qrdata}`);
+            }
         }
     }
 
     useEffect(() => {
+        // keep track of the current client id so it enters down only when connecting a different one
+        if (client && clientId.current && (client as IoTCClient).id === clientId.current) {
+            return;
+        }
         if (client && client.isConnected() && loading) {
             setLoading(false);
             showPrompt(false);
+            removeListener(LOG_DATA, logConnection);
             if (props.onSuccess) {
                 props.onSuccess();
             }
@@ -81,7 +105,7 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
             />
             <Overlay isVisible={prompt} onBackdropPress={showPrompt.bind(null, false)} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: screen.width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
                 <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-                    {loading && <Loader message={'Loading ...'} />}
+                    {loading && <Loader message={loadingMsg} />}
                     {!loading && <><Text>Please provide the password to decrypt credentials</Text>
                         <Input placeholder='Password' value={encKey} onChangeText={val => setEncKey(val)} inputStyle={{ color: colors.text }} />
                         <Divider />

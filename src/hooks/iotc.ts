@@ -3,8 +3,8 @@ import { IoTCClient, IOTC_CONNECT, IOTC_LOGGING, DecryptCredentials, IoTCCredent
 import { IoTCContext, CentralClient, SensorProps } from "../contexts/iotc";
 import { StorageContext } from "../contexts/storage";
 
-export function useIoTCentralClient(): [CentralClient, (creds: string, encKey: string) => Promise<void>] {
-    const { client } = useContext(IoTCContext);
+export function useIoTCentralClient(): [CentralClient, () => Promise<void>, (creds: string, encKey: string) => Promise<void>] {
+    const { client, disconnect } = useContext(IoTCContext);
     const { save } = useContext(StorageContext);
 
     // register device for first time
@@ -13,7 +13,7 @@ export function useIoTCentralClient(): [CentralClient, (creds: string, encKey: s
         await save(current => ({ ...current, credentials }));
     }
 
-    return [client, register];
+    return [client, disconnect, register];
 }
 
 export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {

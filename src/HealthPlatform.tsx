@@ -37,10 +37,6 @@ const sensorMap: { [id in valueof<typeof AVAILABLE_HEALTH>]: ISensor } = {
 
 export default function HealthPlatform() {
 
-    useScreenIcon({
-        name: 'heartbeat',
-        type: 'font-awesome'
-    });
 
     const defaultSensors: SensorProps[] = [
         {

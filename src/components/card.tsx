@@ -65,8 +65,11 @@ function getValue(value: any, enabled: boolean, editable: boolean | undefined, o
         setEdited(value);
     }, [value])
 
-    if (!enabled || edited === null || edited === undefined) {
+    if (!enabled) {
         return (null);
+    }
+    if (!value || edited === null || edited === undefined) {
+        return (<Text>N/A</Text>);
     }
 
     if ((typeof value) !== 'string' && (typeof value) !== 'number') {
@@ -79,12 +82,12 @@ function getValue(value: any, enabled: boolean, editable: boolean | undefined, o
     }
     const strVal: string = value.toString();
     if (editable && onEdit) {
-        return <View style={{ flex: 1, flexDirection: 'row' }}>
-            <Input value={edited.toString()} onChangeText={setEdited} inputStyle={{ color: textColor }} keyboardType={typeof (value) === 'number' ? 'numeric' : 'default'} containerStyle={{ flex: 1 }} />
+        return <View style={{ flex: 1 }}>
+            <Input value={edited.toString()} onChangeText={setEdited} inputStyle={{ color: textColor }} keyboardType={typeof (value) === 'number' ? 'numeric' : 'default'} />
             <Button title='Send' onPress={e => onEdit(edited)} type='clear' />
         </View>
     }
     else {
-        return <Headline style={{ fontSize: 30, marginEnd: 5, color: textColor }}>{strVal.length > 6 ? `${strVal.substring(0, 6)}...` : strVal}</Headline>
+        return <Headline style={{ fontSize: 26, marginEnd: 5, color: textColor }}>{strVal.length > 6 ? `${strVal.substring(0, 6)}...` : strVal}</Headline>
     }
 }
