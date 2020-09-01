@@ -88,6 +88,7 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
                 props.onSuccess();
             }
         }
+        return () => removeListener(LOG_DATA, logConnection);
     }, [client, loading])
 
     return (

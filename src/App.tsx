@@ -54,7 +54,6 @@ export default function App() {
         )
     }
     return (<Welcome setInitialized={setInitialized} />)
-    // return (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Map location={{ lat: 43.93531, lon: 12.75846 }} /></View>)
 }
 
 
