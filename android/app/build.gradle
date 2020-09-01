@@ -173,6 +173,7 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            resValue "string","google_maps_api_key",GOOGLE_MAPS_API_KEY
         }
         betaRelease{
             signingConfig signingConfigs.betaRelease

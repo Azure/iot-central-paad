@@ -61,3 +61,6 @@ buck-out/
 # vscode
 .vscode
 icons.json
+
+# Android
+gradle.properties
