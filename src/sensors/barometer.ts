@@ -2,6 +2,7 @@ import DeviceInfo from 'react-native-device-info';
 import { EventEmitter } from 'events';
 import { ISensor, DATA_AVAILABLE_EVENT, getRandom, SENSOR_UNAVAILABLE_EVENT } from './index';
 import { barometer, setUpdateIntervalForType, SensorTypes } from "react-native-sensors";
+import { Log } from '../tools/CustomLogger';
 
 export default class Barometer extends EventEmitter implements ISensor {
 
@@ -74,7 +75,7 @@ export default class Barometer extends EventEmitter implements ISensor {
                 }
             }.bind(this), function (this: Barometer, error: any) {
                 if (error) {
-                    console.log(`${this.name} is not available`);
+                    Log(`${this.name} is not available`);
                     this.enable(false);
                     this.emit(SENSOR_UNAVAILABLE_EVENT, this.id);
                 }

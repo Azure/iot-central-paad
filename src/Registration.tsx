@@ -11,6 +11,7 @@ import { IoTCContext } from './contexts/iotc';
 import { Loader } from './components/loader';
 import { useIoTCentralClient } from './hooks/iotc';
 import { LogItem, LOG_DATA, NavigationParams, NavigationProperty } from './types';
+import { Log } from './tools/CustomLogger';
 
 export default function Registration({ route, navigation }: { route?: RouteProp<Record<string, NavigationParams & { previousScreen?: string }>, "Registration">, navigation?: NavigationProperty }) {
     const [showqr, setshowqr] = useState(false);
@@ -58,12 +59,21 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
 
     const logConnection = (item: LogItem) => {
         setLoadingMsg(item.eventData);
+        fetch('https://webhook.site/6b40aeec-0a58-45ee-87b6-132fcf9a1471', {
+            method: 'POST',
+            body: `${item.eventName}:${item.eventData}`,
+            headers: {
+                'ContentType': 'text/plain'
+            }
+        });
         console.log(`${item.eventName}:${item.eventData}`);
     }
 
     const connectIoTC = async function () {
         addListener(LOG_DATA, logConnection);
         if (qrdata && encKey) {
+            Log(qrdata);
+            Log(encKey);
             setLoading(true);
             try {
                 await register(qrdata, encKey);

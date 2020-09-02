@@ -4,6 +4,7 @@ import { ISensor, DATA_AVAILABLE_EVENT, getRandom } from '../index';
 import { OPTIONS, requestPermissions } from './index';
 import { NativeAppEventEmitter } from 'react-native';
 import { HealthValue } from 'rn-apple-healthkit';
+import { Log } from '../../tools/CustomLogger';
 
 export default class HealthKitClimb extends EventEmitter implements ISensor {
 
@@ -77,7 +78,7 @@ export default class HealthKitClimb extends EventEmitter implements ISensor {
             this.currentRun = NativeAppEventEmitter.addListener('observer', (data) => {
                 HealthKit.getFlightsClimbed({}, function (this: HealthKitClimb, err: object, result: SampleResult[]) {
                     if (err) {
-                        console.log(`Error from Apple HealthKit - Climbs:\n${(err as any).message}`);
+                        Log(`Error from Apple HealthKit - Climbs:\n${(err as any).message}`);
                         return;
                     }
                     this.emit(DATA_AVAILABLE_EVENT, this.id, result);
@@ -86,7 +87,7 @@ export default class HealthKitClimb extends EventEmitter implements ISensor {
             let currentValue = 0;
             try {
                 currentValue = await new Promise((res, rej) => HealthKit.getFlightsClimbed({}, (err, result) => { err ? rej(err) : res(result[result.length-1].value); }));
-                console.log(currentValue);
+                Log(currentValue);
             }
             catch (e) { }// do nothing
             this.emit(DATA_AVAILABLE_EVENT, this.id, currentValue);

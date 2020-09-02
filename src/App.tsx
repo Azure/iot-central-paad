@@ -23,6 +23,7 @@ import Logs from './Logs';
 import { IconProps } from 'react-native-vector-icons/Icon';
 import { IIcon } from './hooks/common';
 import Map from './components/map';
+import { Log } from './tools/CustomLogger';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createStackNavigator();
@@ -99,7 +100,7 @@ function Root() {
     // connect client if credentials are retrieved
     useEffect(() => {
         if (!simulated) {
-            console.log('Received new credentials... connecting new client');
+            Log('Received new credentials... connecting new client');
             connect(credentials);
         }
     }, [credentials, simulated]);

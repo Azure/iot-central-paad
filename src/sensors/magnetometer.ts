@@ -2,6 +2,7 @@ import DeviceInfo from 'react-native-device-info';
 import { EventEmitter } from 'events';
 import { ISensor, DATA_AVAILABLE_EVENT, getRandom, Vector, SENSOR_UNAVAILABLE_EVENT } from './index';
 import { magnetometer, setUpdateIntervalForType, SensorTypes } from "react-native-sensors";
+import { Log } from '../tools/CustomLogger';
 
 export default class Magnetometer extends EventEmitter implements ISensor {
 
@@ -73,7 +74,7 @@ export default class Magnetometer extends EventEmitter implements ISensor {
                 this.emit(DATA_AVAILABLE_EVENT, this.id, { x, y, z });
             }.bind(this),function (this: Magnetometer, error: any) {
                 if (error) {
-                    console.log(`${this.name} is not available`);
+                    Log(`${this.name} is not available`);
                     this.enable(false);
                     this.emit(SENSOR_UNAVAILABLE_EVENT, this.id);
                 }

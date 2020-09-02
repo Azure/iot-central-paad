@@ -4,6 +4,7 @@ import { ISensor, DATA_AVAILABLE_EVENT, getRandom } from '../index';
 import { OPTIONS, requestPermissions } from './index';
 import { NativeAppEventEmitter } from 'react-native';
 import { HealthValue } from 'rn-apple-healthkit';
+import { Log } from '../../tools/CustomLogger';
 
 export default class HealthKitSteps extends EventEmitter implements ISensor {
 
@@ -77,7 +78,7 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
             this.currentRun = NativeAppEventEmitter.addListener('change:steps', (data) => {
                 HealthKit.getStepCount({}, function (this: HealthKitSteps, err: string, result: HealthValue) {
                     if (err) {
-                        console.log(`Error from Apple HealthKit - Steps:\n${(err as any).message}`);
+                        Log(`Error from Apple HealthKit - Steps:\n${(err as any).message}`);
                         return;
                     }
                     this.emit(DATA_AVAILABLE_EVENT, this.id, result.value);
@@ -91,10 +92,10 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
                             rej(err)
                             : res(result.value);
                     }));
-                console.log(currentValue);
+                Log(currentValue);
             }
             catch (e) {
-                console.log(e);
+                Log(e);
             }// do nothing
             this.emit(DATA_AVAILABLE_EVENT, this.id, currentValue);
         }

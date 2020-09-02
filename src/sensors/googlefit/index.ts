@@ -1,5 +1,6 @@
 import { PermissionsAndroid } from "react-native";
 import GoogleFit, { Scopes } from 'react-native-google-fit';
+import { Log } from "../../tools/CustomLogger";
 
 const SCOPES = [Scopes.FITNESS_ACTIVITY_READ, Scopes.FITNESS_BODY_READ, Scopes.FITNESS_BODY_TEMPERATURE_READ, Scopes.FITNESS_BLOOD_PRESSURE_READ];
 enum GOOGLE_ITEMS {
@@ -26,7 +27,7 @@ export async function requestPermissions(): Promise<void> {
         const authResult = await GoogleFit.authorize({ scopes: SCOPES });
         if (authResult.success) {
             GoogleFit.startRecording((data) => {
-                console.log(`Google fit data : ${data}`);
+                Log(`Google fit data : ${data}`);
             }, ['step', 'distance']);
         }
         else {

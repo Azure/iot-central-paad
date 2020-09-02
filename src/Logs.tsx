@@ -22,27 +22,17 @@ const SET_FREQUENCY_COMMAND = 'SetFrequency';
 
 const onCommandUpdate = async function (setTelemetry: (id: string, data: Partial<SensorProps>) => void, setLogs: StateUpdater<TimedLog>, command: IIoTCCommand) {
     let data: any;
-    try {
-        data = JSON.parse(command.requestPayload);
-    }
-    catch (e) {
-        // if empty just set the right value
-        if (command.name === ENABLE_DISABLE_COMMAND) {
-            data = false;
-        }
-        else if (command.name === SET_FREQUENCY_COMMAND) {
-            data = 5;
-        }
-    }
+    data = JSON.parse(command.requestPayload);
+
     if (command.name === ENABLE_DISABLE_COMMAND) {
-        if (data.item && data.enable !== undefined) {
-            setTelemetry(data.item, { enabled: data.enable });
+        if (data.item) {
+            setTelemetry(data.item, { enabled: data.enable ? data.enable : false });
             await command.reply(IIoTCCommandResponse.SUCCESS, 'Enable');
         }
     }
     else if (command.name === SET_FREQUENCY_COMMAND) {
-        if (data.item && data.frequency !== undefined) {
-            setTelemetry(data.item, { interval: data.frequency * 1000 });
+        if (data.item) {
+            setTelemetry(data.item, { interval: data.frequency ? data.frequency * 1000 : 5000 });
             await command.reply(IIoTCCommandResponse.SUCCESS, 'Frequency');
         }
     }

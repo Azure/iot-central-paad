@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { IoTCCredentials } from "react-native-azure-iotcentral-client";
 import * as Keychain from 'react-native-keychain';
+import { Log } from "../tools/CustomLogger";
 import { StateUpdater } from "../types";
 
 const USERNAME = 'IOTC_PAD_CLIENT';
@@ -50,7 +51,7 @@ const retrieveStorage = async function (update: StateUpdater<IStorageState>) {
 }
 
 const persist = async function (state: IStorageState) {
-    console.log(`Persisting ${JSON.stringify(state)}`);
+    Log(`Persisting ${JSON.stringify(state)}`);
     await Keychain.setGenericPassword(USERNAME, JSON.stringify(state));
 }
 
@@ -95,8 +96,10 @@ const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 retrieveStorage(setState);
             },
             clear: async () => {
-                setState({ credentials: null });
                 await Keychain.resetGenericPassword();
+                setState({ credentials: null });
+                dirty.current = true;
+
             }
         }}>
             {children}

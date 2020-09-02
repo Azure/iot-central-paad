@@ -6,6 +6,7 @@ import { NativeAppEventEmitter } from 'react-native';
 import { HealthValue } from 'rn-apple-healthkit';
 import GoogleFit from 'react-native-google-fit';
 import { GoogleFitStepResult } from '../../types';
+import { Log } from '../../tools/CustomLogger';
 
 export default class GoogleFitSteps extends EventEmitter implements ISensor {
 
@@ -80,7 +81,7 @@ export default class GoogleFitSteps extends EventEmitter implements ISensor {
         else {
             this.currentRun = GoogleFit.observeSteps(function (this: GoogleFitSteps, err: boolean, result: any) {
                 if (err) {
-                    console.log(`Error from Google Fit observe Steps`);
+                    Log(`Error from Google Fit observe Steps`);
                     return;
                 }
                 this.emit(DATA_AVAILABLE_EVENT, this.id, this.realStepCount += result.steps);
@@ -89,7 +90,7 @@ export default class GoogleFitSteps extends EventEmitter implements ISensor {
             let startDate = new Date();
             startDate.setDate(startDate.getDate() - 1);
             const results = await GoogleFit.getDailyStepCountSamples({ startDate: startDate.toISOString(), endDate: new Date().toISOString() }) as GoogleFitStepResult[];
-            console.log(JSON.stringify(results));
+            Log(JSON.stringify(results));
             results.forEach(function (this: GoogleFitSteps, result: any) {
                 if (result.steps && result.steps.length > 0) {
                     const currentValue = result.steps[result.steps.length - 1].value;

@@ -12,6 +12,7 @@ import GeoLocation from "../sensors/geolocation";
 import { defaults } from './defaults';
 import { LOG_DATA, valueof } from "../types";
 import EventLogger from "../tools/EventLogger";
+import { Log } from "../tools/CustomLogger";
 
 
 export type SensorProps = {
@@ -75,12 +76,12 @@ export const IoTCContext = React.createContext<IIoTCContext>({
 });
 
 const connectClient = async function (credentials: IoTCCredentials, eventLogger: EventLogger) {
-    console.log('Connecting Iotcentral client');
+    Log('Connecting Iotcentral client');
     let iotc = new IoTCClient(credentials.deviceId, credentials.scopeId, IOTC_CONNECT.DEVICE_KEY, credentials.deviceKey, eventLogger);
     if (credentials.modelId) {
         iotc.setModelId(credentials.modelId);
     }
-    // iotc.setLogging(IOTC_LOGGING.ALL);
+    //iotc.setLogging(IOTC_LOGGING.ALL);
     await iotc.connect(false);
     return iotc;
 }

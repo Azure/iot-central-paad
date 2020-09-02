@@ -55,6 +55,17 @@ export default function Settings() {
             }
         },
         {
+            title: 'Clear Data',
+            icon: 'trash-outline',
+            action: {
+                type: 'select',
+                fn: async (val) => {
+                    await clear();
+                    Alert.alert('Success', 'Successfully clean data');
+                }
+            }
+        },
+        {
             title: 'Dark Mode',
             icon: dark ? 'moon-outline' : 'moon',
             action: {
@@ -66,17 +77,7 @@ export default function Settings() {
             },
             value: dark
         },
-        {
-            title: 'Clear Data',
-            icon: 'trash-outline',
-            action: {
-                type: 'select',
-                fn: async (val) => {
-                    await clear();
-                    Alert.alert('Success', 'Successfully clean data');
-                }
-            }
-        }, ...(defaults.dev ? [{
+        ...(defaults.dev ? [{
             title: 'Simulation Mode',
             icon: dark ? 'sync-outline' : 'sync',
             action: {
@@ -108,17 +109,6 @@ export default function Settings() {
         </>)
     }
 
-    // useLayoutEffect(() => {
-    //     let headerShown = true;
-    //     if (parentRoute.state) {
-    //         if (parentRoute.state.index > 0) {
-    //             headerShown = false;
-    //         }
-    //     }
-    //     parent.setOptions({
-    //         headerShown
-    //     })
-    // });
     return (
         <View style={{ flex: 1, marginTop: insets.top, marginBottom: insets.bottom }}>
             <Stack.Navigator screenOptions={({ route }) => ({
@@ -137,8 +127,6 @@ export default function Settings() {
                                         onPress={item.action && item.action.type === 'expand' ? item.action.fn.bind(null, nav) : undefined}
                                     />
                                 ))}
-                                {/* <Text style={{ color: colors.text }}>I am {mode === ThemeMode.DARK ? 'dark' : 'light'}</Text>
-            <Button onPress={toggle} title='Change' /> */}
                             </ScrollView>)
                         }}
                 </Stack.Screen>
