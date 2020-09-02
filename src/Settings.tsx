@@ -61,6 +61,7 @@ export default function Settings() {
                 type: 'select',
                 fn: async (val) => {
                     await clear();
+                    console.log('cleared');
                     Alert.alert('Success', 'Successfully clean data');
                 }
             }
@@ -124,7 +125,7 @@ export default function Settings() {
                                     <ListItem key={`setting-${index}`} title={item.title} leftIcon={{ name: item.icon, type: 'ionicon', color: colors.text }} bottomDivider
                                         containerStyle={{ backgroundColor: colors.card }}
                                         titleStyle={{ color: colors.text }} rightElement={item.action ? getRightElement(item) : undefined} chevron={item.action && item.action.type === 'expand' ? true : false}
-                                        onPress={item.action && item.action.type === 'expand' ? item.action.fn.bind(null, nav) : undefined}
+                                        onPress={item.action && item.action.type != 'switch' ? item.action.fn.bind(null, nav) : undefined}
                                     />
                                 ))}
                             </ScrollView>)
@@ -136,16 +137,6 @@ export default function Settings() {
     )
 }
 
-
-// function getHeaderTitle(route) {
-//     // If the focused route is not found, we need to assume it's the initial screen
-//     // This can happen during if there hasn't been any navigation inside the screen
-//     // In our case, it's "Feed" as that's the first screen inside the navigator
-//     if (route.state) {
-//         return route.state.routeNames[route.state.index];
-//     }
-//     return route.name;
-// }
 
 function getHeaderTitle(route: any) {
     // If the focused route is not found, we need to assume it's the initial screen
