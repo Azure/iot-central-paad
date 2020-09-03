@@ -12,6 +12,7 @@ import { IOTC_EVENTS, IIoTCCommand, IIoTCCommandResponse } from 'react-native-az
 import { LogItem, LOG_DATA, StateUpdater, TimedLog } from './types';
 import { colors } from 'react-native-elements';
 import { useTheme } from '@react-navigation/native';
+import { LogsContext } from './contexts/logs';
 
 
 type CommandInfo = { timestamp: number, cmd: IIoTCCommand }[];
@@ -20,7 +21,7 @@ const ENABLE_DISABLE_COMMAND = 'EnableDisable';
 const SET_FREQUENCY_COMMAND = 'SetFrequency';
 
 
-const onCommandUpdate = async function (setTelemetry: (id: string, data: Partial<SensorProps>) => void, setLogs: StateUpdater<TimedLog>, command: IIoTCCommand) {
+const onCommandUpdate = async function (setTelemetry: (id: string, data: Partial<SensorProps>) => void, setLogs: (logItem: LogItem) => void, command: IIoTCCommand) {
     let data: any;
     data = JSON.parse(command.requestPayload);
 
@@ -36,7 +37,7 @@ const onCommandUpdate = async function (setTelemetry: (id: string, data: Partial
             await command.reply(IIoTCCommandResponse.SUCCESS, 'Frequency');
         }
     }
-    setLogs(current => ([...current, { timestamp: Date.now(), logItem: { eventName: command.name, eventData: command.requestPayload } }]));
+    setLogs({ eventName: command.name, eventData: command.requestPayload });
 
 }
 
@@ -56,19 +57,14 @@ export default function Logs() {
 
     const { colors } = useTheme();
     const [simulated] = useSimulation();
-    const { addListener, removeListener } = useContext(IoTCContext);
     const [client] = useIoTCentralClient();
     const { set } = useTelemetry();
-    const [logs, setLogs] = useState<TimedLog>([]);
-
-    const updateLogs = (logItem: LogItem) => setLogs(current => ([...current, { logItem, timestamp: new Date(Date.now()).toLocaleString() }]))
+    const { logs, append } = useContext(LogsContext);
     useEffect(() => {
-        addListener(LOG_DATA, updateLogs);
         if (client && client.isConnected()) {
-            client.on(IOTC_EVENTS.Commands, onCommandUpdate.bind(null, set, setLogs));
+            client.on(IOTC_EVENTS.Commands, onCommandUpdate.bind(null, set, append));
             client.fetchTwin();
         }
-        return () => { removeListener(LOG_DATA, updateLogs) };
     }, [client]);
 
     // if (simulated) {

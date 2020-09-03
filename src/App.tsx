@@ -4,7 +4,7 @@ import Settings from './Settings';
 import ThemeProvider, { ThemeContext, ThemeMode } from './contexts/theme';
 import { NavigationContainer, DarkTheme, DefaultTheme, useTheme, Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Screens, NavigationScreens, NavigationParams, NavigationProperty } from './types';
+import { Screens, NavigationScreens, NavigationParams, NavigationProperty, LOG_DATA } from './types';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import LogoIcon from './assets/IotcLogo.svg';
 import Telemetry from './Telemetry';
@@ -24,6 +24,8 @@ import { IconProps } from 'react-native-vector-icons/Icon';
 import { IIcon } from './hooks/common';
 import Map from './components/map';
 import { Log } from './tools/CustomLogger';
+import FileUpload from './FileUpload';
+import LogsProvider, { LogsContext } from './contexts/logs';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createStackNavigator();
@@ -45,11 +47,13 @@ export default function App() {
         return (
             <ThemeProvider>
                 <SafeAreaProvider>
-                    <StorageProvider>
-                        <IoTCProvider>
-                            <Navigation />
-                        </IoTCProvider>
-                    </StorageProvider>
+                    <LogsProvider>
+                        <StorageProvider>
+                            <IoTCProvider>
+                                <Navigation />
+                            </IoTCProvider>
+                        </StorageProvider>
+                    </LogsProvider>
                 </SafeAreaProvider>
             </ThemeProvider>
         )
@@ -95,13 +99,15 @@ function Navigation() {
 
 function Root() {
     const { credentials, simulated } = useContext(StorageContext);
-    const { connect } = useContext(IoTCContext);
+    const { connect, addListener } = useContext(IoTCContext);
+    const { append } = useContext(LogsContext);
 
     // connect client if credentials are retrieved
     useEffect(() => {
         if (!simulated) {
             Log('Received new credentials... connecting new client');
             connect(credentials);
+            addListener(LOG_DATA, append);
         }
     }, [credentials, simulated]);
 
@@ -138,6 +144,19 @@ function Root() {
                     android: {
                         name: 'playlist-edit',
                         type: 'material-community'
+                    }
+                }) as IIcon, color, size)
+            }} />
+        <Tab.Screen name={Screens.FILE_UPLOAD_SCREEN} component={FileUpload}
+            options={{
+                tabBarIcon: ({ color, size }) => getIcon(Platform.select({
+                    ios: {
+                        name: 'cloud-upload-outline',
+                        type: 'ionicon'
+                    },
+                    android: {
+                        name: 'playlist-edit',
+                        type: 'cloud-upload-outline'
                     }
                 }) as IIcon, color, size)
             }} />

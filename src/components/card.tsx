@@ -1,14 +1,14 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { CardProps, IconProps, Icon, CheckBox, Input, Button } from 'react-native-elements'
 import { useTheme } from '@react-navigation/native';
-import { View, processColor, ColorValue, TouchableOpacityProperties, TouchableOpacity } from 'react-native';
+import { View, processColor, ColorValue, TouchableOpacity, TouchableOpacityProps } from 'react-native';
 import { useScreenDimensions } from '../hooks/layout';
 import { Text, Name, Headline, getRandomColor } from './typography';
 
 type EditCallback = ((value: any) => void | Promise<void>);
 
 
-export function Card(props: CardProps & TouchableOpacityProperties & { onToggle: () => void, enabled: boolean, value?: any, unit?: string, icon?: IconProps, editable?: boolean, onEdit?: EditCallback }) {
+export function Card(props: CardProps & TouchableOpacityProps & { onToggle?: () => void, enabled: boolean, value?: any | React.FC, unit?: string, icon?: IconProps, editable?: boolean, onEdit?: EditCallback }) {
     const { containerStyle, enabled, onToggle, editable, onEdit, value, unit, icon, ...otherProps } = props;
     const { dark, colors } = useTheme();
     const { screen } = useScreenDimensions();
@@ -16,7 +16,7 @@ export function Card(props: CardProps & TouchableOpacityProperties & { onToggle:
     const textColor = enabled ? colors.text : '#9490a9';
     const barColor = useRef(getRandomColor() as ColorValue);
 
-    return (<TouchableOpacity style={{
+    return (<TouchableOpacity style={[{
         backgroundColor: colors.card,
         flex: 1,
         height: 200,
@@ -33,25 +33,27 @@ export function Card(props: CardProps & TouchableOpacityProperties & { onToggle:
             shadowRadius: 3.84,
             elevation: 5
         } : {})
-    }}
+    }, containerStyle]}
         {...otherProps}
     ><View style={{ flex: 1, position: 'relative' }}>
             {enabled && <View style={{ backgroundColor: enabled ? barColor.current : 'white', width: `60%`, height: 5, marginBottom: 20, borderRadius: 5 }}></View>}
-            <CheckBox
+            {onToggle && <CheckBox
                 center
                 checkedIcon='dot-circle-o'
                 uncheckedIcon='circle-o'
                 checked={enabled}
                 containerStyle={{ position: 'absolute', top: -25, right: -40 }}
                 onPress={onToggle}
-            />
+            />}
 
             <View style={{ flex: 2 }}>
                 <Name style={{ color: textColor }}>{otherProps.title}</Name>
-                <View style={{ flexDirection: 'row', paddingVertical: 10 }}>
-                    {getValue(value, enabled, editable, onEdit, textColor)}
-                    {unit && enabled && <Headline style={{ color: '#9490a9', alignSelf: 'flex-end' }}>{unit}</Headline>}
-                </View>
+                {
+                    (typeof value) === 'function' ? value() :
+                        <View style={{ flexDirection: 'row', paddingVertical: 10 }}>
+                            {getValue(value, enabled, editable, onEdit, textColor)}
+                            {unit && enabled && <Headline style={{ color: '#9490a9', alignSelf: 'flex-end' }}>{unit}</Headline>}
+                        </View>}
             </View>
             {icon && <Icon name={icon.name} type={icon.type} style={{ alignSelf: 'flex-end', justifyContent: 'flex-end' }} color='#9490a9' />}
         </View>
@@ -68,7 +70,7 @@ function getValue(value: any, enabled: boolean, editable: boolean | undefined, o
     if (!enabled) {
         return (null);
     }
-    if (!value || edited === null || edited === undefined) {
+    if (value === undefined || edited === null || edited === undefined) {
         return (<Text>N/A</Text>);
     }
 

@@ -6,7 +6,8 @@ export const Screens = {
     'TELEMETRY_SCREEN': 'Telemetry',
     'PROPERTIES_SCREEN': 'Properties',
     'LOGS_SCREEN': 'Logs',
-    'HEALTH_SCREEN': 'Health'
+    'HEALTH_SCREEN': 'Health',
+    'FILE_UPLOAD_SCREEN': 'File Upload'
 }
 
 /**
