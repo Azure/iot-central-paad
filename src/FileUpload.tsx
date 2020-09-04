@@ -15,6 +15,7 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { Platform } from 'react-native';
 import { StateUpdater } from './types';
 import { LogsContext } from './contexts/logs';
+import { Screen } from 'react-native-screens';
 
 export default function FileUpload() {
     const [title, setTitle] = useState('Upload image');
@@ -24,7 +25,7 @@ export default function FileUpload() {
     const { screen } = useScreenDimensions();
     const { append } = useContext(LogsContext);
     const [uploading, setUploading] = useState(false);
-    const [completed, setCompleted] = useState(false);
+    const [uploadStatus, setuploadStatus] = useState<boolean | undefined>(undefined);
 
     const fileName = useRef('');
     const fileSize = useRef('');
@@ -49,6 +50,10 @@ export default function FileUpload() {
                 <Loader message={'Connecting to IoT Central ...'} />
             </View>)
     }
+
+    useEffect(() => {
+        setuploadStatus(undefined);
+    }, [uploading]);
 
     return (<View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom, justifyContent: 'center', alignItems: 'center' }}>
         <Card
@@ -92,16 +97,19 @@ export default function FileUpload() {
                             await new Promise(r => setTimeout(r, 6000));
                             const res = await client.uploadFile(curfileName as string, fileType, response.data, 'base64');
                             if (res >= 200 && res < 300) {
+                                console.log('here');
                                 append({
                                     eventName: 'FILE UPLOAD',
                                     eventData: `Successfully uploaded ${curfileName}`
                                 });
+                                setuploadStatus(true);
                             }
                             else {
                                 append({
                                     eventName: 'FILE UPLOAD',
                                     eventData: `Error uploading ${curfileName}`
                                 });
+                                setuploadStatus(false);
                             }
                         }
                         catch (e) {
@@ -112,7 +120,8 @@ export default function FileUpload() {
                 });
 
             }}
-            value={uploading ? () => (<UploadProgress size={fileSize.current} filename={fileName.current} completed={completed} setUploading={setUploading} />) : UploadIcon}
+            value={uploading ? () => (<UploadProgress size={fileSize.current} filename={fileName.current} uploadStatus={uploadStatus} setUploading={setUploading} />) : UploadIcon}
+
         />
     </View>)
 }
@@ -129,13 +138,14 @@ function UploadIcon() {
         </View>)
 }
 
-function UploadProgress(props: { filename: string, size: string, completed: boolean, setUploading: StateUpdater<boolean> }) {
+function UploadProgress(props: { filename: string, size: string, uploadStatus: boolean | undefined, setUploading: StateUpdater<boolean> }) {
     const { colors } = useTheme();
     const [fill, setFill] = useState(0);
-    const { size, completed, filename, setUploading } = props;
+    const { size, uploadStatus, filename, setUploading } = props;
+    const { screen } = useScreenDimensions();
+    const [showResult, setShowResult] = useState(false);
 
     const intid = useRef<number>();
-    console.log(filename);
 
     useEffect(() => {
         //@ts-ignore
@@ -143,7 +153,6 @@ function UploadProgress(props: { filename: string, size: string, completed: bool
             if (cur === 100) {
                 //@ts-ignore
                 clearInterval(intid.current);
-                setUploading(false);
             }
             return cur + 5;
         }), 300);
@@ -152,17 +161,38 @@ function UploadProgress(props: { filename: string, size: string, completed: bool
     }, []);
 
     useEffect(() => {
-        if (completed) {
+        if (uploadStatus !== undefined) {
+            console.log(`Upload status ${uploadStatus}`);
+            setShowResult(true);
+            // wait before go back to standard screen
+            setTimeout(() => {
+                setUploading(false);
+            }, 3000);
             setFill(100);
-            setUploading(false);
-            //@ts-ignore
-            clearInterval(intid.current);
         }
-    }, [completed]);
+    }, [uploadStatus]);
+
+    if (uploadStatus !== undefined && showResult) {
+        return (<View style={{ flex: 1, alignItems: 'center' }}>
+            <Icon
+                size={screen.height / 6}
+                color={uploadStatus ? 'green' : 'red'}
+                name={Platform.select({
+                    ios: uploadStatus ? 'checkmark-circle-outline' : 'close-circle-outline',
+                    android: uploadStatus ? 'check-circle-outline' : 'close-circle-outline'
+                }) as string}
+                type={Platform.select({
+                    ios: 'ionicon',
+                    android: 'material-community'
+                })}
+            />
+            <Text>{uploadStatus ? `Successfully uploaded ${filename}` : `Failed to upload ${filename}`}</Text>
+        </View>)
+    }
 
     return (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <AnimatedCircularProgress
-            size={200}
+            size={screen.height / 5}
             width={5}
             fill={fill}
             tintColor={colors.text}

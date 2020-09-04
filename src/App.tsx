@@ -155,8 +155,8 @@ function Root() {
                         type: 'ionicon'
                     },
                     android: {
-                        name: 'playlist-edit',
-                        type: 'cloud-upload-outline'
+                        name: 'cloud-upload-outline',
+                        type: 'material-community'
                     }
                 }) as IIcon, color, size)
             }} />
