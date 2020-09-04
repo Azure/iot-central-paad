@@ -91,7 +91,7 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
             <Loader message='' />
         </View>
     }
-    const geolocation = telemetryData.find(t => t.unit && t.unit === '°');
+    const geolocation = telemetryData.find(t => t.id === telemetryId && t.unit && t.unit === '°');
     if (geolocation) {
         return <View style={style.container}>
             <Map style={{
