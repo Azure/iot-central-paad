@@ -60,6 +60,7 @@ export default function Logs() {
     const [client] = useIoTCentralClient();
     const { set } = useTelemetry();
     const { logs, append } = useContext(LogsContext);
+
     useEffect(() => {
         if (client && client.isConnected()) {
             client.on(IOTC_EVENTS.Commands, onCommandUpdate.bind(null, set, append));
@@ -67,35 +68,15 @@ export default function Logs() {
         }
     }, [client]);
 
-    // if (simulated) {
-    //     return (
-    //         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginHorizontal: 30 }}>
-    //             <Headline style={{ textAlign: 'center' }}>Simulation mode is enabled</Headline>
-    //             <Text style={{ textAlign: 'center' }}> Logs are not available.
-    //             Disable simulation mode and connect to IoT Central to work with commands.
-    //             </Text>
-    //         </View>
-    //     )
-    // }
-    // if (client === null) {
-    //     return <Registration />
-    // }
-
-    // if (client === undefined) {
-    //     return (
-    //         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-    //             <Loader message={'Connecting to IoT Central ...'} />
-    //         </View>)
-    // }
     return (<View style={{ flex: 1, padding: 10 }}>
         <Text>Received commands will be logged below.</Text>
-        <ScrollView style={{ margin: 10, borderWidth: 1, borderColor: colors.border, padding: 10 }}>
+        <ScrollView style={{ margin: 10, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 10, paddingBottom: 100 }}>
             {logs.map((l, i) => (
                 <React.Fragment key={`logf-${i}`}>
                     <Text key={`log-${i}`}>{l.timestamp}:
                     <Text key={`logdata-${i}`} style={{ color: 'green' }}>{l.logItem.eventName}</Text>
                     </Text>
-                    <Text key={`logpayload-${i}`}>{l.logItem.eventData}</Text>
+                    <Text style={{ marginBottom: 5 }} key={`logpayload-${i}`}>{l.logItem.eventData}</Text>
                 </React.Fragment>
             ))}
         </ScrollView>

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, StyleSheet, processColor } from 'react-native';
 import { LineChart } from 'react-native-charts-wrapper';
-import { getRandomColor, Text, getNegativeColor, LightenDarkenColor } from './components/typography';
+import { getRandomColor, Text, getNegativeColor, LightenDarkenColor, Name } from './components/typography';
 import { ExtendedLineData, ItemData, CustomLineDatasetConfig, NavigationParams } from './types';
 import { useTelemetry } from './hooks/iotc';
 import { DATA_AVAILABLE_EVENT } from './sensors';
@@ -25,7 +25,7 @@ const footer = 'This view is showing real-time data from the paired device or Go
 export default function Insight({ route }: { route: RouteProp<Record<string, NavigationParams & { telemetryId: string }>, "Insight"> }) {
     const { telemetryData, addListener, removeListener } = useTelemetry();
     const { screen } = useScreenDimensions();
-    const { colors } = useTheme();
+    const { colors, dark } = useTheme();
     const [start, setStart] = useState<number>(Date.now());
     const [data, setData] = useState<ExtendedLineData>({
         dataSets: []
@@ -94,10 +94,22 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
     const geolocation = telemetryData.find(t => t.unit && t.unit === '°');
     if (geolocation) {
         return <View style={style.container}>
-            <Map style={{ flex: 3, margin: 10 }} location={geolocation.value} />
+            <Map style={{
+                flex: 3, margin: 20, borderRadius: 20,
+                ...(!dark ? {
+                    shadowColor: "'rgba(0, 0, 0, 0.14)'",
+                    shadowOffset: {
+                        width: 0,
+                        height: 3,
+                    },
+                    shadowOpacity: 0.8,
+                    shadowRadius: 3.84,
+                    elevation: 5
+                } : {})
+            }} location={geolocation.value} />
             <View style={style.summary}>
-                <Text>Latitude: {geolocation.value.lat}</Text>
-                <Text>Longitude: {geolocation.value.lon}</Text>
+                <Text><Name>Latitude:</Name> {geolocation.value.lat}</Text>
+                <Text><Name>Longitude:</Name> {geolocation.value.lon}</Text>
             </View>
         </View>
     }
