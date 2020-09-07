@@ -1,0 +1,85 @@
+trigger:
+  - master
+
+pool:
+  vmImage: 'macos-latest'
+
+name: $(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '9.7.1'
+  displayName: 'Install Node'
+
+- script: npm install
+  workingDirectory: .
+  displayName: 'Install node dependencies'
+
+- task: CocoaPods@0
+  displayName: "Install CocoaPods dependencies"
+  inputs:
+    workingDirectory: ios
+    forceRepoUpdate: false
+
+# - task: CmdLine@2
+#   displayName: "Run Unit Tests"
+#   inputs:
+#     script: 'xcodebuild test -workspace ReactNativePipeline.xcworkspace -scheme ReactNativePipeline -destination ''platform=iOS Simulator,name=iPhone 8'' -skip-testing OperationsMobileApplicationUITests | xcpretty --report junit && exit ${PIPESTATUS[0]}'
+#     workingDirectory: '$(Build.SourcesDirectory)/src/ios'
+
+# - task: PublishTestResults@2
+#   displayName: "Publish Test Results"
+#   inputs:
+#     testResultsFormat: 'JUnit'
+#     testResultsFiles: 'junit.xml'
+#     searchFolder: '$(Build.SourcesDirectory)/src/ios/build/reports/'
+#     failTaskOnFailedTests: true
+
+- task: InstallAppleCertificate@2
+  displayName: "Install Apple Certificate"
+  inputs:
+    certSecureFile: '$(Certificate_Name)'
+    certPwd: '$(Certificate_Password)'
+
+- task: InstallAppleProvisioningProfile@1
+  displayName: "Install Apple provisioning profile"
+  inputs:
+    provisioningProfileLocation: 'secureFiles'
+    provProfileSecureFile: '$(Provisioning_Profile)'
+
+#- task: ios-bundle-version@1
+#  displayName: "Set versions"
+#  inputs:
+#    sourcePath: 'ios/$(Project_Name)/Info.plist'
+#    versionCodeOption: 'buildid'
+#    versionCode: '$(Build.BuildId)'
+#    printFile: true
+
+- task: Xcode@5
+  displayName: "Build Mobile Application"
+  inputs:
+    actions: 'build'
+    configuration: 'Release'
+    sdk: 'iphoneos13.6'
+    xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
+    scheme: '$(Project_Name)'
+    packageApp: true
+    exportPath: 'output/package'
+    archivePath: 'output/archive'
+    signingOption: 'manual'
+    signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+    provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+    xcodeVersion: 'specifyPath'
+    xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
+
+- task: CmdLine@2
+  displayName: "Rename build build artifact to include build number"
+  inputs:
+    script: 'mv output/package/$(Project_Name).ipa output/package/$(Project_Name)$(Build.BuildNumber).ipa'
+  
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Build Artifact"
+  inputs:
+    PathtoPublish: 'output/package/$(Project_Name)$(Build.BuildNumber).ipa'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
