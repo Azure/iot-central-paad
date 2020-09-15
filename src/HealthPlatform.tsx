@@ -20,7 +20,7 @@ import GoogleFitSteps from './sensors/googlefit/steps';
 
 const AVAILABLE_HEALTH = {
     STEPS: 'steps',
-    FLOORS: 'floors'
+    FLOORS: 'flightsClimbed'
 }
 
 

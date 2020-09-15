@@ -41,12 +41,9 @@ export default function Registration({ route, navigation }: { route?: RouteProp<
 
 function QRCode(props: { onSuccess?(): void | Promise<void> }) {
     const { screen, orientation } = useScreenDimensions();
-    const [prompt, showPrompt] = useState(false);
-    const [encKey, setEncKey] = useState<string | undefined>(undefined);
     const [qrdata, setQrdata] = useState<string | undefined>(undefined);
     const { colors } = useTheme();
     const [client, disconnect, register] = useIoTCentralClient();
-    const { addListener, removeListener } = useContext(IoTCContext);
     const [loading, setLoading] = useState(false);
     const [loadingMsg, setLoadingMsg] = useState('Loading ...');
 
@@ -54,16 +51,15 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
 
     const onRead = async function (e: Event) {
         setQrdata(e.data);
-        showPrompt(true);
+        await connectIoTC();
     }
 
     const connectIoTC = async function () {
-        if (qrdata && encKey) {
+        if (qrdata) {
             Log(qrdata);
-            Log(encKey);
             setLoading(true);
             try {
-                await register(qrdata, encKey);
+                await register(qrdata);
             }
             catch (ex) {
                 setLoadingMsg(ex.message);
@@ -79,7 +75,6 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
         }
         if (client && client.isConnected() && loading) {
             setLoading(false);
-            showPrompt(false);
             if (props.onSuccess) {
                 props.onSuccess();
             }
@@ -99,15 +94,6 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
                 cameraStyle={{ height: screen.height + 20, width: screen.width }}
 
             />
-            <Overlay isVisible={prompt} onBackdropPress={showPrompt.bind(null, false)} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: screen.width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
-                <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-                    {loading && <Loader message={loadingMsg} />}
-                    {!loading && <><Text>Please provide the password to decrypt credentials</Text>
-                        <Input placeholder='Password' value={encKey} onChangeText={val => setEncKey(val)} inputStyle={{ color: colors.text }} />
-                        <Divider />
-                        <Button type='clear' title='Confirm' onPress={connectIoTC} /></>}
-                </View>
-            </Overlay>
         </View >
     )
 }
