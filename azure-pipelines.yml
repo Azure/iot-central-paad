@@ -72,14 +72,14 @@ steps:
     xcodeVersion: 'specifyPath'
     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
 
-- task: CmdLine@2
-  displayName: "Rename build build artifact to include build number"
-  inputs:
-    script: 'mv output/package/$(Project_Name).ipa output/package/$(Project_Name)$(Build.BuildNumber).ipa'
+# - task: CmdLine@2
+#   displayName: "Rename build build artifact to include build number"
+#   inputs:
+#     script: 'mv output/package/$(Project_Name).ipa output/package/$(Project_Name)$(Build.BuildNumber).ipa'
   
 - task: PublishBuildArtifacts@1
   displayName: "Publish Build Artifact"
   inputs:
-    PathtoPublish: 'output/package/$(Project_Name)$(Build.BuildNumber).ipa'
+    PathtoPublish: 'output/package/$(Project_Name).ipa'
     ArtifactName: 'drop'
     publishLocation: 'Container'
