@@ -16,6 +16,7 @@ export function Card(props: CardProps & TouchableOpacityProps & { onToggle?: () 
     const textColor = enabled ? colors.text : '#9490a9';
     const barColor = useRef(getRandomColor() as ColorValue);
 
+
     return (<TouchableOpacity style={[{
         backgroundColor: colors.card,
         flex: 1,

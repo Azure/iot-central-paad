@@ -18,7 +18,6 @@ import { LogsContext } from './contexts/logs';
 import { Screen } from 'react-native-screens';
 
 export default function FileUpload() {
-    const [title, setTitle] = useState('Upload image');
     const [client] = useIoTCentralClient();
     const [simulated] = useSimulation();
     const insets = useSafeAreaInsets();
@@ -29,6 +28,10 @@ export default function FileUpload() {
 
     const fileName = useRef('');
     const fileSize = useRef('');
+
+    useEffect(() => {
+        setuploadStatus(undefined);
+    }, [uploading]);
 
     if (simulated) {
         return (
@@ -51,9 +54,6 @@ export default function FileUpload() {
             </View>)
     }
 
-    useEffect(() => {
-        setuploadStatus(undefined);
-    }, [uploading]);
 
     return (<View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom, justifyContent: 'center', alignItems: 'center' }}>
         <Card
@@ -162,7 +162,6 @@ function UploadProgress(props: { filename: string, size: string, uploadStatus: b
 
     useEffect(() => {
         if (uploadStatus !== undefined) {
-            console.log(`Upload status ${uploadStatus}`);
             setShowResult(true);
             // wait before go back to standard screen
             setTimeout(() => {

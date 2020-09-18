@@ -41,9 +41,11 @@ export default function Registration({ route, navigation }: { route?: RouteProp<
 
 function QRCode(props: { onSuccess?(): void | Promise<void> }) {
     const { screen, orientation } = useScreenDimensions();
+    const [prompt, showPrompt] = useState(false);
     const [qrdata, setQrdata] = useState<string | undefined>(undefined);
     const { colors } = useTheme();
     const [client, disconnect, register] = useIoTCentralClient();
+    const { addListener, removeListener } = useContext(IoTCContext);
     const [loading, setLoading] = useState(false);
     const [loadingMsg, setLoadingMsg] = useState('Loading ...');
 
@@ -51,11 +53,12 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
 
     const onRead = async function (e: Event) {
         setQrdata(e.data);
-        await connectIoTC();
+        showPrompt(true);
     }
 
     const connectIoTC = async function () {
         if (qrdata) {
+            console.log(qrdata);
             Log(qrdata);
             setLoading(true);
             try {
@@ -69,12 +72,19 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
     }
 
     useEffect(() => {
+        if (prompt && qrdata) {
+            connectIoTC();
+        }
+    }, [prompt, qrdata]);
+
+    useEffect(() => {
         // keep track of the current client id so it enters down only when connecting a different one
         if (client && clientId.current && (client as IoTCClient).id === clientId.current) {
             return;
         }
         if (client && client.isConnected() && loading) {
             setLoading(false);
+            showPrompt(false);
             if (props.onSuccess) {
                 props.onSuccess();
             }
@@ -94,6 +104,11 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
                 cameraStyle={{ height: screen.height + 20, width: screen.width }}
 
             />
+            <Overlay isVisible={prompt} onBackdropPress={showPrompt.bind(null, false)} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: screen.width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
+                <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
+                    {loading && <Loader message={loadingMsg} />}
+                </View>
+            </Overlay>
         </View >
     )
 }
