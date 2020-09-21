@@ -16,26 +16,6 @@ steps:
   workingDirectory: .
   displayName: 'Install node dependencies'
 
-- task: CocoaPods@0
-  displayName: "Install CocoaPods dependencies"
-  inputs:
-    workingDirectory: ios
-    forceRepoUpdate: false
-
-# - task: CmdLine@2
-#   displayName: "Run Unit Tests"
-#   inputs:
-#     script: 'xcodebuild test -workspace ReactNativePipeline.xcworkspace -scheme ReactNativePipeline -destination ''platform=iOS Simulator,name=iPhone 8'' -skip-testing OperationsMobileApplicationUITests | xcpretty --report junit && exit ${PIPESTATUS[0]}'
-#     workingDirectory: '$(Build.SourcesDirectory)/src/ios'
-
-# - task: PublishTestResults@2
-#   displayName: "Publish Test Results"
-#   inputs:
-#     testResultsFormat: 'JUnit'
-#     testResultsFiles: 'junit.xml'
-#     searchFolder: '$(Build.SourcesDirectory)/src/ios/build/reports/'
-#     failTaskOnFailedTests: true
-
 - task: InstallAppleCertificate@2
   displayName: "Install Apple Certificate"
   inputs:
