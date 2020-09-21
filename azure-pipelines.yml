@@ -41,20 +41,16 @@ steps:
   inputs:
     certSecureFile: '$(Certificate_Name)'
     certPwd: '$(Certificate_Password)'
-
 - task: InstallAppleProvisioningProfile@1
   displayName: "Install Apple provisioning profile"
   inputs:
     provisioningProfileLocation: 'secureFiles'
     provProfileSecureFile: '$(Provisioning_Profile)'
 
-#- task: ios-bundle-version@1
-#  displayName: "Set versions"
-#  inputs:
-#    sourcePath: 'ios/$(Project_Name)/Info.plist'
-#    versionCodeOption: 'buildid'
-#    versionCode: '$(Build.BuildId)'
-#    printFile: true
+- task: Shell++@0
+  inputs:
+    type: 'FilePath'
+    scriptPath: 'bumpVersion.sh'
 
 - task: Xcode@5
   displayName: "Build Mobile Application"
@@ -72,11 +68,6 @@ steps:
     provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
     xcodeVersion: 'specifyPath'
     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
-
-# - task: CmdLine@2
-#   displayName: "Rename build build artifact to include build number"
-#   inputs:
-#     script: 'mv output/package/$(Project_Name).ipa output/package/$(Project_Name)$(Build.BuildNumber).ipa'
   
 - task: PublishBuildArtifacts@1
   displayName: "Publish Build Artifact"
