@@ -14,8 +14,8 @@ export function useScreenDimensions() {
     const [orientation, setOrientation] = useState<Orientation>(getOrientation(screenData.width, screenData.height));
 
     const onChange = (result: { window: ScaledSize, screen: ScaledSize }) => {
-        setScreenData(result.screen);
-        const currentOrientation = getOrientation(result.screen.width, result.screen.height);
+        setScreenData(result.window);
+        const currentOrientation = getOrientation(result.window.width, result.window.height);
         if (orientation !== currentOrientation) {
             setOrientation(currentOrientation);
         }

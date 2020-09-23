@@ -60,6 +60,10 @@ export default class QRCodeScanner extends React.Component<IQRCodeProps, {}> imp
     render() {
         const sideWidth = this.calculateSideWidth(this.props.width, this.props.markerSize);
         const verticals = this.calculateVerticals(this.props.height, this.props.markerSize);
+        // console.log(`Height: ${this.props.height}`);
+        // console.log(`Width: ${this.props.width}`);
+        // console.log(`SideWidth: ${sideWidth}`);
+        // console.log(`Verticals: ${verticals}`);
         return (<Scanner
             ref={sc => this.qrCodeRef = sc}
             onRead={this.onRead}

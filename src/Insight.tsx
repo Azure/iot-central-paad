@@ -44,7 +44,6 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
             return;
         }
         let itemToProcess: ItemData[] = [item];
-        console.log(JSON.stringify(item.value));
         if ((typeof item.value) !== 'string' && (typeof item.value) !== 'number') {
             // data is composite
             itemToProcess = Object.keys(item.value).map(i => ({
