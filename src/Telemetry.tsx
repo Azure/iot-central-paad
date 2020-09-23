@@ -33,7 +33,9 @@ export default function Telemetry() {
 
     const sendTelemetryData = async function (id: string, value: any) {
         if (client && client.isConnected()) {
-            await client.sendTelemetry({ [id]: value });
+            if (telemetryData.some(t => t.id === id)) {
+                await client.sendTelemetry({ [id]: value });
+            }
         }
     }
     useEffect(() => {

@@ -1,24 +1,49 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Alert } from 'react-native';
 import { Text } from './components/typography';
-import QRCodeScanner, { Event } from 'react-native-qrcode-scanner'
-import QRCodeMask from './components/qrcodeMask';
-import { Button, Overlay, Input, Divider } from 'react-native-elements';
+import { Button, Overlay } from 'react-native-elements';
 import { useScreenDimensions } from './hooks/layout';
-import { DecryptCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING, IOTC_EVENTS } from 'react-native-azure-iotcentral-client';
+import { IoTCClient } from 'react-native-azure-iotcentral-client';
 import { RouteProp, useTheme } from '@react-navigation/native';
-import { IoTCContext } from './contexts/iotc';
 import { Loader } from './components/loader';
 import { useIoTCentralClient } from './hooks/iotc';
 import { LogItem, LOG_DATA, NavigationParams, NavigationProperty } from './types';
 import { Log } from './tools/CustomLogger';
+import QRCodeScanner, { Event } from './components/qrcodeScanner';
 
 export default function Registration({ route, navigation }: { route?: RouteProp<Record<string, NavigationParams & { previousScreen?: string }>, "Registration">, navigation?: NavigationProperty }) {
+    const { screen } = useScreenDimensions();
+    const { colors } = useTheme();
     const [showqr, setshowqr] = useState(false);
     const [client, disconnect] = useIoTCentralClient();
 
     if (showqr) {
-        return <QRCode onSuccess={(route && route.params.previousScreen && navigation) ? () => navigation.navigate(route.params.previousScreen as string) : undefined} />;
+        return (
+            <Overlay isVisible={showqr} overlayStyle={{ height: screen.height, width: screen.width, backgroundColor: colors.background }}>
+                <View style={{ position: 'relative', margin: -10 }}>
+
+                    <QRCode onSuccess={(route && route.params.previousScreen && navigation) ? () => navigation.navigate(route.params.previousScreen as string) : undefined}
+                        onFailure={(qrCode) => {
+                            Alert.alert('Error', 'The QR code you have scanned is not an Azure IoT Central Device QR code', [
+                                {
+                                    text: 'Retry',
+                                    onPress: () => { qrCode.current?.reactivate() }
+                                },
+                                {
+                                    text: 'Cancel',
+                                    style: 'cancel',
+                                    onPress: () => { setshowqr(false); }
+                                }
+                            ], {
+                                cancelable: false
+                            });
+                        }}
+                        onClose={() => { setshowqr(false) }}
+                    />
+                </View>
+
+            </Overlay>
+        );
     }
     if (client) {
         return <View style={style.container}>
@@ -30,8 +55,8 @@ export default function Registration({ route, navigation }: { route?: RouteProp<
     }
     return (
         <View style={style.container}>
-            <Text style={style.header}>Mobile device is not currently registered to any device in IoT Central.
-            To register a device, scan the associated QR Code</Text>
+            <Text style={style.header}>Mobile device is not currently registered to any application in Azure IoT Central. To register this phone as a device scan the associated QR Code
+.</Text>
             <Button type='clear' title='Scan QR code' onPress={async () => {
                 await disconnect();
                 setshowqr(true);
@@ -39,15 +64,17 @@ export default function Registration({ route, navigation }: { route?: RouteProp<
         </View>)
 }
 
-function QRCode(props: { onSuccess?(): void | Promise<void> }) {
+function QRCode(props: { onClose?(): void, onSuccess?(qrcode: React.RefObject<QRCodeScanner>): void | Promise<void>, onFailure?(qrcode: React.RefObject<QRCodeScanner>): void | Promise<void> }) {
     const { screen, orientation } = useScreenDimensions();
     const [prompt, showPrompt] = useState(false);
     const [qrdata, setQrdata] = useState<string | undefined>(undefined);
     const { colors } = useTheme();
-    const [client, disconnect, register] = useIoTCentralClient();
-    const { addListener, removeListener } = useContext(IoTCContext);
+    const [client, disconnect, register, addListener, removeListener] = useIoTCentralClient();
     const [loading, setLoading] = useState(false);
-    const [loadingMsg, setLoadingMsg] = useState('Loading ...');
+    const [loadingMsg, setLoadingMsg] = useState('Connecting ...');
+
+    const { onFailure, onClose, onSuccess } = props;
+    const qrcode = useRef<QRCodeScanner>(null);
 
     const clientId = useRef(client ? (client as IoTCClient).id : null);
 
@@ -65,15 +92,22 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
                 await register(qrdata);
             }
             catch (ex) {
-                setLoadingMsg(ex.message);
-                setLoadingMsg(`Wrong qr value: ${qrdata}`);
+                setLoading(false);
+                showPrompt(false);
+                if (onFailure) {
+                    onFailure(qrcode);
+                }
             }
         }
     }
 
     useEffect(() => {
         if (prompt && qrdata) {
+            addListener(LOG_DATA, (logData: LogItem) => { setLoadingMsg(logData.eventData) });
             connectIoTC();
+        }
+        return () => {
+            removeListener(LOG_DATA, (logData: LogItem) => { setLoadingMsg(logData.eventData) });
         }
     }, [prompt, qrdata]);
 
@@ -85,26 +119,16 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
         if (client && client.isConnected() && loading) {
             setLoading(false);
             showPrompt(false);
-            if (props.onSuccess) {
-                props.onSuccess();
+            if (onSuccess) {
+                onSuccess(qrcode);
             }
         }
     }, [client, loading])
 
     return (
         <View>
-            <QRCodeScanner onRead={onRead}
-                customMarker={
-                    <View style={{ marginTop: -(screen.width / 2) }}>
-                        <QRCodeMask />
-                        <Text style={{ ...style.center, textAlign: 'center' }}>Move closer to scan</Text>
-                    </View>
-                }
-                showMarker={true}
-                cameraStyle={{ height: screen.height + 20, width: screen.width }}
-
-            />
-            <Overlay isVisible={prompt} onBackdropPress={showPrompt.bind(null, false)} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: screen.width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
+            <QRCodeScanner onRead={onRead} onClose={onClose} width={screen.width} height={screen.height} markerSize={Math.floor(screen.width / 1.5)} />
+            <Overlay isVisible={prompt} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: screen.width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
                 <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
                     {loading && <Loader message={loadingMsg} />}
                 </View>

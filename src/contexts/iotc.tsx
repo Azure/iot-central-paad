@@ -13,6 +13,9 @@ import { defaults } from './defaults';
 import { LOG_DATA, valueof } from "../types";
 import EventLogger from "../tools/EventLogger";
 import { Log } from "../tools/CustomLogger";
+import HealthKitSteps from "../sensors/healthkit/steps";
+import GoogleFitSteps from "../sensors/googlefit/steps";
+import HealthKitClimb from "../sensors/healthkit/climb";
 
 
 export type SensorProps = {
@@ -23,6 +26,11 @@ export type SensorProps = {
     interval: number,
     simulated: boolean,
     unit?: string
+}
+
+const AVAILABLE_HEALTH = {
+    STEPS: 'steps',
+    FLOORS: 'flightsClimbed'
 }
 
 const AVAILABLE_SENSORS = {
@@ -44,15 +52,26 @@ const sensorMap: { [id in valueof<typeof AVAILABLE_SENSORS>]: ISensor } = {
     [AVAILABLE_SENSORS.GEOLOCATION]: new GeoLocation(AVAILABLE_SENSORS.GEOLOCATION, 5000)
 }
 
+const healthMap: { [id in valueof<typeof AVAILABLE_HEALTH>]: ISensor } = {
+    [AVAILABLE_HEALTH.STEPS]: Platform.select<ISensor>({
+        ios: new HealthKitSteps(AVAILABLE_HEALTH.STEPS, 5000),
+        android: new GoogleFitSteps(AVAILABLE_HEALTH.STEPS, 5000)
+    }) as ISensor,
+    [AVAILABLE_HEALTH.FLOORS]: Platform.select<ISensor>({
+        ios: new HealthKitClimb(AVAILABLE_HEALTH.FLOORS, 5000)
+        // android: new HealthKitClimb(AVAILABLE_HEALTH.FLOORS, 5000)
+    }) as ISensor
+}
+
 export type CentralClient = IIoTCClient | null | undefined;
-type ICentralState = { telemetryData: SensorProps[], client: CentralClient };
+type ICentralState = { telemetryData: SensorProps[], healthData: SensorProps[], client: CentralClient };
 
 
 export type IIoTCContext = ICentralState & {
     connect: (credentials?: IoTCCredentials | null) => Promise<void>,
     disconnect: () => Promise<void>,
-    updateTelemetry: (fn: (currentData: SensorProps[]) => SensorProps[]) => void,
-    getTelemetryName: (id: string) => string,
+    updateSensors: (type: 'telemetry' | 'health', fn: (currentData: SensorProps[]) => SensorProps[]) => void,
+    getSensorName: (id: string) => string,
     addListener: (eventname: string, listener: (...args: any[]) => void) => void,
     removeListener: (eventname: string, listener: (...args: any[]) => void) => void,
 }
@@ -61,6 +80,7 @@ export type IIoTCContext = ICentralState & {
 
 const initialState: ICentralState = {
     telemetryData: [],
+    healthData: [],
     client: undefined
 }
 
@@ -68,8 +88,8 @@ export const IoTCContext = React.createContext<IIoTCContext>({
     ...initialState,
     connect: (credentials?: IoTCCredentials | null) => Promise.resolve(),
     disconnect: () => Promise.resolve(),
-    updateTelemetry: () => { },
-    getTelemetryName: (id: string) => '',
+    updateSensors: () => { },
+    getSensorName: (id: string) => '',
     addListener: () => { },
     removeListener: () => { },
 
@@ -145,7 +165,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 type: 'ionicon'
             },
             simulated: defaults.emulator,
-            unit:'°'
+            unit: '°'
         },
         {
             id: AVAILABLE_SENSORS.BATTERY,
@@ -163,15 +183,47 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 })
             }
         }
-    ]
+    ];
 
-    const [state, setState] = useState<ICentralState>({ client: undefined, telemetryData: defaultSensors });
+    const defaultHealths: SensorProps[] = [
+        {
+            id: AVAILABLE_HEALTH.STEPS,
+            interval: 5000,
+            icon: {
+                name: 'foot-print',
+                type: 'material-community'
+            },
+            enabled: true, // TODO: auto-enable based on settings
+            simulated: defaults.emulator
+        },
+        ...Platform.select({
+            ios: [{
+                id: AVAILABLE_HEALTH.FLOORS,
+                interval: 5000,
+                icon: {
+                    name: 'stairs',
+                    type: 'material-community'
+                },
+                enabled: true, // TODO: auto-enable based on settings
+                simulated: defaults.emulator
+            }],
+            android: []
+        }) as SensorProps[]
+    ];
+
+    const [state, setState] = useState<ICentralState>({ client: undefined, telemetryData: defaultSensors, healthData: defaultHealths });
     const eventLogger = useRef<EventLogger>(new EventLogger(LOG_DATA));
 
 
     const updateValues = function (id: string, value: any) {
         setState(current => ({
             ...current, telemetryData: current.telemetryData.map(({ ...sensor }) => {
+                if (sensor.id === id) {
+                    sensor = { ...sensor, value };
+                }
+                return sensor;
+            }),
+            healthData: current.healthData.map(({ ...sensor }) => {
                 if (sensor.id === id) {
                     sensor = { ...sensor, value };
                 }
@@ -187,7 +239,14 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             (sensorMap[id] as ISensor).enable(telem.enabled);
             (sensorMap[id] as ISensor).sendInterval(telem.interval);
         });
-    }, [state.telemetryData]);
+
+        state.healthData.forEach(health => {
+            const id = health.id as keyof typeof AVAILABLE_HEALTH;
+            (healthMap[id] as ISensor).simulate(health.simulated);
+            (healthMap[id] as ISensor).enable(health.enabled);
+            (healthMap[id] as ISensor).sendInterval(health.interval);
+        });
+    }, [state.telemetryData, state.healthData]);
 
     /**
      * Runs initially to add ux listeners to data_change event
@@ -205,6 +264,8 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 });
             })
         });
+
+        Object.values(healthMap).forEach(h => h ? h.addListener(DATA_AVAILABLE_EVENT, updateValues) : null);
     }, []);
 
 
@@ -212,16 +273,24 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     return (
         <Provider value={{
             ...state,
-            updateTelemetry: (fn: (currentData: SensorProps[]) => SensorProps[]) => {
-                setState(current => ({ ...current, telemetryData: fn(current.telemetryData) }));
+            updateSensors: (type: 'telemetry' | 'health', fn: (currentData: SensorProps[]) => SensorProps[]) => {
+                switch (type) {
+                    case 'telemetry':
+                        setState(current => ({ ...current, telemetryData: fn(current.telemetryData) }));
+                        break;
+                    case 'health':
+                        setState(current => ({ ...current, healthData: fn(current.healthData) }));
+                }
+
             },
-            getTelemetryName: (id: string) => (sensorMap[id].name),
+            getSensorName: (id: string) => ({ ...sensorMap, ...healthMap }[id].name),
             addListener: (eventname: string, listener: (...args: any[]) => void) => {
                 if (eventname === LOG_DATA) {
                     eventLogger.current?.addListener(LOG_DATA, listener);
                 }
                 else {
                     Object.values(sensorMap).forEach(s => s.addListener(eventname, listener));
+                    Object.values(healthMap).forEach(s => s.addListener(eventname, listener));
                 }
             },
             removeListener: (eventname: string, listener: (...args: any[]) => void) => {
@@ -229,6 +298,8 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                     eventLogger.current?.removeListener(LOG_DATA, listener);
                 }
                 Object.values(sensorMap).forEach(s => s.removeListener(eventname, listener));
+                Object.values(healthMap).forEach(s => s.removeListener(eventname, listener));
+
             },
             connect: async (credentials?: IoTCCredentials | null) => {
                 // disconnect previous client if any

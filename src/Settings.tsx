@@ -11,6 +11,7 @@ import { StackNavigationProp, HeaderTitle, createStackNavigator } from "@react-n
 import { useSimulation } from "./hooks/iotc";
 import { defaults } from "./contexts/defaults";
 import { StorageContext } from "./contexts/storage";
+import { LogsContext } from "./contexts/logs";
 
 
 const Stack = createStackNavigator();
@@ -29,6 +30,7 @@ type ProfileItem = {
 export default function Settings() {
     const { mode, toggle } = useContext(ThemeContext);
     const { clear } = useContext(StorageContext);
+    const { clear: clearLogs } = useContext(LogsContext);
     const [centralSimulated, simulate] = useSimulation();
     const { colors, dark } = useTheme();
     const insets = useSafeAreaInsets()
@@ -61,7 +63,7 @@ export default function Settings() {
                 type: 'select',
                 fn: async (val) => {
                     await clear();
-                    console.log('cleared');
+                    clearLogs();
                     Alert.alert('Success', 'Successfully clean data');
                 }
             }

@@ -1,5 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
-import { useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
+import { LogsContext } from "../contexts/logs";
 
 export type IIcon = {
     name: string,
@@ -12,6 +13,11 @@ export function useScreenIcon(icon: IIcon): void {
     useEffect(() => {
         navigation.setParams({ icon })
     }, []);
+}
+
+export function useLogger() {
+    const { logs, append } = useContext(LogsContext);
+    return [logs, append];
 }
 
 

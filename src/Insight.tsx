@@ -3,7 +3,7 @@ import { View, StyleSheet, processColor } from 'react-native';
 import { LineChart } from 'react-native-charts-wrapper';
 import { getRandomColor, Text, getNegativeColor, LightenDarkenColor, Name } from './components/typography';
 import { ExtendedLineData, ItemData, CustomLineDatasetConfig, NavigationParams } from './types';
-import { useTelemetry } from './hooks/iotc';
+import { useHealth, useTelemetry } from './hooks/iotc';
 import { DATA_AVAILABLE_EVENT } from './sensors';
 import { useTheme, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -22,7 +22,7 @@ const footer = 'This view is showing real-time data from the paired device or Go
 
 
 
-export default function Insight({ route }: { route: RouteProp<Record<string, NavigationParams & { telemetryId: string }>, "Insight"> }) {
+export default function Insight({ route }: { route: RouteProp<Record<string, NavigationParams & { telemetryId: string, currentValue: any }>, "Insight"> }) {
     const { telemetryData, addListener, removeListener } = useTelemetry();
     const { screen } = useScreenDimensions();
     const { colors, dark } = useTheme();
@@ -31,7 +31,7 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
         dataSets: []
     });
     const timestamp = Date.now() - start;
-    const { telemetryId } = route.params;
+    const { telemetryId, currentValue } = route.params;
     /**
  * 
  * @param itemdata Current sample for the item
@@ -44,6 +44,7 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
             return;
         }
         let itemToProcess: ItemData[] = [item];
+        console.log(JSON.stringify(item.value));
         if ((typeof item.value) !== 'string' && (typeof item.value) !== 'number') {
             // data is composite
             itemToProcess = Object.keys(item.value).map(i => ({
@@ -81,9 +82,12 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
     useEffect(() => {
         setStart(Date.now());
         addListener(DATA_AVAILABLE_EVENT, updateData);
-
+        // init chart with current value
+        if (currentValue !== undefined) {
+            updateData(telemetryId, currentValue);
+        }
         return () => removeListener(DATA_AVAILABLE_EVENT, updateData);
-    }, []);
+    }, [telemetryId, currentValue]);
 
 
     if (data.dataSets.length === 0) {

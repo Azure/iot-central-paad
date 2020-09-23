@@ -5,7 +5,8 @@ import { LogItem, TimedLog, valueof } from '../types';
 
 interface ILogsContext {
     logs: TimedLog,
-    append: (logItem: LogItem) => void
+    append: (logItem: LogItem) => void,
+    clear: () => void
 }
 
 
@@ -14,7 +15,8 @@ const initialState: TimedLog = [];
 
 export const LogsContext = React.createContext<ILogsContext>({
     logs: initialState,
-    append: () => { }
+    append: () => { },
+    clear: () => { }
 });
 const { Provider } = LogsContext;
 const LogsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -24,6 +26,15 @@ const LogsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             logs,
             append: (logItem: LogItem) => {
                 setLogs(current => ([...current, { logItem, timestamp: new Date(Date.now()).toLocaleString() }]));
+            },
+            clear: () => {
+                setLogs([{
+                    logItem: {
+                        eventData: 'Application just reset',
+                        eventName: 'INFO'
+                    },
+                    timestamp: new Date(Date.now()).toLocaleString()
+                }])
             }
         }}>
             {children}

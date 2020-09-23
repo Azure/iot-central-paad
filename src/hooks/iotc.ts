@@ -3,8 +3,13 @@ import { IoTCClient, IOTC_CONNECT, IOTC_LOGGING, DecryptCredentials, IoTCCredent
 import { IoTCContext, CentralClient, SensorProps } from "../contexts/iotc";
 import { StorageContext } from "../contexts/storage";
 
-export function useIoTCentralClient(): [CentralClient, () => Promise<void>, (creds: string, encKey?: string) => Promise<void>] {
-    const { client, disconnect } = useContext(IoTCContext);
+type ClientProps = [CentralClient, () => Promise<void>, (creds: string, encKey?: string) => Promise<void>,
+    (eventname: string, listener: (...args: any[]) => void) => void,
+    (eventname: string, listener: (...args: any[]) => void) => void
+];
+
+export function useIoTCentralClient(): ClientProps {
+    const { client, disconnect, addListener, removeListener } = useContext(IoTCContext);
     const { save } = useContext(StorageContext);
 
     // register device for first time
@@ -13,7 +18,7 @@ export function useIoTCentralClient(): [CentralClient, () => Promise<void>, (cre
         await save(current => ({ ...current, credentials }));
     }
 
-    return [client, disconnect, register];
+    return [client, disconnect, register, addListener, removeListener];
 }
 
 export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
@@ -33,10 +38,10 @@ export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
 }
 
 export function useTelemetry(): { telemetryData: SensorProps[], getTelemetryName: (id: string) => string, set: (id: string, data: Partial<SensorProps>) => void, addListener: (...args: any[]) => void, removeListener: (...args: any[]) => void } {
-    const { telemetryData, updateTelemetry, getTelemetryName, addListener, removeListener } = useContext(IoTCContext);
+    const { telemetryData, updateSensors, getSensorName:getTelemetryName, addListener, removeListener } = useContext(IoTCContext);
 
     const set = function (id: string, data: Partial<SensorProps>) {
-        updateTelemetry(current => (current.map(({ ...sensor }) => {
+        updateSensors('telemetry', current => (current.map(({ ...sensor }) => {
             if (sensor.id === id) {
                 sensor = { ...sensor, ...data };
             }
@@ -45,4 +50,20 @@ export function useTelemetry(): { telemetryData: SensorProps[], getTelemetryName
     }
 
     return { telemetryData, getTelemetryName, set, addListener, removeListener };
+}
+
+
+export function useHealth(): { healthData: SensorProps[], getHealthName: (id: string) => string, set: (id: string, data: Partial<SensorProps>) => void, addListener: (...args: any[]) => void, removeListener: (...args: any[]) => void } {
+    const { healthData, updateSensors, getSensorName: getHealthName, addListener, removeListener } = useContext(IoTCContext);
+
+    const set = function (id: string, data: Partial<SensorProps>) {
+        updateSensors('health', current => (current.map(({ ...sensor }) => {
+            if (sensor.id === id) {
+                sensor = { ...sensor, ...data };
+            }
+            return sensor;
+        })));
+    }
+
+    return { healthData, getHealthName, set, addListener, removeListener };
 }
