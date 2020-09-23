@@ -4,47 +4,51 @@ import { Icon } from 'react-native-elements';
 import Scanner, { Event as QRCodeEvent } from 'react-native-qrcode-scanner'
 import { Text } from './typography';
 
+type Orientation = 'portrait' | 'landscape';
+
 
 
 interface QRCodeScannerProps {
     height: number,
     width: number,
-    markerSize: number,
-    onRead: (e: Event) => void | Promise<void>,
-    onClose?: () => void | Promise<void>
+    markerSize: number
 }
 
-interface IQRCodeScanner extends QRCodeScannerProps {
+
+interface IQRCodeScanner {
     reactivate: () => void
+}
+
+export type IQRCodeProps = QRCodeScannerProps & {
+    onRead: (e: Event) => void | Promise<void>,
+    onClose?: () => void | Promise<void>
 }
 
 export type Event = QRCodeEvent;
 
 
-export default class QRCodeScanner extends React.Component<QRCodeScannerProps, {}> implements IQRCodeScanner {
+export default class QRCodeScanner extends React.Component<IQRCodeProps, {}> implements IQRCodeScanner {
 
-    public height: number;
-    public width: number;
-    public markerSize: number;
     public overlayDimension: any;
     private qrCodeRef: Scanner | null;
     public onRead: (e: Event) => void | Promise<void>;
     public onClose: (() => void | Promise<void>) | undefined;
 
 
-    constructor(props: QRCodeScannerProps) {
+    private calculateSideWidth(width: number, markerSize: number): number {
+        return (width - markerSize) / 2;
+    }
+
+    private calculateVerticals(height: number, markerSize: number): number {
+        return (height - markerSize) / 2;
+    }
+
+    constructor(props: IQRCodeProps) {
         super(props);
         ({
-            width: this.width,
-            height: this.height,
-            markerSize: this.markerSize,
             onRead: this.onRead,
             onClose: this.onClose
         } = props);
-        this.overlayDimension = {
-            sideWidth: (this.width - this.markerSize) / 2,
-            verticals: (this.height - this.markerSize) / 2
-        };
         this.qrCodeRef = null;
     }
 
@@ -54,34 +58,37 @@ export default class QRCodeScanner extends React.Component<QRCodeScannerProps, {
 
 
     render() {
+        const sideWidth = this.calculateSideWidth(this.props.width, this.props.markerSize);
+        const verticals = this.calculateVerticals(this.props.height, this.props.markerSize);
         return (<Scanner
             ref={sc => this.qrCodeRef = sc}
             onRead={this.onRead}
-            topViewStyle={{ flex: 0, position: 'absolute', zIndex: 2 }}
+            topViewStyle={{ position: 'absolute', zIndex: 2, marginLeft: (this.props.width > this.props.height) ? (sideWidth - verticals) : 0 }} // hack: margin is needed when in landscape
             topContent={(
-                <View style={{ position: 'relative', height: this.height, width: this.width }}>
-                    <View key='left' style={{ height: this.height, backgroundColor: 'rgba(0,0,0,.5)', width: this.overlayDimension.sideWidth, left: 0, position: 'absolute', top: 0 }}></View>
-                    <View key='right' style={{ height: this.height, backgroundColor: 'rgba(0,0,0,.5)', width: this.overlayDimension.sideWidth, right: 0, position: 'absolute', top: 0 }}></View>
-                    <View key='top' style={{ marginHorizontal: this.overlayDimension.sideWidth, width: this.markerSize, backgroundColor: 'rgba(0,0,0,.5)', height: this.overlayDimension.verticals + 10, top: 0, position: 'absolute' }}></View>
-                    <View key='bottom' style={{ marginHorizontal: this.overlayDimension.sideWidth, width: this.markerSize, backgroundColor: 'rgba(0,0,0,.5)', height: this.overlayDimension.verticals, bottom: -10, position: 'absolute' }}></View>
+                <View style={{ position: 'relative', height: this.props.height, width: this.props.width }}>
+                    <View key='left' style={{ height: this.props.height, backgroundColor: 'rgba(0,0,0,.5)', width: sideWidth, left: 0, position: 'absolute', top: 0 }}></View>
+                    <View key='right' style={{ height: this.props.height, backgroundColor: 'rgba(0,0,0,.5)', width: sideWidth, right: 0, position: 'absolute', top: 0 }}></View>
+                    <View key='top' style={{ marginHorizontal: sideWidth, width: this.props.markerSize, backgroundColor: 'rgba(0,0,0,.5)', height: verticals + 10, top: 0, position: 'absolute' }}></View>
+                    <View key='bottom' style={{ marginHorizontal: sideWidth, width: this.props.markerSize, backgroundColor: 'rgba(0,0,0,.5)', height: verticals, bottom: -10, position: 'absolute' }}></View>
                     {this.onClose && <Icon name='close-circle-outline'
                         type={Platform.select({ ios: 'ionicon', android: 'material-community' })}
                         size={40}
                         color='black'
-                        containerStyle={{ position: 'absolute', top: this.overlayDimension.verticals - 40, right: this.width / 10 }}
+                        containerStyle={{ position: 'absolute', top: verticals - 40, right: sideWidth - 40 }}
                         onPress={this.onClose}
                     />}
+
                 </View>)}
 
             customMarker={
                 <View>
-                    <QRCodeMask width={this.markerSize} color={'black'} />
+                    <QRCodeMask width={this.props.markerSize} color={'black'} />
                     <Text style={{ ...style.center, textAlign: 'center' }}>Move closer to scan</Text>
                 </View>
             }
 
             showMarker={true}
-            cameraStyle={{ height: this.height + 20, width: this.width }}
+            cameraStyle={{ height: this.props.height + 20, width: this.props.width }}
         />)
     }
 }

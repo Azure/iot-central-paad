@@ -15,8 +15,10 @@ export function useScreenDimensions() {
 
     const onChange = (result: { window: ScaledSize, screen: ScaledSize }) => {
         setScreenData(result.screen);
-        setOrientation(getOrientation(result.screen.width, result.screen.height));
-
+        const currentOrientation = getOrientation(result.screen.width, result.screen.height);
+        if (orientation !== currentOrientation) {
+            setOrientation(currentOrientation);
+        }
     };
 
     useEffect(() => {

@@ -12,17 +12,20 @@ import { Log } from './tools/CustomLogger';
 import QRCodeScanner, { Event } from './components/qrcodeScanner';
 
 export default function Registration({ route, navigation }: { route?: RouteProp<Record<string, NavigationParams & { previousScreen?: string }>, "Registration">, navigation?: NavigationProperty }) {
-    const { screen } = useScreenDimensions();
+    const { screen, orientation } = useScreenDimensions();
     const { colors } = useTheme();
     const [showqr, setshowqr] = useState(false);
     const [client, disconnect] = useIoTCentralClient();
 
     if (showqr) {
         return (
-            <Overlay isVisible={showqr} overlayStyle={{ height: screen.height, width: screen.width, backgroundColor: colors.background }}>
+            <Overlay isVisible={showqr}
+                overlayStyle={{ height: screen.height, width: screen.width, backgroundColor: colors.background }}
+                supportedOrientations={['portrait', 'landscape']}
+            >
                 <View style={{ position: 'relative', margin: -10 }}>
 
-                    <QRCode onSuccess={(route && route.params.previousScreen && navigation) ? () => navigation.navigate(route.params.previousScreen as string) : undefined}
+                    <QRCode orientation={orientation} width={screen.width} height={screen.height} onSuccess={(route && route.params.previousScreen && navigation) ? () => navigation.navigate(route.params.previousScreen as string) : undefined}
                         onFailure={(qrCode) => {
                             Alert.alert('Error', 'The QR code you have scanned is not an Azure IoT Central Device QR code', [
                                 {
@@ -64,8 +67,7 @@ export default function Registration({ route, navigation }: { route?: RouteProp<
         </View>)
 }
 
-function QRCode(props: { onClose?(): void, onSuccess?(qrcode: React.RefObject<QRCodeScanner>): void | Promise<void>, onFailure?(qrcode: React.RefObject<QRCodeScanner>): void | Promise<void> }) {
-    const { screen, orientation } = useScreenDimensions();
+function QRCode(props: { height: number, width: number, orientation: 'portrait' | 'landscape', onClose?(): void, onSuccess?(qrcode: React.RefObject<QRCodeScanner>): void | Promise<void>, onFailure?(qrcode: React.RefObject<QRCodeScanner>): void | Promise<void> }) {
     const [prompt, showPrompt] = useState(false);
     const [qrdata, setQrdata] = useState<string | undefined>(undefined);
     const { colors } = useTheme();
@@ -73,10 +75,11 @@ function QRCode(props: { onClose?(): void, onSuccess?(qrcode: React.RefObject<QR
     const [loading, setLoading] = useState(false);
     const [loadingMsg, setLoadingMsg] = useState('Connecting ...');
 
-    const { onFailure, onClose, onSuccess } = props;
+    const { height, width, orientation, onFailure, onClose, onSuccess } = props;
     const qrcode = useRef<QRCodeScanner>(null);
 
     const clientId = useRef(client ? (client as IoTCClient).id : null);
+
 
     const onRead = async function (e: Event) {
         setQrdata(e.data);
@@ -127,9 +130,9 @@ function QRCode(props: { onClose?(): void, onSuccess?(qrcode: React.RefObject<QR
 
     return (
         <View>
-            <QRCodeScanner onRead={onRead} onClose={onClose} width={screen.width} height={screen.height} markerSize={Math.floor(screen.width / 1.5)} />
-            <Overlay isVisible={prompt} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: screen.width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
-                <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
+            <QRCodeScanner onRead={onRead} onClose={onClose} width={width} height={height} markerSize={Math.floor((orientation === 'portrait' ? width : height) / 1.5)} />
+            <Overlay isVisible={prompt} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
+                <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: height / 4, padding: 20 }}>
                     {loading && <Loader message={loadingMsg} />}
                 </View>
             </Overlay>
