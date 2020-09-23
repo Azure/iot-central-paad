@@ -88,7 +88,6 @@ function QRCode(props: { height: number, width: number, orientation: 'portrait' 
 
     const connectIoTC = async function () {
         if (qrdata) {
-            console.log(qrdata);
             Log(qrdata);
             setLoading(true);
             try {

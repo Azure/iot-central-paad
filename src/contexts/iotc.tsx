@@ -289,17 +289,16 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                     eventLogger.current?.addListener(LOG_DATA, listener);
                 }
                 else {
-                    Object.values(sensorMap).forEach(s => s.addListener(eventname, listener));
-                    Object.values(healthMap).forEach(s => s.addListener(eventname, listener));
+                    Object.values(sensorMap).forEach(s => s ? s.addListener(eventname, listener) : null);
+                    Object.values(healthMap).forEach(s => s ? s.addListener(eventname, listener) : null);
                 }
             },
             removeListener: (eventname: string, listener: (...args: any[]) => void) => {
                 if (eventname === LOG_DATA) {
                     eventLogger.current?.removeListener(LOG_DATA, listener);
                 }
-                Object.values(sensorMap).forEach(s => s.removeListener(eventname, listener));
-                Object.values(healthMap).forEach(s => s.removeListener(eventname, listener));
-
+                Object.values(sensorMap).forEach(s => s ? s.removeListener(eventname, listener) : null);
+                Object.values(healthMap).forEach(s => s ? s.removeListener(eventname, listener) : null);
             },
             connect: async (credentials?: IoTCCredentials | null) => {
                 // disconnect previous client if any
@@ -334,7 +333,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 }
             }
         }}>
-            {children}
+            { children}
         </Provider >
     )
 };
