@@ -5,11 +5,20 @@ trigger:
 pool:
   vmImage: 'macos-latest'
 
+variables:
+  - group: iotc-paad-android
+  - name: PAAD_BETARELEASE_PROJECT_NAME
+    value: $(Project_Name)
+  - name: PAAD_BETARELEASE_VERSION_CODE
+    value: $(Date:yyyyMMdd)$(Rev:r)
+  - name: PAAD_BETARELEASE_VERSION_NAME
+    value: 1.0.0
+
 name: $(Date:yyyyMMdd)$(Rev:.r)
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '9.7.1'
+    versionSpec: '12.6.1'
   displayName: 'Install Node'
 
 - script: npm install
@@ -48,10 +57,26 @@ steps:
     provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
     xcodeVersion: 'specifyPath'
     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
+
+- task: Gradle@2
+  inputs:
+    workingDirectory: 'android'
+    gradleWrapperFile: 'android/gradlew'
+    gradleOptions: '-Xmx3072m'
+    publishJUnitResults: false
+    testResultsFiles: '**/TEST-*.xml'
+    tasks: 'assembleBetaRelease'
   
 - task: PublishBuildArtifacts@1
   displayName: "Publish Build Artifact"
   inputs:
     PathtoPublish: 'output/package/$(Project_Name).ipa'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Build Artifact"
+  inputs:
+    PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
     ArtifactName: 'drop'
     publishLocation: 'Container'
