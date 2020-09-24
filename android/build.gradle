@@ -1,5 +1,9 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+def code = System.env.PAAD_BETARELEASE_VERSION_CODE ? System.env.PAAD_BETARELEASE_VERSION_CODE.toInteger() : 1
+
+def name = System.env.PAAD_BETARELEASE_VERSION_NAME ? System.env.PAAD_BETARELEASE_VERSION_NAME.toString() : "1.0.0"
+
 buildscript {
     ext {
         buildToolsVersion = "29.0.2"
@@ -20,6 +24,8 @@ buildscript {
 }
 
 allprojects {
+    ext.baseVersionCode = code
+    ext.baseVersionName = name
     repositories {
         mavenLocal()
         maven {

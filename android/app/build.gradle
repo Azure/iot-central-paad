@@ -134,8 +134,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         missingDimensionStrategy 'react-native-camera', 'general'
-        versionCode 1
-        versionName '1.0'
+        versionCode baseVersionCode
+        versionName baseVersionName
         archivesBaseName = "$applicationId-v$versionCode($versionName)"
         vectorDrawables.useSupportLibrary = true
     }
@@ -169,6 +169,7 @@ android {
                 keyAlias PAAD_BETARELEASE_KEY_ALIAS
                 keyPassword PAAD_BETARELEASE_KEY_PASSWORD
             }
+
         }
     }
     buildTypes {
@@ -186,6 +187,9 @@ android {
             matchingFallbacks = ['debug', 'release']
             if (System.env.GOOGLE_MAPS_API_KEY) {
                 resValue 'string', 'google_maps_api_key', "\"${System.env.GOOGLE_MAPS_API_KEY}\""
+            }
+            if (System.env.PAAD_BETARELEASE_VERSION_CODE) {
+                archivesBaseName = "${System.env.PAAD_BETARELEASE_PROJECT_NAME}"
             }
         }
         release {
