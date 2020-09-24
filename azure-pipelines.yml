@@ -17,8 +17,9 @@ steps:
     PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
     echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
     echo "Using variable: $GOOGLE_MAPS_API_KEY"
+    echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
   env:
-    GOOGLE_MAPS_API_KEY: $(googlemapskey)
+    GOOGLE_MAPS_KEY: $(googlemapskey)
 - bash: env | sort
 
 - task: NodeTool@0
