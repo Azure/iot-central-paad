@@ -18,7 +18,7 @@ name: $(Date:yyyyMMdd)$(Rev:.r)
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '12.6.1'
+    versionSpec: '12.18.4'
   displayName: 'Install Node'
 
 - script: npm install
