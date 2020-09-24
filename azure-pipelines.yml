@@ -6,7 +6,7 @@ variables:
   - name: PAAD_BETARELEASE_PROJECT_NAME
     value: $(Project_Name)
   - name: PAAD_BETARELEASE_VERSION_CODE
-    value: $(Date:yyyyMMdd)$(Rev:r)
+    value: '$(Date:yyyyMMdd)$(Rev:r)'
   - name: PAAD_BETARELEASE_VERSION_NAME
     value: 1.0.0
 
