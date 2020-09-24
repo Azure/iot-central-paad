@@ -28,67 +28,67 @@ steps:
     GOOGLE_MAPS_KEY: $(googlemapskey)
 - bash: env | sort
 
-# - task: NodeTool@0
+- task: NodeTool@0
+  inputs:
+    versionSpec: '12.18.4'
+  displayName: 'Install Node'
+
+- script: npm install
+  workingDirectory: .
+  displayName: 'Install node dependencies'
+
+# - task: InstallAppleCertificate@2
+#   displayName: "Install Apple Certificate"
 #   inputs:
-#     versionSpec: '12.18.4'
-#   displayName: 'Install Node'
-
-# - script: npm install
-#   workingDirectory: .
-#   displayName: 'Install node dependencies'
-
-# # - task: InstallAppleCertificate@2
-# #   displayName: "Install Apple Certificate"
-# #   inputs:
-# #     certSecureFile: '$(Certificate_Name)'
-# #     certPwd: '$(Certificate_Password)'
-# # - task: InstallAppleProvisioningProfile@1
-# #   displayName: "Install Apple provisioning profile"
-# #   inputs:
-# #     provisioningProfileLocation: 'secureFiles'
-# #     provProfileSecureFile: '$(Provisioning_Profile)'
-
-# # - task: Shell++@0
-# #   inputs:
-# #     type: 'FilePath'
-# #     scriptPath: 'bumpVersion.sh'
-
-# # - task: Xcode@5
-# #   displayName: "Build Mobile Application"
-# #   inputs:
-# #     actions: 'build'
-# #     configuration: 'Release'
-# #     sdk: 'iphoneos13.6'
-# #     xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
-# #     scheme: '$(Project_Name)'
-# #     packageApp: true
-# #     exportPath: 'output/package'
-# #     archivePath: 'output/archive'
-# #     signingOption: 'manual'
-# #     signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
-# #     provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
-# #     xcodeVersion: 'specifyPath'
-# #     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
-
-# - task: Gradle@2
+#     certSecureFile: '$(Certificate_Name)'
+#     certPwd: '$(Certificate_Password)'
+# - task: InstallAppleProvisioningProfile@1
+#   displayName: "Install Apple provisioning profile"
 #   inputs:
-#     workingDirectory: 'android'
-#     gradleWrapperFile: 'android/gradlew'
-#     gradleOptions: '-Xmx3072m'
-#     publishJUnitResults: false
-#     testResultsFiles: '**/TEST-*.xml'
-#     tasks: 'assembleBetaRelease'
+#     provisioningProfileLocation: 'secureFiles'
+#     provProfileSecureFile: '$(Provisioning_Profile)'
+
+# - task: Shell++@0
+#   inputs:
+#     type: 'FilePath'
+#     scriptPath: 'bumpVersion.sh'
+
+# - task: Xcode@5
+#   displayName: "Build Mobile Application"
+#   inputs:
+#     actions: 'build'
+#     configuration: 'Release'
+#     sdk: 'iphoneos13.6'
+#     xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
+#     scheme: '$(Project_Name)'
+#     packageApp: true
+#     exportPath: 'output/package'
+#     archivePath: 'output/archive'
+#     signingOption: 'manual'
+#     signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+#     provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+#     xcodeVersion: 'specifyPath'
+#     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
+
+- task: Gradle@2
+  inputs:
+    workingDirectory: 'android'
+    gradleWrapperFile: 'android/gradlew'
+    gradleOptions: '-Xmx3072m'
+    publishJUnitResults: false
+    testResultsFiles: '**/TEST-*.xml'
+    tasks: 'assembleBetaRelease'
   
-# # - task: PublishBuildArtifacts@1
-# #   displayName: "Publish Build Artifact"
-# #   inputs:
-# #     PathtoPublish: 'output/package/$(Project_Name).ipa'
-# #     ArtifactName: 'drop'
-# #     publishLocation: 'Container'
-
 # - task: PublishBuildArtifacts@1
 #   displayName: "Publish Build Artifact"
 #   inputs:
-#     PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
+#     PathtoPublish: 'output/package/$(Project_Name).ipa'
 #     ArtifactName: 'drop'
 #     publishLocation: 'Container'
+
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Build Artifact"
+  inputs:
+    PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
