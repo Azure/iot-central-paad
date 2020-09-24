@@ -18,14 +18,14 @@ steps:
     echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
 - bash: env | sort
 
-# - task: NodeTool@0
-#   inputs:
-#     versionSpec: '12.18.4'
-#   displayName: 'Install Node'
+- task: NodeTool@0
+  inputs:
+    versionSpec: '12.18.4'
+  displayName: 'Install Node'
 
-# - script: npm install
-#   workingDirectory: .
-#   displayName: 'Install node dependencies'
+- script: npm install
+  workingDirectory: .
+  displayName: 'Install node dependencies'
 
 # - task: InstallAppleCertificate@2
 #   displayName: "Install Apple Certificate"
@@ -60,14 +60,14 @@ steps:
 #     xcodeVersion: 'specifyPath'
 #     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
 
-# - task: Gradle@2
-#   inputs:
-#     workingDirectory: 'android'
-#     gradleWrapperFile: 'android/gradlew'
-#     gradleOptions: '-Xmx3072m'
-#     publishJUnitResults: false
-#     testResultsFiles: '**/TEST-*.xml'
-#     tasks: 'assembleBetaRelease'
+- task: Gradle@2
+  inputs:
+    workingDirectory: 'android'
+    gradleWrapperFile: 'android/gradlew'
+    gradleOptions: '-Xmx3072m'
+    publishJUnitResults: false
+    testResultsFiles: '**/TEST-*.xml'
+    tasks: 'assembleBetaRelease'
   
 # - task: PublishBuildArtifacts@1
 #   displayName: "Publish Build Artifact"
@@ -76,9 +76,9 @@ steps:
 #     ArtifactName: 'drop'
 #     publishLocation: 'Container'
 
-# - task: PublishBuildArtifacts@1
-#   displayName: "Publish Build Artifact"
-#   inputs:
-#     PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
-#     ArtifactName: 'drop'
-#     publishLocation: 'Container'
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Build Artifact"
+  inputs:
+    PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
