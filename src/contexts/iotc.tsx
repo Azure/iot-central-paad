@@ -303,6 +303,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             connect: async (credentials?: IoTCCredentials | null) => {
                 // disconnect previous client if any
                 if (state.client) {
+                    Log(`Disconnecting ${(state.client as IoTCClient).id}`);
                     await state.client.disconnect();
                 }
                 //  assign credentials object that can be undefined,null or with value.
@@ -323,6 +324,9 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                     catch (e) {
                         client = null;
                     }
+                }
+                else {
+                    client = credentials;
                 }
                 setState(current => ({ ...current, client }));
             },
