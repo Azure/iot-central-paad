@@ -83,12 +83,12 @@ steps:
   displayName: "Publish Build Artifact"
   inputs:
     PathtoPublish: 'output/package/$(Project_Name).ipa'
-    ArtifactName: 'drop'
+    ArtifactName: 'ios'
     publishLocation: 'Container'
 
 - task: PublishBuildArtifacts@1
   displayName: "Publish Build Artifact"
   inputs:
     PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
-    ArtifactName: 'drop'
+    ArtifactName: 'android'
     publishLocation: 'Container'
