@@ -26,6 +26,13 @@ export type NavigationParams = {
 
 // Type for getting the values of an object (lookup)
 export type valueof<T> = T[keyof T];
+
+
+/**
+ * Ref type
+ */
+export type Ref<T> = React.RefObject<T>;
+
 /**
  * Defines type of screens
  */

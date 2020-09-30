@@ -26,7 +26,7 @@ export default function HealthPlatform() {
 
 
     const [simulated] = useSimulation();
-    const [client] = useIoTCentralClient();
+    const {client} = useIoTCentralClient();
     const insets = useSafeAreaInsets();
     const { screen } = useScreenDimensions();
     const navigation = useNavigation();
@@ -37,7 +37,7 @@ export default function HealthPlatform() {
     const sendTelemetryData = async function (id: string, value: any) {
         if (client && client.isConnected()) {
             if (healthData.some(h => h.id === id)) {
-                await client.sendTelemetry({ [id]: value });
+                // await client.sendTelemetry({ [id]: value });
             }
         }
     }
@@ -57,9 +57,8 @@ export default function HealthPlatform() {
 
         if (client === undefined) {
             return (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-                    <Loader message={'Connecting to IoT Central ...'} />
-                </View>)
+                <Loader message={'Connecting to IoT Central ...'} visible={true} style={{ flex: 1, justifyContent: 'center' }} />
+            )
         }
     }
 

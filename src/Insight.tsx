@@ -90,9 +90,7 @@ export default function Insight({ route }: { route: RouteProp<Record<string, Nav
 
 
     if (data.dataSets.length === 0) {
-        return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Loader message='' />
-        </View>
+        <Loader message='' visible={true} />
     }
     const geolocation = telemetryData.find(t => t.id === telemetryId && t.unit && t.unit === '°');
     if (geolocation) {

@@ -25,7 +25,7 @@ export default function Telemetry() {
 
     // const { client, simulated: centralSimulated } = useContext(IoTCContext);
     const [simulated] = useSimulation();
-    const [client] = useIoTCentralClient();
+    const { client } = useIoTCentralClient();
     const insets = useSafeAreaInsets();
     const { screen } = useScreenDimensions();
     const { telemetryData, getTelemetryName, set, addListener } = useTelemetry();
@@ -34,7 +34,7 @@ export default function Telemetry() {
     const sendTelemetryData = async function (id: string, value: any) {
         if (client && client.isConnected()) {
             if (telemetryData.some(t => t.id === id)) {
-                await client.sendTelemetry({ [id]: value });
+                // await client.sendTelemetry({ [id]: value });
             }
         }
     }
@@ -51,9 +51,8 @@ export default function Telemetry() {
 
         if (client === undefined) {
             return (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-                    <Loader message={'Connecting to IoT Central ...'} />
-                </View>)
+                <Loader message={'Connecting to IoT Central ...'} visible={true} style={{ flex: 1, justifyContent: 'center' }} />
+            )
         }
     }
 
