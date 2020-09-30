@@ -25,7 +25,7 @@ export default class EventLogger extends EventEmitter implements IIoTCLogger {
         if (this.logLevel === IOTC_LOGGING.ALL) {
 
             this.emit(this.eventName, {
-                eventName: `DEBUG${tag ? ` - ${tag.toUpperCase()}` : ''}`,
+                eventName: `[IOTC_CLIENT] - (DEBUG)${tag ? ` - ${tag.toUpperCase()}` : ''}`,
                 eventData: message
             });
         }
@@ -33,7 +33,7 @@ export default class EventLogger extends EventEmitter implements IIoTCLogger {
     async log(message: string, tag?: string) {
         if (this.logLevel != IOTC_LOGGING.DISABLED)
             this.emit(this.eventName, {
-                eventName: `INFO${tag ? ` - ${tag.toUpperCase()}` : ''}`,
+                eventName: `[IOTC_CLIENT] - (INFO)${tag ? ` - ${tag.toUpperCase()}` : ''}`,
                 eventData: message
             });
 

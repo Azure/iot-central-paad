@@ -1,5 +1,5 @@
 import React, { useReducer, useState, useEffect, useRef } from "react";
-import { IIoTCClient, IoTCCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING } from "react-native-azure-iotcentral-client";
+import { IIoTCClient, IoTCCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING, CancellationToken } from "react-native-azure-iotcentral-client";
 import { IconProps } from "react-native-elements";
 import { Platform } from "react-native";
 import { ISensor, DATA_AVAILABLE_EVENT, SENSOR_UNAVAILABLE_EVENT } from "../sensors";
@@ -68,7 +68,7 @@ type ICentralState = { telemetryData: SensorProps[], healthData: SensorProps[], 
 
 
 export type IIoTCContext = ICentralState & {
-    connect: (credentials?: IoTCCredentials | null) => Promise<void>,
+    connect: (credentials: IoTCCredentials | null | undefined, cancellationToken?: CancellationToken) => Promise<void>,
     disconnect: () => Promise<void>,
     updateSensors: (type: 'telemetry' | 'health', fn: (currentData: SensorProps[]) => SensorProps[]) => void,
     getSensorName: (id: string) => string,
@@ -86,7 +86,7 @@ const initialState: ICentralState = {
 
 export const IoTCContext = React.createContext<IIoTCContext>({
     ...initialState,
-    connect: (credentials?: IoTCCredentials | null) => Promise.resolve(),
+    connect: (credentials: IoTCCredentials | null | undefined, cancellationToken?: CancellationToken) => Promise.resolve(),
     disconnect: () => Promise.resolve(),
     updateSensors: () => { },
     getSensorName: (id: string) => '',
@@ -95,14 +95,14 @@ export const IoTCContext = React.createContext<IIoTCContext>({
 
 });
 
-const connectClient = async function (credentials: IoTCCredentials, eventLogger: EventLogger) {
+const connectClient = async function (credentials: IoTCCredentials, eventLogger: EventLogger, cancellationToken?: CancellationToken) {
     Log('Connecting Iotcentral client');
     let iotc = new IoTCClient(credentials.deviceId, credentials.scopeId, IOTC_CONNECT.DEVICE_KEY, credentials.deviceKey, eventLogger);
     if (credentials.modelId) {
         iotc.setModelId(credentials.modelId);
     }
     //iotc.setLogging(IOTC_LOGGING.ALL);
-    await iotc.connect(false);
+    await iotc.connect({ cleanSession: false, cancellationToken });
     return iotc;
 }
 
@@ -300,12 +300,8 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 Object.values(sensorMap).forEach(s => s ? s.removeListener(eventname, listener) : null);
                 Object.values(healthMap).forEach(s => s ? s.removeListener(eventname, listener) : null);
             },
-            connect: async (credentials?: IoTCCredentials | null) => {
+            connect: async (credentials: IoTCCredentials | null | undefined, cancellationToken?: CancellationToken) => {
                 // disconnect previous client if any
-                if (state.client) {
-                    Log(`Disconnecting ${(state.client as IoTCClient).id}`);
-                    await state.client.disconnect();
-                }
                 //  assign credentials object that can be undefined,null or with value.
                 //  the goal is to keep client object aligned to credentials object
                 //  cases:
@@ -318,11 +314,9 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
                 let client: any = credentials;
                 if (credentials) {
-                    try {
-                        client = await connectClient(credentials, eventLogger.current);
-                    }
-                    catch (e) {
-                        client = null;
+                    client = await connectClient(credentials, eventLogger.current, cancellationToken);
+                    if (client && client.isConnected()) {
+                        await state.client?.disconnect();
                     }
                 }
                 else {
@@ -333,7 +327,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             disconnect: async () => {
                 if (state.client && state.client.isConnected()) {
                     await state.client.disconnect();
-                    setState(current => ({ ...current, client: undefined }));
+                    setState(current => ({ ...current, client: null }));
                 }
             }
         }}>

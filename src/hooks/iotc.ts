@@ -1,24 +1,31 @@
 import { useContext, useEffect } from "react";
-import { IoTCClient, IOTC_CONNECT, IOTC_LOGGING, DecryptCredentials, IoTCCredentials } from "react-native-azure-iotcentral-client";
+import { IoTCClient, IOTC_CONNECT, IOTC_LOGGING, DecryptCredentials, IoTCCredentials, CancellationToken } from "react-native-azure-iotcentral-client";
 import { IoTCContext, CentralClient, SensorProps } from "../contexts/iotc";
 import { StorageContext } from "../contexts/storage";
+import { Log } from "../tools/CustomLogger";
 
-type ClientProps = [CentralClient, () => Promise<void>, (creds: string, encKey?: string) => Promise<void>,
-    (eventname: string, listener: (...args: any[]) => void) => void,
-    (eventname: string, listener: (...args: any[]) => void) => void
-];
+type ClientProps = {
+    client: CentralClient,
+    disconnect: () => Promise<void>,
+    register: (creds: string, cancellationToken?: CancellationToken) => Promise<void>,
+    addListener: (eventname: string, listener: (...args: any[]) => void) => void,
+    removeListener: (eventname: string, listener: (...args: any[]) => void) => void
+};
 
 export function useIoTCentralClient(): ClientProps {
-    const { client, disconnect, addListener, removeListener } = useContext(IoTCContext);
+    const { client, connect, disconnect, addListener, removeListener } = useContext(IoTCContext);
     const { save } = useContext(StorageContext);
 
     // register device for first time
-    const register = async function (creds: string, encKey?: string) {
-        const credentials = DecryptCredentials(creds, encKey);
+    const register = async function (creds: string, cancellationToken?: CancellationToken) {
+        const credentials = DecryptCredentials(creds);
+        await connect(credentials, cancellationToken);
+        Log('Storing received credentials...');
         await save(current => ({ ...current, credentials }));
+        Log('Credentials stored.');
     }
 
-    return [client, disconnect, register, addListener, removeListener];
+    return { client, disconnect, register, addListener, removeListener };
 }
 
 export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
@@ -38,7 +45,7 @@ export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
 }
 
 export function useTelemetry(): { telemetryData: SensorProps[], getTelemetryName: (id: string) => string, set: (id: string, data: Partial<SensorProps>) => void, addListener: (...args: any[]) => void, removeListener: (...args: any[]) => void } {
-    const { telemetryData, updateSensors, getSensorName:getTelemetryName, addListener, removeListener } = useContext(IoTCContext);
+    const { telemetryData, updateSensors, getSensorName: getTelemetryName, addListener, removeListener } = useContext(IoTCContext);
 
     const set = function (id: string, data: Partial<SensorProps>) {
         updateSensors('telemetry', current => (current.map(({ ...sensor }) => {

@@ -5,11 +5,10 @@ import { useSimulation, useIoTCentralClient, useTelemetry } from './hooks/iotc';
 import Registration from './Registration';
 import { Text, Headline } from './components/typography';
 import { IoTCContext, SensorProps } from './contexts/iotc';
-import { Loader } from './components/loader';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useScreenDimensions } from './hooks/layout';
 import { IOTC_EVENTS, IIoTCCommand, IIoTCCommandResponse } from 'react-native-azure-iotcentral-client';
-import { LogItem, LOG_DATA, StateUpdater, TimedLog } from './types';
+import { LogItem} from './types';
 import { colors } from 'react-native-elements';
 import { useTheme } from '@react-navigation/native';
 import { LogsContext } from './contexts/logs';
@@ -57,7 +56,7 @@ export default function Logs() {
 
     const { colors } = useTheme();
     const [simulated] = useSimulation();
-    const [client] = useIoTCentralClient();
+    const {client} = useIoTCentralClient();
     const { set } = useTelemetry();
     const { logs, append } = useContext(LogsContext);
 

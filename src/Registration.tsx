@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { Text } from './components/typography';
 import { Button, Overlay } from 'react-native-elements';
 import { useScreenDimensions } from './hooks/layout';
-import { IoTCClient } from 'react-native-azure-iotcentral-client';
+import { IoTCClient, CancellationToken } from 'react-native-azure-iotcentral-client';
 import { RouteProp, useTheme } from '@react-navigation/native';
 import { Loader } from './components/loader';
 import { useIoTCentralClient } from './hooks/iotc';
@@ -15,7 +15,7 @@ export default function Registration({ route, navigation }: { route?: RouteProp<
     const { screen, orientation } = useScreenDimensions();
     const { colors } = useTheme();
     const [showqr, setshowqr] = useState(false);
-    const [client, disconnect] = useIoTCentralClient();
+    const { client } = useIoTCentralClient();
 
     if (showqr) {
         return (
@@ -30,7 +30,9 @@ export default function Registration({ route, navigation }: { route?: RouteProp<
                             Alert.alert('Error', 'The QR code you have scanned is not an Azure IoT Central Device QR code', [
                                 {
                                     text: 'Retry',
-                                    onPress: () => { qrCode.current?.reactivate() }
+                                    onPress: () => {
+                                        qrCode.current?.reactivate()
+                                    }
                                 },
                                 {
                                     text: 'Cancel',
@@ -61,80 +63,77 @@ export default function Registration({ route, navigation }: { route?: RouteProp<
             <Text style={style.header}>Mobile device is not currently registered to any application in Azure IoT Central. To register this phone as a device scan the associated QR Code
 .</Text>
             <Button type='clear' title='Scan QR code' onPress={async () => {
-                await disconnect();
                 setshowqr(true);
             }} />
         </View>)
 }
 
 function QRCode(props: { height: number, width: number, orientation: 'portrait' | 'landscape', onClose?(): void, onSuccess?(qrcode: React.RefObject<QRCodeScanner>): void | Promise<void>, onFailure?(qrcode: React.RefObject<QRCodeScanner>): void | Promise<void> }) {
-    const [prompt, showPrompt] = useState(false);
-    const [qrdata, setQrdata] = useState<string | undefined>(undefined);
-    const { colors } = useTheme();
-    const [client, disconnect, register, addListener, removeListener] = useIoTCentralClient();
-    const [loading, setLoading] = useState(false);
+    // dialog with progress
+    const { client, register, addListener, removeListener } = useIoTCentralClient();
+    // connection in progress. Loading enabled
+    const [connecting, setConnecting] = useState(false);
     const [loadingMsg, setLoadingMsg] = useState('Connecting ...');
 
     const { height, width, orientation, onFailure, onClose, onSuccess } = props;
     const qrcode = useRef<QRCodeScanner>(null);
-
-    const clientId = useRef(client ? (client as IoTCClient).id : null);
+    const request = useRef(new CancellationToken());
 
 
     const onRead = async function (e: Event) {
-        setQrdata(e.data);
-        showPrompt(true);
+        setConnecting(true);
+        await connectIoTC(e.data);
     }
 
-    const connectIoTC = async function () {
+    const onComplete = (success: boolean | null) => {
+        removeListener(LOG_DATA, updateLoadingMessage);
+        if (success === null) { // close
+            return onClose?.();
+        }
+        if (success) {
+            return onSuccess?.(qrcode);
+        }
+        else {
+            return onFailure?.(qrcode);
+        }
+
+    }
+
+    const updateLoadingMessage = (logData: LogItem) => {
+        setLoadingMsg(logData.eventData);
+    }
+
+    const connectIoTC = async function (qrdata: string) {
         if (qrdata) {
             Log(qrdata);
-            setLoading(true);
             try {
-                await register(qrdata);
+                addListener(LOG_DATA, updateLoadingMessage);
+                await register(qrdata, request.current);
+                onComplete(true); // registration successfull
             }
             catch (ex) {
-                setLoading(false);
-                showPrompt(false);
-                if (onFailure) {
-                    onFailure(qrcode);
-                }
+                Log(ex);
+                const reason = ex.name === 'Cancel' ? null : false;
+                // registration failed. Set failure mode.
+                onComplete(reason);
             }
         }
     }
 
-    useEffect(() => {
-        if (prompt && qrdata) {
-            addListener(LOG_DATA, (logData: LogItem) => { setLoadingMsg(logData.eventData) });
-            connectIoTC();
-        }
-        return () => {
-            removeListener(LOG_DATA, (logData: LogItem) => { setLoadingMsg(logData.eventData) });
-        }
-    }, [prompt, qrdata]);
-
-    useEffect(() => {
-        // keep track of the current client id so it enters down only when connecting a different one
-        if (client && clientId.current && (client as IoTCClient).id === clientId.current) {
-            return;
-        }
-        if (client && client.isConnected() && loading) {
-            setLoading(false);
-            showPrompt(false);
-            if (onSuccess) {
-                onSuccess(qrcode);
-            }
-        }
-    }, [client, loading])
 
     return (
         <View>
             <QRCodeScanner onRead={onRead} onClose={onClose} width={width} height={height} markerSize={Math.floor((orientation === 'portrait' ? width : height) / 1.5)} />
-            <Overlay isVisible={prompt} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
-                <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: height / 4, padding: 20 }}>
-                    {loading && <Loader message={loadingMsg} />}
-                </View>
-            </Overlay>
+            {connecting && <Loader visible={connecting} message={loadingMsg}
+                modal
+                buttons={[{
+                    text: 'Cancel',
+                    onPress: ()=>{
+                        setLoadingMsg('Canceling...')
+                        request.current.cancel.bind(request.current)();
+                    }
+
+                }]} />}
         </View >
     )
 }

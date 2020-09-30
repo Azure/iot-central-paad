@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ListItem, Icon } from "react-native-elements";
 import Registration from "./Registration";
 import { StackNavigationProp, HeaderTitle, createStackNavigator } from "@react-navigation/stack";
-import { useSimulation } from "./hooks/iotc";
+import { useIoTCentralClient, useSimulation } from "./hooks/iotc";
 import { defaults } from "./contexts/defaults";
 import { StorageContext } from "./contexts/storage";
 import { LogsContext } from "./contexts/logs";
@@ -31,6 +31,7 @@ export default function Settings() {
     const { mode, toggle } = useContext(ThemeContext);
     const { clear } = useContext(StorageContext);
     const { clear: clearLogs } = useContext(LogsContext);
+    const { disconnect } = useIoTCentralClient();
     const [centralSimulated, simulate] = useSimulation();
     const { colors, dark } = useTheme();
     const insets = useSafeAreaInsets()
@@ -62,6 +63,7 @@ export default function Settings() {
             action: {
                 type: 'select',
                 fn: async (val) => {
+                    await disconnect();
                     await clear();
                     clearLogs();
                     Alert.alert('Success', 'Successfully clean data');

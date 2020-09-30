@@ -21,7 +21,7 @@ import { Welcome } from './Welcome';
 import HealthPlatform from './HealthPlatform';
 import Logs from './Logs';
 import { IconProps } from 'react-native-vector-icons/Icon';
-import { IIcon } from './hooks/common';
+import { IIcon, usePrevious } from './hooks/common';
 import Map from './components/map';
 import { Log } from './tools/CustomLogger';
 import FileUpload from './FileUpload';
@@ -99,16 +99,20 @@ function Navigation() {
 
 function Root() {
     const { credentials, simulated } = useContext(StorageContext);
-    const { connect, addListener } = useContext(IoTCContext);
+    const { connect, addListener, removeListener } = useContext(IoTCContext);
     const { append } = useContext(LogsContext);
+
+    const prevCredentials = usePrevious(credentials);
 
     // connect client if credentials are retrieved
     useEffect(() => {
-        if (!simulated) {
+        if (!simulated && prevCredentials === undefined) {
             Log('Received new credentials... connecting new client');
-            connect(credentials);
             addListener(LOG_DATA, append);
+            connect(credentials);
+
         }
+        return () => removeListener(LOG_DATA, append);
     }, [credentials, simulated]);
 
 

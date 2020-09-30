@@ -124,7 +124,7 @@ async function initProps(client: CentralClient, properties: PropertiesProps[], s
 export default function Properties() {
 
     // const [simulated] = useSimulation();
-    const [client] = useIoTCentralClient();
+    const { client } = useIoTCentralClient();
     const insets = useSafeAreaInsets();
     const { screen } = useScreenDimensions();
     const [simulated] = useSimulation();
@@ -160,9 +160,8 @@ export default function Properties() {
 
     if (client === undefined) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-                <Loader message={'Connecting to IoT Central ...'} />
-            </View>)
+            <Loader message={'Connecting to IoT Central ...'} visible={true} style={{ flex: 1, justifyContent: 'center' }} />
+        )
     }
 
     return (<View style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}>

@@ -18,7 +18,7 @@ import { LogsContext } from './contexts/logs';
 import { Screen } from 'react-native-screens';
 
 export default function FileUpload() {
-    const [client] = useIoTCentralClient();
+    const { client } = useIoTCentralClient();
     const [simulated] = useSimulation();
     const insets = useSafeAreaInsets();
     const { screen } = useScreenDimensions();
@@ -49,9 +49,8 @@ export default function FileUpload() {
 
     if (client === undefined) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
-                <Loader message={'Connecting to IoT Central ...'} />
-            </View>)
+            <Loader message={'Connecting to IoT Central ...'} visible={true} />
+        );
     }
 
 
@@ -139,20 +138,22 @@ function UploadIcon() {
 }
 
 function UploadProgress(props: { filename: string, size: string, uploadStatus: boolean | undefined, setUploading: StateUpdater<boolean> }) {
-    const { colors } = useTheme();
-    const [fill, setFill] = useState(0);
+    const { colors: themeColors } = useTheme();
+    const [fill, setFill] = useState(1);
     const { size, uploadStatus, filename, setUploading } = props;
     const { screen } = useScreenDimensions();
     const [showResult, setShowResult] = useState(false);
+    const [rotationStyle, setRotationStyle] = useState({});
+    const [colors, setColors] = useState({ tint: themeColors.text, background: themeColors.card });
 
     const intid = useRef<number>();
 
     useEffect(() => {
         //@ts-ignore
         intid.current = setInterval(() => setFill(cur => {
-            if (cur === 100) {
-                //@ts-ignore
-                clearInterval(intid.current);
+            if (cur === 100 || cur === 101) {
+                // reset counter
+                return 0;
             }
             return cur + 5;
         }), 300);
@@ -161,13 +162,25 @@ function UploadProgress(props: { filename: string, size: string, uploadStatus: b
     }, []);
 
     useEffect(() => {
+        if (fill === 0) {
+            // setRotationStyle({ transform: [{ scaleX: -1 }] });
+            setColors(cur => ({
+                tint: cur.tint === themeColors.text ? themeColors.card : themeColors.text,
+                background: cur.background === themeColors.card ? themeColors.text : themeColors.card
+            }));
+        }
+    }, [fill]);
+
+    useEffect(() => {
         if (uploadStatus !== undefined) {
             setShowResult(true);
             // wait before go back to standard screen
             setTimeout(() => {
                 setUploading(false);
             }, 3000);
-            setFill(100);
+
+            //@ts-ignore
+            clearInterval(intid.current);
         }
     }, [uploadStatus]);
 
@@ -194,12 +207,14 @@ function UploadProgress(props: { filename: string, size: string, uploadStatus: b
             size={screen.height / 5}
             width={5}
             fill={fill}
-            tintColor={colors.text}
-            backgroundColor={colors.card}
-            rotation={360}>
+            tintColor={colors.tint}
+            backgroundColor={colors.background}
+            rotation={360}
+            style={rotationStyle}
+        >
             {() => (
 
-                <Text>{size}</Text>
+                <Text style={rotationStyle}>{size}</Text>
             )}
         </AnimatedCircularProgress>
         <Text style={{ marginTop: 30 }}>{filename}</Text>
