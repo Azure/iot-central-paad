@@ -63,7 +63,7 @@ export default function FileUpload() {
             }}
             enabled={false}
             title=''
-            onPress={() => {
+            onPress={uploading ? undefined : () => {
                 ImagePicker.showImagePicker({
                     title: 'Select Image'
                 }, async (response) => {
@@ -95,7 +95,7 @@ export default function FileUpload() {
                             fileSize.current = formatBytes(response.fileSize);
                             await new Promise(r => setTimeout(r, 6000));
                             const res = await client.uploadFile(curfileName as string, fileType, response.data, 'base64');
-                            if (res >= 200 && res < 300) {
+                            if (res.status >= 200 && res.status < 300) {
                                 console.log('here');
                                 append({
                                     eventName: 'FILE UPLOAD',
@@ -106,7 +106,7 @@ export default function FileUpload() {
                             else {
                                 append({
                                     eventName: 'FILE UPLOAD',
-                                    eventData: `Error uploading ${curfileName}`
+                                    eventData: `Error uploading ${curfileName}${res.errorMessage ? `. Reason:${res.errorMessage}` : '.'}`
                                 });
                                 setuploadStatus(false);
                             }

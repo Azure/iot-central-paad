@@ -109,7 +109,12 @@ function Root() {
         if (!simulated && prevCredentials === undefined) {
             Log('Received new credentials... connecting new client');
             addListener(LOG_DATA, append);
-            connect(credentials);
+            try {
+                connect(credentials);
+            }
+            catch (ex) {
+                console.log('Connection failed');
+            }
 
         }
         return () => removeListener(LOG_DATA, append);
