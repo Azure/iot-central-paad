@@ -61,8 +61,13 @@ export function useTelemetry(): { telemetryData: SensorProps[], getTelemetryName
 
 
 export function useHealth(): { healthData: SensorProps[], getHealthName: (id: string) => string, set: (id: string, data: Partial<SensorProps>) => void, addListener: (...args: any[]) => void, removeListener: (...args: any[]) => void } {
-    const { healthData, updateSensors, getSensorName: getHealthName, addListener, removeListener } = useContext(IoTCContext);
+    const { healthData, initHealth, updateSensors, getSensorName: getHealthName, addListener, removeListener } = useContext(IoTCContext);
 
+    useEffect(() => {
+        if (healthData.length === 0) {
+            initHealth();
+        }
+    }, [healthData])
     const set = function (id: string, data: Partial<SensorProps>) {
         updateSensors('health', current => (current.map(({ ...sensor }) => {
             if (sensor.id === id) {
@@ -72,5 +77,5 @@ export function useHealth(): { healthData: SensorProps[], getHealthName: (id: st
         })));
     }
 
-    return { healthData, getHealthName, set, addListener, removeListener };
+    return { healthData: healthData.map(h => h.sensorProps), getHealthName, set, addListener, removeListener };
 }

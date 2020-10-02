@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, Platform, ListRenderItemInfo } from 'react-native';
-import { useScreenIcon } from './hooks/common';
 import { useSimulation, useIoTCentralClient, useTelemetry, useHealth } from './hooks/iotc';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useScreenDimensions } from './hooks/layout';
@@ -8,22 +7,14 @@ import { useNavigation } from '@react-navigation/native';
 import Registration from './Registration';
 import { Loader } from './components/loader';
 import { camelToName } from './components/typography';
-import { valueof } from './types';
 import { DATA_AVAILABLE_EVENT, ISensor } from './sensors';
-import HealthKitSteps from './sensors/healthkit/steps';
-import { defaults } from './contexts/defaults';
 import { SensorProps } from './contexts/iotc';
 import { Card } from './components/card';
-import HealthKitClimb from './sensors/healthkit/climb';
-import GoogleFitSteps from './sensors/googlefit/steps';
 
 
 
 
 export default function HealthPlatform() {
-
-
-
 
     const [simulated] = useSimulation();
     const { client } = useIoTCentralClient();

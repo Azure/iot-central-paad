@@ -1,7 +1,7 @@
 import React, { useReducer, useState, useEffect, useRef } from "react";
 import { IIoTCClient, IoTCCredentials, IoTCClient, IOTC_CONNECT, IOTC_LOGGING, CancellationToken } from "react-native-azure-iotcentral-client";
 import { IconProps } from "react-native-elements";
-import { Platform } from "react-native";
+import { Constructor, Platform } from "react-native";
 import { ISensor, DATA_AVAILABLE_EVENT, SENSOR_UNAVAILABLE_EVENT } from "../sensors";
 import Battery from "../sensors/battery";
 import Gyroscope from "../sensors/gyroscope";
@@ -28,6 +28,8 @@ export type SensorProps = {
     unit?: string
 }
 
+type IHealthData = { sensor: ISensor, sensorProps: SensorProps };
+
 const AVAILABLE_HEALTH = {
     STEPS: 'steps',
     FLOORS: 'flightsClimbed'
@@ -52,19 +54,20 @@ const sensorMap: { [id in valueof<typeof AVAILABLE_SENSORS>]: ISensor } = {
     [AVAILABLE_SENSORS.GEOLOCATION]: new GeoLocation(AVAILABLE_SENSORS.GEOLOCATION, 5000)
 }
 
-const healthMap: { [id in valueof<typeof AVAILABLE_HEALTH>]: ISensor } = {
-    [AVAILABLE_HEALTH.STEPS]: Platform.select<ISensor>({
-        ios: new HealthKitSteps(AVAILABLE_HEALTH.STEPS, 5000),
-        android: new GoogleFitSteps(AVAILABLE_HEALTH.STEPS, 5000)
-    }) as ISensor,
-    [AVAILABLE_HEALTH.FLOORS]: Platform.select<ISensor>({
-        ios: new HealthKitClimb(AVAILABLE_HEALTH.FLOORS, 5000)
+const healthMap: { [id in valueof<typeof AVAILABLE_HEALTH>]: Constructor<ISensor> } = {
+    [AVAILABLE_HEALTH.STEPS]: Platform.select<Constructor<ISensor>>({
+        ios: HealthKitSteps,
+        android: GoogleFitSteps
+    }) as Constructor<ISensor>,
+    [AVAILABLE_HEALTH.FLOORS]: Platform.select<Constructor<ISensor>>({
+        ios: HealthKitClimb
         // android: new HealthKitClimb(AVAILABLE_HEALTH.FLOORS, 5000)
-    }) as ISensor
+    }) as Constructor<ISensor>
 }
 
+
 export type CentralClient = IIoTCClient | null | undefined;
-type ICentralState = { telemetryData: SensorProps[], healthData: SensorProps[], client: CentralClient };
+type ICentralState = { telemetryData: SensorProps[], healthData: IHealthData[], client: CentralClient };
 
 
 export type IIoTCContext = ICentralState & {
@@ -74,6 +77,7 @@ export type IIoTCContext = ICentralState & {
     getSensorName: (id: string) => string,
     addListener: (eventname: string, listener: (...args: any[]) => void) => void,
     removeListener: (eventname: string, listener: (...args: any[]) => void) => void,
+    initHealth: () => void
 }
 
 
@@ -92,6 +96,7 @@ export const IoTCContext = React.createContext<IIoTCContext>({
     getSensorName: (id: string) => '',
     addListener: () => { },
     removeListener: () => { },
+    initHealth: () => { }
 
 });
 
@@ -211,7 +216,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         }) as SensorProps[]
     ];
 
-    const [state, setState] = useState<ICentralState>({ client: undefined, telemetryData: defaultSensors, healthData: defaultHealths });
+    const [state, setState] = useState<ICentralState>({ client: undefined, telemetryData: defaultSensors, healthData: [] });
     const eventLogger = useRef<EventLogger>(new EventLogger(LOG_DATA));
 
 
@@ -224,8 +229,8 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 return sensor;
             }),
             healthData: current.healthData.map(({ ...sensor }) => {
-                if (sensor.id === id) {
-                    sensor = { ...sensor, value };
+                if (sensor.sensorProps.id === id) {
+                    sensor = { ...sensor, sensorProps: { ...sensor.sensorProps, value } };
                 }
                 return sensor;
             })
@@ -239,14 +244,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             (sensorMap[id] as ISensor).enable(telem.enabled);
             (sensorMap[id] as ISensor).sendInterval(telem.interval);
         });
-
-        state.healthData.forEach(health => {
-            const id = health.id as keyof typeof AVAILABLE_HEALTH;
-            (healthMap[id] as ISensor).simulate(health.simulated);
-            (healthMap[id] as ISensor).enable(health.enabled);
-            (healthMap[id] as ISensor).sendInterval(health.interval);
-        });
-    }, [state.telemetryData, state.healthData]);
+    }, [state.telemetryData]);
 
     /**
      * Runs initially to add ux listeners to data_change event
@@ -264,8 +262,6 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 });
             })
         });
-
-        Object.values(healthMap).forEach(h => h ? h.addListener(DATA_AVAILABLE_EVENT, updateValues) : null);
     }, []);
 
 
@@ -279,18 +275,25 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                         setState(current => ({ ...current, telemetryData: fn(current.telemetryData) }));
                         break;
                     case 'health':
-                        setState(current => ({ ...current, healthData: fn(current.healthData) }));
+                        setState(current => ({
+                            ...current, healthData: fn(current.healthData.map(({ ...h }) => h.sensorProps)).map<IHealthData>(({ ...sensorProps }) => ({
+                                sensorProps,
+                                sensor: (current.healthData.find(h => h.sensorProps.id === sensorProps.id) as IHealthData).sensor
+                            }))
+                        }));
                 }
 
             },
-            getSensorName: (id: string) => ({ ...sensorMap, ...healthMap }[id].name),
+            getSensorName: (id: string) => ({ ...sensorMap, ...state.healthData.reduce<{ [x: string]: ISensor }>((obj, item) => ({ ...obj, [item.sensor.id as keyof typeof AVAILABLE_HEALTH]: item.sensor }), {}) }[id].name),
             addListener: (eventname: string, listener: (...args: any[]) => void) => {
                 if (eventname === LOG_DATA) {
                     eventLogger.current?.addListener(LOG_DATA, listener);
                 }
                 else {
                     Object.values(sensorMap).forEach(s => s ? s.addListener(eventname, listener) : null);
-                    Object.values(healthMap).forEach(s => s ? s.addListener(eventname, listener) : null);
+                    state.healthData.forEach((health) => {
+                        health.sensor.addListener(eventname, listener);
+                    });
                 }
             },
             removeListener: (eventname: string, listener: (...args: any[]) => void) => {
@@ -298,7 +301,9 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                     eventLogger.current?.removeListener(LOG_DATA, listener);
                 }
                 Object.values(sensorMap).forEach(s => s ? s.removeListener(eventname, listener) : null);
-                Object.values(healthMap).forEach(s => s ? s.removeListener(eventname, listener) : null);
+                state.healthData.forEach((health) => {
+                    health.sensor.removeListener(eventname, listener);
+                });
             },
             connect: async (credentials: IoTCCredentials | null | undefined, cancellationToken?: CancellationToken) => {
                 // disconnect previous client if any
@@ -329,6 +334,27 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                     await state.client.disconnect();
                     setState(current => ({ ...current, client: null }));
                 }
+            },
+            initHealth: () => {
+                if (state.healthData && state.healthData.length > 0) {
+                    return; //no-op: already initialized
+                }
+                setState(current => ({
+                    ...current,
+                    healthData: [...current.healthData, ...defaultHealths.map<IHealthData>(health => {
+                        const id = health.id as keyof typeof AVAILABLE_HEALTH;
+                        const sensor = new healthMap[id](id, 5000);
+                        sensor.simulate(health.simulated);
+                        sensor.enable(health.enabled);
+                        sensor.sendInterval(health.interval);
+                        sensor.addListener(DATA_AVAILABLE_EVENT, updateValues);
+                        return {
+                            sensor,
+                            sensorProps: health
+                        }
+                    })]
+                }));
+
             }
         }}>
             { children}
