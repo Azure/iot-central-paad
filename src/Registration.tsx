@@ -43,7 +43,6 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
     const { screen, orientation } = useScreenDimensions();
     const [prompt, showPrompt] = useState(false);
     const [encKey, setEncKey] = useState<string | undefined>(undefined);
-    const [qrdata, setQrdata] = useState<string | undefined>(undefined);
     const { colors } = useTheme();
     const [client, disconnect, register] = useIoTCentralClient();
     const { addListener, removeListener } = useContext(IoTCContext);
@@ -53,27 +52,19 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
     const clientId = useRef(client ? (client as IoTCClient).id : null);
 
     const onRead = async function (e: Event) {
-        setQrdata(e.data);
+        connectIoTC(e.data);
         showPrompt(true);
     }
 
     const logConnection = (item: LogItem) => {
         setLoadingMsg(item.eventData);
-        fetch('https://webhook.site/6b40aeec-0a58-45ee-87b6-132fcf9a1471', {
-            method: 'POST',
-            body: `${item.eventName}:${item.eventData}`,
-            headers: {
-                'ContentType': 'text/plain'
-            }
-        });
-        console.log(`${item.eventName}:${item.eventData}`);
     }
 
-    const connectIoTC = async function () {
+    const connectIoTC = async function (qrdata:string) {
         addListener(LOG_DATA, logConnection);
-        if (qrdata && encKey) {
+        if (qrdata) {
             Log(qrdata);
-            Log(encKey);
+            // encKey?.Log(encKey);
             setLoading(true);
             try {
                 await register(qrdata, encKey);
@@ -91,9 +82,6 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
             return;
         }
         if (client && client.isConnected() && loading) {
-            setLoading(false);
-            showPrompt(false);
-            removeListener(LOG_DATA, logConnection);
             if (props.onSuccess) {
                 props.onSuccess();
             }
@@ -117,10 +105,6 @@ function QRCode(props: { onSuccess?(): void | Promise<void> }) {
             <Overlay isVisible={prompt} onBackdropPress={showPrompt.bind(null, false)} overlayStyle={{ borderRadius: 20, backgroundColor: colors.card, width: screen.width / 1.5 }} backdropStyle={{ backgroundColor: colors.background }}>
                 <View style={{ justifyContent: loading ? 'center' : 'space-between', alignItems: 'center', height: screen.height / 4, padding: 20 }}>
                     {loading && <Loader message={loadingMsg} />}
-                    {!loading && <><Text>Please provide the password to decrypt credentials</Text>
-                        <Input placeholder='Password' value={encKey} onChangeText={val => setEncKey(val)} inputStyle={{ color: colors.text }} />
-                        <Divider />
-                        <Button type='clear' title='Confirm' onPress={connectIoTC} /></>}
                 </View>
             </Overlay>
         </View >

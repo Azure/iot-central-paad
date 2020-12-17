@@ -81,8 +81,11 @@ const connectClient = async function (credentials: IoTCCredentials, eventLogger:
     if (credentials.modelId) {
         iotc.setModelId(credentials.modelId);
     }
-    //iotc.setLogging(IOTC_LOGGING.ALL);
-    await iotc.connect(false);
+    // iotc.setLogging(IOTC_LOGGING.ALL);
+    await iotc.connect({
+        cleanSession: false,
+        timeout: 20
+    });
     return iotc;
 }
 
@@ -145,7 +148,7 @@ const IoTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 type: 'ionicon'
             },
             simulated: defaults.emulator,
-            unit:'°'
+            unit: '°'
         },
         {
             id: AVAILABLE_SENSORS.BATTERY,

@@ -15,6 +15,9 @@ import { StateUpdater, valueof } from './types';
 import { getDeviceInfo, DeviceInfo } from './properties/deviceInfo';
 import { Headline, Text } from './components/typography';
 import { Overlay } from 'react-native-elements';
+import { Log } from './tools/CustomLogger';
+
+const PROPERTY_COMPONENT = 'device_info';
 
 export const PROPERTY_CHANGED = 'PROPERTY_CHANGED';
 
@@ -93,9 +96,15 @@ const propsMap: { [id in valueof<typeof AVAILABLE_PROPERTIES>]: PropertiesProps 
 }
 
 async function onPropUpdate(update: StateUpdater<PropertiesProps[]>, prop: IIoTCProperty) {
+    let { name, value } = prop;
+    if (value['__t'] === 'c') {
+        // inside a component: TODO: change sdk
+        name = Object.keys(value).filter(v => v !== '__t')[0];
+        value = value[name];
+    }
     update(current => (current.map(({ ...property }) => {
-        if (property.id === prop.name) {
-            property.value = prop.value;
+        if (property.id === name) {
+            property.value = value;
         }
         return property;
     })));
@@ -111,10 +120,10 @@ async function initProps(client: CentralClient, properties: PropertiesProps[], s
                 prop.value = devInfo[dInfo as keyof DeviceInfo];
             }
         });
-        await client.sendProperty(await getDeviceInfo());
+        await client.sendProperty({ [PROPERTY_COMPONENT]: { '__t': 'c', ...await getDeviceInfo() } });
         properties.forEach(async prop => {
             if (prop.value) {
-                await client.sendProperty({ [prop.id]: prop.value });
+                await client.sendProperty({ [PROPERTY_COMPONENT]: { '__t': 'c', [prop.id]: prop.value } });
             }
         });
         setProperties(properties);
@@ -177,7 +186,7 @@ export default function Properties() {
                 editable={item.item.editable}
                 onEdit={async (value) => {
                     try {
-                        await client.sendProperty({ [item.item.id]: value });
+                        await client.sendProperty({ [PROPERTY_COMPONENT]: { '__t': 'c', [item.item.id]: value } });
                         Alert.alert('Property', `Property ${item.item.name} successfully sent to IoT Central`, [{ text: 'OK' }]);
                     }
                     catch (e) {

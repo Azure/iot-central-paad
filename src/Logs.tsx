@@ -16,8 +16,8 @@ import { useTheme } from '@react-navigation/native';
 
 type CommandInfo = { timestamp: number, cmd: IIoTCCommand }[];
 
-const ENABLE_DISABLE_COMMAND = 'EnableDisable';
-const SET_FREQUENCY_COMMAND = 'SetFrequency';
+const ENABLE_DISABLE_COMMAND = 'enableSensors';
+const SET_FREQUENCY_COMMAND = 'changeInterval';
 
 
 const onCommandUpdate = async function (setTelemetry: (id: string, data: Partial<SensorProps>) => void, setLogs: StateUpdater<TimedLog>, command: IIoTCCommand) {
@@ -25,14 +25,14 @@ const onCommandUpdate = async function (setTelemetry: (id: string, data: Partial
     data = JSON.parse(command.requestPayload);
 
     if (command.name === ENABLE_DISABLE_COMMAND) {
-        if (data.item) {
-            setTelemetry(data.item, { enabled: data.enable ? data.enable : false });
+        if (data.sensor) {
+            setTelemetry(data.sensor, { enabled: data.enable ? data.enable : false });
             await command.reply(IIoTCCommandResponse.SUCCESS, 'Enable');
         }
     }
     else if (command.name === SET_FREQUENCY_COMMAND) {
-        if (data.item) {
-            setTelemetry(data.item, { interval: data.frequency ? data.frequency * 1000 : 5000 });
+        if (data.sensor) {
+            setTelemetry(data.sensor, { interval: data.frequency ? data.frequency * 1000 : 5000 });
             await command.reply(IIoTCCommandResponse.SUCCESS, 'Frequency');
         }
     }

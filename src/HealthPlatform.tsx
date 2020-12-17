@@ -17,6 +17,7 @@ import { Card } from './components/card';
 import HealthKitClimb from './sensors/healthkit/climb';
 import GoogleFitSteps from './sensors/googlefit/steps';
 
+const HEALTH_COMPONENT = 'health';
 
 const AVAILABLE_HEALTH = {
     STEPS: 'steps',
@@ -83,7 +84,7 @@ export default function HealthPlatform() {
 
     const sendTelemetryData = async function (id: string, value: any) {
         if (client && client.isConnected()) {
-            await client.sendTelemetry({ [id]: value });
+            await client.sendTelemetry({ [id]: value }, { '$.sub': HEALTH_COMPONENT });
         }
     }
 

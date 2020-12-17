@@ -100,15 +100,17 @@ function Root() {
     // connect client if credentials are retrieved
     useEffect(() => {
         if (!simulated) {
-            Log('Received new credentials... connecting new client');
+            Log('Connecting client');
             connect(credentials);
         }
     }, [credentials, simulated]);
 
 
-    return ((<Tab.Navigator key='tab' tabBarOptions={Platform.select({
-        android: { safeAreaInsets: { bottom: 0 } }
-    })}>
+    return ((<Tab.Navigator key='tab' tabBarOptions={
+        Platform.select({
+            android: { safeAreaInsets: { bottom: 0 } }
+        })
+    } lazy={false}>
         <Tab.Screen name={Screens.TELEMETRY_SCREEN} component={Telemetry} options={{
             tabBarIcon: ({ color, size }) => getIcon(Platform.select({
                 ios: {

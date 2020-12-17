@@ -19,7 +19,7 @@ import { Loader } from './components/loader';
 import { useScreenDimensions } from './hooks/layout';
 import { camelToName } from './components/typography';
 
-
+const TELEMETRY_COMPONENT = 'sensors';
 
 export default function Telemetry() {
 
@@ -33,7 +33,7 @@ export default function Telemetry() {
 
     const sendTelemetryData = async function (id: string, value: any) {
         if (client && client.isConnected()) {
-            await client.sendTelemetry({ [id]: value });
+            await client.sendTelemetry({ [id]: value }, { '$.sub': TELEMETRY_COMPONENT });
         }
     }
     useEffect(() => {
