@@ -186,6 +186,9 @@ android {
             if (System.env.GOOGLE_MAPS_API_KEY) {
                 resValue 'string', 'google_maps_api_key', "\"${System.env.GOOGLE_MAPS_API_KEY}\""
             }
+            if (System.env.PAAD_BETARELEASE_VERSION_CODE) {
+                archivesBaseName = "${System.env.PAAD_BETARELEASE_PROJECT_NAME}"
+            }
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
