@@ -1,10 +1,10 @@
 import HealthKit from 'rn-apple-healthkit';
 import {EventEmitter} from 'events';
-import {ISensor, DATA_AVAILABLE_EVENT} from '../index';
+import {ISensor, DATA_AVAILABLE_EVENT} from '../../index';
 import {requestPermissions} from './index';
 import {NativeAppEventEmitter} from 'react-native';
 import {HealthValue} from 'rn-apple-healthkit';
-import {Log} from '../../tools/CustomLogger';
+import {Log} from '../../../tools/CustomLogger';
 
 export default class HealthKitSteps extends EventEmitter implements ISensor {
   private enabled: boolean;
