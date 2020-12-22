@@ -13,6 +13,7 @@
       "resolveJsonModule": true,
       "noEmit": true,
       "strict": true,
+      "noUnusedLocals": true,
       "module": "commonjs",
       "target": "es2017",
       "skipLibCheck": true

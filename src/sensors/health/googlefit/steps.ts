@@ -1,17 +1,17 @@
-import HealthKit from 'rn-apple-healthkit';
 import {EventEmitter} from 'events';
-import {ISensor, DATA_AVAILABLE_EVENT} from '../index';
+import {ISensor, DATA_AVAILABLE_EVENT} from '../../index';
 import {requestPermissions} from './index';
-import {NativeAppEventEmitter} from 'react-native';
-import {HealthValue} from 'rn-apple-healthkit';
-import {Log} from '../../tools/CustomLogger';
+import GoogleFit from 'react-native-google-fit';
+import {GoogleFitStepResult} from '../../../types';
+import {Log} from '../../../tools/CustomLogger';
 
-export default class HealthKitSteps extends EventEmitter implements ISensor {
+export default class GoogleFitSteps extends EventEmitter implements ISensor {
   private enabled: boolean;
   private simulated: boolean;
   private currentRun: any;
   private initialized: boolean;
   private simulatedStepCount: number;
+  private realStepCount: number;
 
   constructor(public id: string, private interval: number) {
     super();
@@ -20,6 +20,7 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
     this.currentRun = null;
     this.initialized = false;
     this.simulatedStepCount = 0;
+    this.realStepCount = 0;
   }
 
   name: string = 'Steps';
@@ -64,7 +65,7 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
   async run() {
     if (this.simulated) {
       const intId = setInterval(
-        function (this: HealthKitSteps) {
+        function (this: GoogleFitSteps) {
           this.emit(
             DATA_AVAILABLE_EVENT,
             this.id,
@@ -79,37 +80,38 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
         },
       };
     } else {
-      this.currentRun = NativeAppEventEmitter.addListener(
-        'change:steps',
-        (data) => {
-          HealthKit.getStepCount(
-            {},
-            function (this: HealthKitSteps, err: string, result: HealthValue) {
-              if (err) {
-                Log(
-                  `Error from Apple HealthKit - Steps:\n${
-                    (err as any).message
-                  }`,
-                );
-                return;
-              }
-              this.emit(DATA_AVAILABLE_EVENT, this.id, result.value);
-            }.bind(this),
+      this.currentRun = GoogleFit.observeSteps(
+        function (this: GoogleFitSteps, err: boolean, result: any) {
+          if (err) {
+            Log(`Error from Google Fit observe Steps`);
+            return;
+          }
+          this.emit(
+            DATA_AVAILABLE_EVENT,
+            this.id,
+            (this.realStepCount += result.steps),
           );
-        },
+        }.bind(this),
       );
-      let currentValue = 0;
-      try {
-        currentValue = await new Promise((res, rej) =>
-          HealthKit.getStepCount({}, (err, result) => {
-            err ? rej(err) : res(result.value);
-          }),
-        );
-        Log(currentValue);
-      } catch (e) {
-        Log(e);
-      } // do nothing
-      this.emit(DATA_AVAILABLE_EVENT, this.id, currentValue);
+
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 1);
+      const results = (await GoogleFit.getDailyStepCountSamples({
+        startDate: startDate.toISOString(),
+        endDate: new Date().toISOString(),
+      })) as GoogleFitStepResult[];
+      Log(JSON.stringify(results));
+      results.forEach(
+        function (this: GoogleFitSteps, result: any) {
+          if (result.steps && result.steps.length > 0) {
+            const currentValue = result.steps[result.steps.length - 1].value;
+            if (currentValue && currentValue > 0) {
+              this.realStepCount = currentValue;
+            }
+            this.emit(DATA_AVAILABLE_EVENT, this.id, this.realStepCount);
+          }
+        }.bind(this),
+      );
     }
   }
 }

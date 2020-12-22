@@ -1,6 +1,6 @@
 import {PermissionsAndroid} from 'react-native';
 import GoogleFit, {Scopes} from 'react-native-google-fit';
-import {Log} from '../../tools/CustomLogger';
+import {Log} from '../../../tools/CustomLogger';
 
 const SCOPES = [
   Scopes.FITNESS_ACTIVITY_READ,
