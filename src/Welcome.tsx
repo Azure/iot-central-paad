@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {StyleSheet, View} from 'react-native';
 import Logo from './assets/IotcLogo.svg';
 import * as Animatable from 'react-native-animatable';
@@ -6,7 +6,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import {defaults} from './contexts/defaults';
 import DeviceInfo from 'react-native-device-info';
 import {StateUpdater} from './types';
-import Progress from 'react-native-progress';
+import ProgressCircleSnail from 'react-native-progress/CircleSnail';
 import {useScreenDimensions} from './hooks/layout';
 import {Text} from 'react-native-elements';
 
@@ -39,18 +39,21 @@ export function Welcome(props: {setInitialized: StateUpdater<boolean>}) {
 
   const animation = useRef<any>();
 
-  const initDefaults = async (animationHasEnded: boolean) => {
-    defaults.emulator = await DeviceInfo.isEmulator();
-    defaults.dev = __DEV__;
-    while (!animationHasEnded) {
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-    setInitialized(true);
-  };
+  const initDefaults = useCallback(
+    async (animationHasEnded: boolean) => {
+      defaults.emulator = await DeviceInfo.isEmulator();
+      defaults.dev = __DEV__;
+      while (!animationHasEnded) {
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+      setInitialized(true);
+    },
+    [setInitialized],
+  );
   // init authentication
   useEffect(() => {
     initDefaults(animationEnded);
-  }, [animationEnded]);
+  }, [animationEnded, initDefaults]);
 
   return (
     <LinearGradient colors={['#041b5c', '#136BFB']} style={style.container}>
@@ -85,7 +88,7 @@ export function Welcome(props: {setInitialized: StateUpdater<boolean>}) {
         ) : null}
       </View>
       <View style={{alignItems: 'center'}}>
-        <Progress.CircleSnail
+        <ProgressCircleSnail
           size={Math.floor(screen.width / 8)}
           indeterminate={true}
           color="white"

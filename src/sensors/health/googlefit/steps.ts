@@ -1,9 +1,8 @@
 import {EventEmitter} from 'events';
-import {ISensor, DATA_AVAILABLE_EVENT} from '../../index';
-import {requestPermissions} from './index';
 import GoogleFit from 'react-native-google-fit';
+import {ISensor, DATA_AVAILABLE_EVENT, LOG_DATA} from 'sensors/internal';
 import {GoogleFitStepResult} from '../../../types';
-import {Log} from '../../../tools/CustomLogger';
+import {requestPermissions} from '../internal';
 
 export default class GoogleFitSteps extends EventEmitter implements ISensor {
   private enabled: boolean;
@@ -83,7 +82,7 @@ export default class GoogleFitSteps extends EventEmitter implements ISensor {
       this.currentRun = GoogleFit.observeSteps(
         function (this: GoogleFitSteps, err: boolean, result: any) {
           if (err) {
-            Log(`Error from Google Fit observe Steps`);
+            this.emit(LOG_DATA, `Error from Google Fit observe Steps`);
             return;
           }
           this.emit(
@@ -100,7 +99,7 @@ export default class GoogleFitSteps extends EventEmitter implements ISensor {
         startDate: startDate.toISOString(),
         endDate: new Date().toISOString(),
       })) as GoogleFitStepResult[];
-      Log(JSON.stringify(results));
+      this.emit(LOG_DATA, JSON.stringify(results));
       results.forEach(
         function (this: GoogleFitSteps, result: any) {
           if (result.steps && result.steps.length > 0) {

@@ -1,9 +1,8 @@
 import HealthKit, {SampleResult} from 'rn-apple-healthkit';
 import {EventEmitter} from 'events';
-import {ISensor, DATA_AVAILABLE_EVENT} from '../../index';
-import {requestPermissions} from './index';
+import {requestPermissions} from '../internal';
 import {NativeAppEventEmitter} from 'react-native';
-import {Log} from '../../../tools/CustomLogger';
+import {ISensor, DATA_AVAILABLE_EVENT, LOG_DATA} from 'sensors/internal';
 
 export default class HealthKitClimb extends EventEmitter implements ISensor {
   private enabled: boolean;
@@ -20,8 +19,6 @@ export default class HealthKitClimb extends EventEmitter implements ISensor {
     this.initialized = false;
     this.simulatedFloorsCount = 0;
   }
-
-  name: string = 'Floor Climbed';
 
   async enable(val: boolean): Promise<void> {
     if (!this.initialized) {
@@ -89,7 +86,8 @@ export default class HealthKitClimb extends EventEmitter implements ISensor {
               result: SampleResult[],
             ) {
               if (err) {
-                Log(
+                this.emit(
+                  LOG_DATA,
                   `Error from Apple HealthKit - Climbs:\n${
                     (err as any).message
                   }`,
@@ -108,7 +106,6 @@ export default class HealthKitClimb extends EventEmitter implements ISensor {
             err ? rej(err) : res(result[result.length - 1].value);
           }),
         );
-        Log(currentValue);
       } catch (e) {
         // do nothing
       }

@@ -28,7 +28,7 @@ export default function Settings() {
   const {toggle} = useContext(ThemeContext);
   const {clear} = useContext(StorageContext);
   const {clear: clearLogs} = useContext(LogsContext);
-  const {disconnect} = useIoTCentralClient();
+  const client = useIoTCentralClient();
   const [centralSimulated, simulate] = useSimulation();
   const {colors, dark} = useTheme();
   const insets = useSafeAreaInsets();
@@ -61,7 +61,7 @@ export default function Settings() {
       action: {
         type: 'select',
         fn: async (val) => {
-          await disconnect();
+          await client?.disconnect();
           await clear();
           clearLogs();
           Alert.alert('Success', 'Successfully clean data');
@@ -98,7 +98,23 @@ export default function Settings() {
       : []),
   ]);
 
-  function getRightElement(item: ProfileItem) {
+  return (
+    <View style={{flex: 1, marginTop: insets.top, marginBottom: insets.bottom}}>
+      <Stack.Navigator
+        screenOptions={({route}) => ({
+          headerShown: false, // TODO: fix header
+        })}>
+        <Stack.Screen name="setting_root">
+          {() => <Root items={items} colors={colors} />}
+        </Stack.Screen>
+        <Stack.Screen name="Registration" component={Registration} />
+      </Stack.Navigator>
+    </View>
+  );
+}
+
+const RightElement = React.memo<{item: ProfileItem; colors: any}>(
+  ({item, colors}) => {
     if (item.action && item.action.type === 'switch') {
       return (
         <Switch
@@ -110,53 +126,39 @@ export default function Settings() {
         />
       );
     }
-  }
+    return null;
+  },
+);
 
-  return (
-    <View style={{flex: 1, marginTop: insets.top, marginBottom: insets.bottom}}>
-      <Stack.Navigator
-        screenOptions={({route}) => ({
-          headerShown: false, // TODO: fix header
-        })}>
-        <Stack.Screen name="setting_root">
-          {() => {
-            const nav = useNavigation<any>();
-
-            return (
-              <ScrollView style={{flex: 1}}>
-                {items.map((item, index) => (
-                  <ListItem
-                    key={`setting-${index}`}
-                    title={item.title}
-                    leftIcon={{
-                      name: item.icon,
-                      type: 'ionicon',
-                      color: colors.text,
-                    }}
-                    bottomDivider
-                    containerStyle={{backgroundColor: colors.card}}
-                    titleStyle={{color: colors.text}}
-                    rightElement={
-                      item.action ? getRightElement(item) : undefined
-                    }
-                    chevron={
-                      item.action && item.action.type === 'expand'
-                        ? true
-                        : false
-                    }
-                    onPress={
-                      item.action && item.action.type !== 'switch'
-                        ? item.action.fn.bind(null, nav)
-                        : undefined
-                    }
-                  />
-                ))}
-              </ScrollView>
-            );
-          }}
-        </Stack.Screen>
-        <Stack.Screen name="Registration" component={Registration} />
-      </Stack.Navigator>
-    </View>
-  );
-}
+const Root = React.memo<{items: ProfileItem[]; colors: any}>(
+  ({items, colors}) => {
+    const nav = useNavigation<any>();
+    return (
+      <ScrollView style={{flex: 1}}>
+        {items.map((item, index) => (
+          <ListItem
+            key={`setting-${index}`}
+            title={item.title}
+            leftIcon={{
+              name: item.icon,
+              type: 'ionicon',
+              color: colors.text,
+            }}
+            bottomDivider
+            containerStyle={{backgroundColor: colors.card}}
+            titleStyle={{color: colors.text}}
+            rightElement={<RightElement item={item} colors={colors} />}
+            chevron={
+              item.action && item.action.type === 'expand' ? true : false
+            }
+            onPress={
+              item.action && item.action.type !== 'switch'
+                ? item.action.fn.bind(null, nav)
+                : undefined
+            }
+          />
+        ))}
+      </ScrollView>
+    );
+  },
+);

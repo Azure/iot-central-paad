@@ -1,45 +1,87 @@
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import {View, FlatList} from 'react-native';
 import Registration from './Registration';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Card} from './components/card';
-import {DATA_AVAILABLE_EVENT} from './sensors';
-import {useIoTCentralClient, useSimulation, useTelemetry} from './hooks/iotc';
 import {useNavigation} from '@react-navigation/native';
 import {Loader} from './components/loader';
 import {camelToName} from './components/typography';
+import {useSensors, useIoTCentralClient, useSimulation} from 'hooks';
+import {SensorMap} from 'sensors';
+import {
+  DATA_AVAILABLE_EVENT,
+  ENABLE_DISABLE_COMMAND,
+  SET_FREQUENCY_COMMAND,
+} from 'types';
+import {
+  IIoTCCommand,
+  IIoTCCommandResponse,
+  IOTC_EVENTS,
+} from 'react-native-azure-iotcentral-client';
 
 const TELEMETRY_COMPONENT = 'sensors';
 
 export default function Telemetry() {
   const [simulated] = useSimulation();
-  const {client} = useIoTCentralClient();
+  const iotcentralClient = useIoTCentralClient();
   const insets = useSafeAreaInsets();
-  const {telemetryData, getTelemetryName, set, addListener} = useTelemetry();
+  const sensors = useSensors();
   const navigation = useNavigation();
 
-  const sendTelemetryData = async (id: string, value: any) => {
-    if (client && client.isConnected()) {
-      if (telemetryData.some((t) => t.id === id)) {
-        await client.sendTelemetry(
+  const sendTelemetryHandler = useRef<(...args: any[]) => void | Promise<void>>(
+    async (id: string, value: any) => {
+      if (iotcentralClient && iotcentralClient.isConnected()) {
+        await iotcentralClient.sendTelemetry(
           {[id]: value},
           {'$.sub': TELEMETRY_COMPONENT},
         );
       }
-    }
-  };
+    },
+  );
+
+  const onCommandUpdate = useCallback(
+    async (command: IIoTCCommand) => {
+      let data: any;
+      data = JSON.parse(command.requestPayload);
+      if (data.sensor) {
+        if (command.name === ENABLE_DISABLE_COMMAND) {
+          sensors?.[data.sensor].enable(data.enable ? data.enable : false);
+          await command.reply(IIoTCCommandResponse.SUCCESS, 'Enable');
+        } else if (command.name === SET_FREQUENCY_COMMAND) {
+          SensorMap[data.sensor].sendInterval(
+            data.frequency ? data.frequency * 1000 : 5000,
+          );
+          await command.reply(IIoTCCommandResponse.SUCCESS, 'Frequency');
+        }
+      }
+    },
+    [sensors],
+  );
+
   useEffect(() => {
-    if (!simulated && client && client.isConnected()) {
-      addListener(DATA_AVAILABLE_EVENT, sendTelemetryData);
+    const handler = sendTelemetryHandler.current;
+    sensors?.forEach((s) =>
+      SensorMap[s.id].addListener(DATA_AVAILABLE_EVENT, handler),
+    );
+    return () => {
+      sensors?.forEach((s) =>
+        SensorMap[s.id].removeListener(DATA_AVAILABLE_EVENT, handler),
+      );
+    };
+  }, [sensors]);
+
+  useEffect(() => {
+    if (iotcentralClient) {
+      iotcentralClient.on(IOTC_EVENTS.Commands, onCommandUpdate);
     }
-  }, [simulated, client]);
+  }, [iotcentralClient, onCommandUpdate]);
 
   if (!simulated) {
-    if (client === null) {
+    if (iotcentralClient === null) {
       return <Registration />;
     }
 
-    if (client === undefined) {
+    if (!sensors || iotcentralClient === undefined) {
       return (
         <Loader
           message={'Connecting to IoT Central ...'}
@@ -55,24 +97,24 @@ export default function Telemetry() {
       style={{flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom}}>
       <FlatList
         numColumns={2}
-        data={telemetryData}
-        renderItem={(item) => {
+        data={sensors}
+        renderItem={({item: sensor, index}) => {
           return (
             <Card
-              key={`telem-${item.index}`}
-              title={getTelemetryName(item.item.id)}
-              value={item.item.value}
-              unit={item.item.unit}
-              enabled={item.item.enabled}
-              icon={item.item.icon}
-              onToggle={() => set(item.item.id, {enabled: !item.item.enabled})}
+              key={`telem-${index}`}
+              title={sensor.name}
+              value={sensor.value}
+              unit={sensor.unit}
+              enabled={sensor.enabled}
+              icon={sensor.icon}
+              onToggle={() => sensor.enable(!sensor.enabled)}
               onLongPress={(e) => console.log('longpress')} // edit card
               onPress={
-                item.item.enabled
+                sensor.enabled
                   ? (e) =>
                       navigation.navigate('Insight', {
-                        telemetryId: item.item.id,
-                        title: camelToName(item.item.id),
+                        telemetryId: sensor.id,
+                        title: camelToName(sensor.id),
                         backTitle: 'Telemetry',
                       })
                   : undefined

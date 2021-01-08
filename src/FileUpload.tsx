@@ -16,7 +16,7 @@ import {StateUpdater} from './types';
 import {LogsContext} from './contexts/logs';
 
 export default function FileUpload() {
-  const {client} = useIoTCentralClient();
+  const client = useIoTCentralClient();
   const [simulated] = useSimulation();
   const insets = useSafeAreaInsets();
   const {screen} = useScreenDimensions();
@@ -230,7 +230,7 @@ function UploadProgress(props: {
             : themeColors.card,
       }));
     }
-  }, [fill]);
+  }, [fill, themeColors.card, themeColors.text]);
 
   useEffect(() => {
     if (uploadStatus !== undefined) {
@@ -243,7 +243,7 @@ function UploadProgress(props: {
       // @ts-ignore
       clearInterval(intid.current);
     }
-  }, [uploadStatus]);
+  }, [uploadStatus, setUploading]);
 
   if (uploadStatus !== undefined && showResult) {
     return (

@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useCallback} from 'react';
 import {Dimensions, ScaledSize} from 'react-native';
 
 type Orientation = 'portrait' | 'landscape';
@@ -15,22 +15,25 @@ export function useScreenDimensions() {
     getOrientation(screenData.width, screenData.height),
   );
 
-  const onChange = (result: {window: ScaledSize; screen: ScaledSize}) => {
-    setScreenData(result.window);
-    const currentOrientation = getOrientation(
-      result.window.width,
-      result.window.height,
-    );
-    if (orientation !== currentOrientation) {
-      setOrientation(currentOrientation);
-    }
-  };
+  const onChange = useCallback(
+    (result: {window: ScaledSize; screen: ScaledSize}) => {
+      setScreenData(result.window);
+      const currentOrientation = getOrientation(
+        result.window.width,
+        result.window.height,
+      );
+      if (orientation !== currentOrientation) {
+        setOrientation(currentOrientation);
+      }
+    },
+    [setOrientation, setScreenData, orientation],
+  );
 
   useEffect(() => {
     Dimensions.addEventListener('change', onChange);
     return () => {
       Dimensions.removeEventListener('change', onChange);
     };
-  }, [orientation]);
+  }, [orientation, onChange]);
   return {screen: screenData, orientation};
 }
