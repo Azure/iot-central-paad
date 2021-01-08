@@ -38,3 +38,10 @@ export async function requestPermissions(): Promise<void> {
     });
   });
 }
+
+export const AVAILABLE_HEALTH = {
+  STEPS: 'steps',
+  FLOORS: 'flightsClimbed',
+};
+
+export type HealthNames = typeof AVAILABLE_HEALTH[keyof typeof AVAILABLE_HEALTH];

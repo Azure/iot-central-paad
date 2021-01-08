@@ -1,5 +1,5 @@
 import {EventEmitter} from 'events';
-import {ISensor, DATA_AVAILABLE_EVENT, getRandom} from './index';
+import {ISensor, DATA_AVAILABLE_EVENT, getRandom} from './internal';
 import Geolocation from '@react-native-community/geolocation';
 
 export default class GeoLocation extends EventEmitter implements ISensor {
@@ -13,8 +13,6 @@ export default class GeoLocation extends EventEmitter implements ISensor {
     this.simulated = false;
     this.currentRun = null;
   }
-
-  name: string = 'GeoLocation';
 
   enable(val: boolean): void {
     if (this.enabled === val) {

@@ -12,26 +12,29 @@ let LogsContext: React.Context<ILogsContext>;
 
 const LogsProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
   const [logs, setLogs] = useState<TimedLog>(initialState);
-  const contextObj = {
-    logs,
-    append: (logItem: LogItem) => {
-      setLogs((current) => [
-        ...current,
-        {logItem, timestamp: new Date(Date.now()).toLocaleString()},
-      ]);
-    },
-    clear: () => {
-      setLogs([
-        {
-          logItem: {
-            eventData: 'Application just reset',
-            eventName: 'INFO',
+  const contextObj = React.useMemo(
+    () => ({
+      logs,
+      append: (logItem: LogItem) => {
+        setLogs((current) => [
+          ...current,
+          {logItem, timestamp: new Date(Date.now()).toLocaleString()},
+        ]);
+      },
+      clear: () => {
+        setLogs([
+          {
+            logItem: {
+              eventData: 'Application just reset',
+              eventName: 'INFO',
+            },
+            timestamp: new Date(Date.now()).toLocaleString(),
           },
-          timestamp: new Date(Date.now()).toLocaleString(),
-        },
-      ]);
-    },
-  };
+        ]);
+      },
+    }),
+    [logs],
+  );
   LogsContext = React.createContext<ILogsContext>(contextObj);
   const {Provider} = LogsContext;
   return <Provider value={contextObj}>{children}</Provider>;

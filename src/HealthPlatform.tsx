@@ -1,44 +1,53 @@
-import React, {useEffect} from 'react';
-import {View, FlatList, Platform, ListRenderItemInfo} from 'react-native';
-import {useSimulation, useIoTCentralClient, useHealth} from './hooks/iotc';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
+import React, {useEffect, useRef} from 'react';
+import {View, FlatList} from 'react-native';
 import Registration from './Registration';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {Card} from './components/card';
+import {useIoTCentralClient, useSimulation} from './hooks/iotc';
+import {useNavigation} from '@react-navigation/native';
 import {Loader} from './components/loader';
 import {camelToName} from './components/typography';
-import {DATA_AVAILABLE_EVENT} from './sensors';
-import {SensorProps} from './contexts/iotc';
-import {Card} from './components/card';
+import {useHealth} from 'hooks/common';
+import {HealthMap} from 'sensors';
+import {DATA_AVAILABLE_EVENT} from 'types';
 
 const HEALTH_COMPONENT = 'health';
 
 export default function HealthPlatform() {
   const [simulated] = useSimulation();
-  const {client} = useIoTCentralClient();
+  const iotcentralClient = useIoTCentralClient();
   const insets = useSafeAreaInsets();
+  const sensors = useHealth();
   const navigation = useNavigation();
-  const {healthData, getHealthName, set, addListener} = useHealth();
-
-  const sendTelemetryData = async (id: string, value: any) => {
-    if (client && client.isConnected()) {
-      if (healthData.some((h) => h.id === id)) {
-        await client.sendTelemetry({[id]: value}, {'$.sub': HEALTH_COMPONENT});
+  const sendTelemetryHandler = useRef<(...args: any[]) => void | Promise<void>>(
+    async (id: string, value: any) => {
+      if (iotcentralClient && iotcentralClient.isConnected()) {
+        await iotcentralClient.sendTelemetry(
+          {[id]: value},
+          {'$.sub': HEALTH_COMPONENT},
+        );
       }
-    }
-  };
+    },
+  );
 
   useEffect(() => {
-    if (!simulated && client && client.isConnected()) {
-      addListener(DATA_AVAILABLE_EVENT, sendTelemetryData);
-    }
-  }, [simulated, client]);
+    const handler = sendTelemetryHandler.current;
+    sensors?.forEach((s) =>
+      HealthMap[s.id].addListener(DATA_AVAILABLE_EVENT, handler),
+    );
+    return () => {
+      sensors?.forEach((s) =>
+        HealthMap[s.id].removeListener(DATA_AVAILABLE_EVENT, handler),
+      );
+    };
+  }, [sensors]);
 
   if (!simulated) {
-    if (client === null) {
+    if (iotcentralClient === null) {
       return <Registration />;
     }
 
-    if (client === undefined) {
+    if (!sensors || iotcentralClient === undefined) {
       return (
         <Loader
           message={'Connecting to IoT Central ...'}
@@ -53,29 +62,28 @@ export default function HealthPlatform() {
     <View
       style={{flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom}}>
       <FlatList
-        numColumns={1}
-        data={healthData}
-        renderItem={(item: ListRenderItemInfo<SensorProps>) => {
+        numColumns={2}
+        data={sensors}
+        renderItem={({item: sensor, index}) => {
           return (
             <Card
-              key={`telem-${item.index}`}
-              title={getHealthName(item.item.id)}
-              value={item.item.value}
-              unit={item.item.unit}
-              enabled={item.item.enabled}
-              icon={item.item.icon}
-              onToggle={() => set(item.item.id, {enabled: !item.item.enabled})}
+              key={`health-${index}`}
+              title={sensor.name}
+              value={sensor.value}
+              unit={sensor.unit}
+              enabled={sensor.enabled}
+              icon={sensor.icon}
+              onToggle={() => sensor.enable(!sensor.enabled)}
               onLongPress={(e) => console.log('longpress')} // edit card
-              onPress={(e) =>
-                navigation.navigate('Insight', {
-                  telemetryId: item.item.id,
-                  currentValue: item.item.value,
-                  title: camelToName(item.item.id),
-                  backTitle: Platform.select({
-                    ios: 'HealthKit',
-                    android: 'GoogleFit',
-                  }),
-                })
+              onPress={
+                sensor.enabled
+                  ? (e) =>
+                      navigation.navigate('Insight', {
+                        telemetryId: sensor.id,
+                        title: camelToName(sensor.id),
+                        backTitle: 'Health',
+                      })
+                  : undefined
               }
             />
           );

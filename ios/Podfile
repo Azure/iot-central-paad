@@ -11,7 +11,6 @@ target 'iotc_pad_client' do
   config = use_native_modules!
 
   use_react_native!(:path => config["reactNativePath"])
-  pod 'RNSensors', :path => '../node_modules/react-native-sensors'
 
   target 'iotc_pad_clientTests' do
     inherit! :complete

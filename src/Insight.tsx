@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {View, StyleSheet, processColor} from 'react-native';
 import {LineChart} from 'react-native-charts-wrapper';
 import {
@@ -13,8 +13,6 @@ import {
   CustomLineDatasetConfig,
   NavigationParams,
 } from './types';
-import {useTelemetry} from './hooks/iotc';
-import {DATA_AVAILABLE_EVENT} from './sensors';
 import {useTheme, RouteProp} from '@react-navigation/native';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {useScreenDimensions} from './hooks/layout';
@@ -29,7 +27,6 @@ export default function Insight({
     'Insight'
   >;
 }) {
-  const {telemetryData, addListener, removeListener} = useTelemetry();
   const {screen} = useScreenDimensions();
   const {colors, dark} = useTheme();
   const [start, setStart] = useState<number>(Date.now());
@@ -44,75 +41,79 @@ export default function Insight({
    * @param startTime Start time of the sampling. Must be the same value used as "since" param in the chart
    * @param setData Dispatch to update dataset with current sample
    */
-  function updateData(id: string, value: any) {
-    const item = {id, value};
-    if (id !== telemetryId) {
-      return;
-    }
-    let itemToProcess: ItemData[] = [item];
-    if (typeof item.value !== 'string' && typeof item.value !== 'number') {
-      // data is composite
-      itemToProcess = Object.keys(item.value).map((i) => ({
-        id: `${item.id}.${i}`,
-        value: item.value[i],
-      }));
-    }
-    itemToProcess.forEach((itemdata) => {
-      setData((currentDataSet) => {
-        const currentItemData = currentDataSet.dataSets.find(
-          (d) => d.itemId === itemdata.id,
-        );
+  const updateData = useCallback(
+    (id: string, value: any) => {
+      const item = {id, value};
+      if (id !== telemetryId) {
+        return;
+      }
+      let itemToProcess: ItemData[] = [item];
+      if (typeof item.value !== 'string' && typeof item.value !== 'number') {
+        // data is composite
+        itemToProcess = Object.keys(item.value).map((i) => ({
+          id: `${item.id}.${i}`,
+          value: item.value[i],
+        }));
+      }
+      itemToProcess.forEach((itemdata) => {
+        setData((currentDataSet) => {
+          const currentItemData = currentDataSet.dataSets.find(
+            (d) => d.itemId === itemdata.id,
+          );
 
-        // Current sample time (x-axis) is the difference between current timestamp e the start time of sampling
-        const newSample = {x: Date.now() - start, y: itemdata.value};
+          // Current sample time (x-axis) is the difference between current timestamp e the start time of sampling
+          const newSample = {x: Date.now() - start, y: itemdata.value};
 
-        if (!currentItemData) {
-          // current item is not in the dataset yet
-          const rgbcolor = getRandomColor();
+          if (!currentItemData) {
+            // current item is not in the dataset yet
+            const rgbcolor = getRandomColor();
+            return {
+              ...currentDataSet,
+              dataSets: [
+                ...currentDataSet.dataSets,
+                ...[
+                  {
+                    itemId: itemdata.id,
+                    values: [newSample],
+                    label: itemdata.id,
+                    config: {
+                      color: processColor(rgbcolor),
+                      rgbcolor,
+                    } as CustomLineDatasetConfig,
+                  },
+                ],
+              ],
+            };
+          }
           return {
             ...currentDataSet,
-            dataSets: [
-              ...currentDataSet.dataSets,
-              ...[
-                {
-                  itemId: itemdata.id,
-                  values: [newSample],
-                  label: itemdata.id,
-                  config: {
-                    color: processColor(rgbcolor),
-                    rgbcolor,
-                  } as CustomLineDatasetConfig,
-                },
-              ],
-            ],
+            dataSets: currentDataSet.dataSets.map(({...currentItem}) => {
+              if (currentItem.itemId === itemdata.id && currentItem.values) {
+                currentItem.values = [...currentItem.values, ...[newSample]];
+              }
+              return currentItem;
+            }),
           };
-        }
-        return {
-          ...currentDataSet,
-          dataSets: currentDataSet.dataSets.map(({...currentItem}) => {
-            if (currentItem.itemId === itemdata.id && currentItem.values) {
-              currentItem.values = [...currentItem.values, ...[newSample]];
-            }
-            return currentItem;
-          }),
-        };
+        });
       });
-    });
-  }
+    },
+    [start, telemetryId],
+  );
 
   useEffect(() => {
     setStart(Date.now());
-    addListener(DATA_AVAILABLE_EVENT, updateData);
+    // addListener(DATA_AVAILABLE_EVENT, updateData);
     // init chart with current value
     if (currentValue !== undefined) {
       updateData(telemetryId, currentValue);
     }
-    return () => removeListener(DATA_AVAILABLE_EVENT, updateData);
-  }, [telemetryId, currentValue]);
+    // return () => removeListener(DATA_AVAILABLE_EVENT, updateData);
+  }, [telemetryId, currentValue, updateData]);
 
-  const geolocation = telemetryData.find(
-    (t) => t.id === telemetryId && t.unit && t.unit === '°',
-  );
+  // const geolocation = telemetryData.find(
+  //   (t) => t.id === telemetryId && t.unit && t.unit === '°',
+  // );
+  const geolocation: any = {};
   if (geolocation) {
     return (
       <View style={style.container}>

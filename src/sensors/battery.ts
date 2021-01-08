@@ -1,6 +1,6 @@
 import DeviceInfo from 'react-native-device-info';
 import {EventEmitter} from 'events';
-import {ISensor, DATA_AVAILABLE_EVENT} from './index';
+import {ISensor, DATA_AVAILABLE_EVENT} from './internal';
 
 export default class Battery extends EventEmitter implements ISensor {
   private enabled: boolean;
@@ -13,8 +13,6 @@ export default class Battery extends EventEmitter implements ISensor {
     this.simulated = false;
     this.currentRun = null;
   }
-
-  name: string = 'Battery Level';
 
   enable(val: boolean): void {
     if (this.enabled === val) {

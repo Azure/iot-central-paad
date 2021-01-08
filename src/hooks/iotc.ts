@@ -1,129 +1,83 @@
-import {useContext, useEffect} from 'react';
+import {useContext, useState, useRef} from 'react';
 import {
   DecryptCredentials,
   CancellationToken,
+  IoTCClient,
+  IOTC_CONNECT,
+  IOTC_EVENTS,
 } from 'react-native-azure-iotcentral-client';
-import {IoTCContext, CentralClient, SensorProps} from '../contexts/iotc';
-import {StorageContext} from '../contexts/storage';
-import {Log} from '../tools/CustomLogger';
+import {StorageContext, IoTCContext} from 'contexts';
+import {Log, EventLogger} from 'tools';
+import {LOG_DATA} from 'types';
 
-type ClientProps = {
-  client: CentralClient;
-  disconnect: () => Promise<void>;
-  register: (
-    creds: string,
-    cancellationToken?: CancellationToken,
-  ) => Promise<void>;
-  addListener: (eventname: string, listener: (...args: any[]) => void) => void;
-  removeListener: (
-    eventname: string,
-    listener: (...args: any[]) => void,
-  ) => void;
-};
+export function useIoTCentralClient(): IoTCClient | null {
+  const {client} = useContext(IoTCContext);
+  return client;
+}
 
-export function useIoTCentralClient(): ClientProps {
-  const {client, connect, disconnect, addListener, removeListener} = useContext(
-    IoTCContext,
-  );
-  const {save} = useContext(StorageContext);
+export function useConnectIoTCentralClient(): [
+  (encryptedCredentials: string, encryptionKey?: string) => Promise<void>,
+  () => void,
+  {loading: boolean; client: IoTCClient | null; error: any},
+] {
+  const {client, setClient} = useContext(IoTCContext);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState(null);
+  const connectRequest = useRef(new CancellationToken());
+  const eventLogger = useRef(new EventLogger(LOG_DATA));
 
-  // register device for first time
-  const register = async (
-    creds: string,
-    cancellationToken?: CancellationToken,
+  const connect = async (
+    encryptedCredentials: string,
+    encryptionKey?: string,
   ) => {
-    const credentials = DecryptCredentials(creds);
-    await connect(credentials, cancellationToken);
-    Log('Storing received credentials...');
-    await save((current) => ({...current, credentials}));
-    Log('Credentials stored.');
+    setLoading(true);
+    const credentials = DecryptCredentials(encryptedCredentials, encryptionKey);
+    Log('Connecting Iotcentral client');
+    const iotc = new IoTCClient(
+      credentials.deviceId,
+      credentials.scopeId,
+      IOTC_CONNECT.DEVICE_KEY,
+      credentials.deviceKey,
+      eventLogger.current,
+    );
+    if (credentials.modelId) {
+      iotc.setModelId(credentials.modelId);
+    }
+    // iotc.setLogging(IOTC_LOGGING.ALL);
+    try {
+      iotc.on(IOTC_EVENTS.Properties, () => {});
+      await iotc.connect({
+        cleanSession: false,
+        timeout: 20,
+        cancellationToken: connectRequest.current,
+      });
+      setClient(iotc);
+    } catch (err) {
+      setError(err);
+    }
+    setLoading(false);
   };
 
-  return {client, disconnect, register, addListener, removeListener};
+  const cancel = () => {
+    connectRequest.current.cancel();
+  };
+
+  return [
+    connect,
+    cancel,
+    {
+      loading,
+      client,
+      error,
+    },
+  ];
 }
 
 export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
   const {save, simulated} = useContext(StorageContext);
 
-  const setSimulated = async (val: boolean) => {
-    await save((current) => ({...current, simulated: val}));
+  const setSimulated = async (simulated: boolean) => {
+    save({simulated});
   };
-
-  useEffect(() => {
-    if (simulated !== undefined) {
-      setSimulated(simulated);
-    }
-  }, [simulated]);
-
-  return [simulated || false, setSimulated];
-}
-
-export function useTelemetry(): {
-  telemetryData: SensorProps[];
-  getTelemetryName: (id: string) => string;
-  set: (id: string, data: Partial<SensorProps>) => void;
-  addListener: (...args: any[]) => void;
-  removeListener: (...args: any[]) => void;
-} {
-  const {
-    telemetryData,
-    updateSensors,
-    getSensorName: getTelemetryName,
-    addListener,
-    removeListener,
-  } = useContext(IoTCContext);
-
-  const set = (id: string, data: Partial<SensorProps>) => {
-    updateSensors('telemetry', (current) =>
-      current.map(({...sensor}) => {
-        if (sensor.id === id) {
-          sensor = {...sensor, ...data};
-        }
-        return sensor;
-      }),
-    );
-  };
-
-  return {telemetryData, getTelemetryName, set, addListener, removeListener};
-}
-
-export function useHealth(): {
-  healthData: SensorProps[];
-  getHealthName: (id: string) => string;
-  set: (id: string, data: Partial<SensorProps>) => void;
-  addListener: (...args: any[]) => void;
-  removeListener: (...args: any[]) => void;
-} {
-  const {
-    healthData,
-    initHealth,
-    updateSensors,
-    getSensorName: getHealthName,
-    addListener,
-    removeListener,
-  } = useContext(IoTCContext);
-
-  useEffect(() => {
-    if (healthData.length === 0) {
-      initHealth();
-    }
-  }, [healthData]);
-  const set = (id: string, data: Partial<SensorProps>) => {
-    updateSensors('health', (current) =>
-      current.map(({...sensor}) => {
-        if (sensor.id === id) {
-          sensor = {...sensor, ...data};
-        }
-        return sensor;
-      }),
-    );
-  };
-
-  return {
-    healthData: healthData.map((h) => h.sensorProps),
-    getHealthName,
-    set,
-    addListener,
-    removeListener,
-  };
+  return [simulated, setSimulated];
 }

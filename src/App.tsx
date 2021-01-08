@@ -1,7 +1,6 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState, useRef} from 'react';
 import {View, Platform} from 'react-native';
 import Settings from './Settings';
-import ThemeProvider, {ThemeContext, ThemeMode} from './contexts/theme';
 import {
   NavigationContainer,
   DarkTheme,
@@ -14,25 +13,31 @@ import {
   NavigationScreens,
   NavigationParams,
   NavigationProperty,
-  LOG_DATA,
+  ScreenNames,
 } from './types';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {
+  LogsProvider,
+  StorageProvider,
+  IoTCProvider,
+  ThemeProvider,
+  ThemeContext,
+  StorageContext,
+  ThemeMode,
+} from 'contexts';
 import LogoIcon from './assets/IotcLogo.svg';
 import Telemetry from './Telemetry';
 import {Icon} from 'react-native-elements';
-import Properties from './Properties';
+import Property from './Property';
 import {createStackNavigator, HeaderTitle} from '@react-navigation/stack';
 import {Text} from './components/typography';
-import IoTCProvider, {IoTCContext} from './contexts/iotc';
-import StorageProvider, {StorageContext} from './contexts/storage';
 import Insight from './Insight';
 import {Welcome} from './Welcome';
 import HealthPlatform from './HealthPlatform';
 import Logs from './Logs';
-import {IIcon, usePrevious} from './hooks/common';
-import {Log} from './tools/CustomLogger';
+import {IIcon} from 'hooks';
+import {Log} from 'tools';
 import FileUpload from './FileUpload';
-import LogsProvider, {LogsContext} from './contexts/logs';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createStackNavigator();
@@ -57,7 +62,7 @@ export default function App() {
   return <Welcome setInitialized={setInitialized} />;
 }
 
-function Navigation() {
+const Navigation = React.memo(() => {
   const {mode} = useContext(ThemeContext);
   return (
     <NavigationContainer
@@ -67,7 +72,7 @@ function Navigation() {
         <Stack.Screen
           name="root"
           options={({navigation}: {navigation: NavigationProperty}) => ({
-            headerTitle: undefined,
+            headerTitle: () => null,
             headerLeft: () => <Logo />,
             headerRight: () => <Profile navigate={navigation.navigate} />,
           })}
@@ -107,29 +112,79 @@ function Navigation() {
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+});
 
-function Root() {
+const Root = React.memo(() => {
   const {credentials, simulated} = useContext(StorageContext);
-  const {connect, addListener, removeListener} = useContext(IoTCContext);
-  const {append} = useContext(LogsContext);
+  // const { connect, addListener, removeListener } = useContext(IoTCContext);
+  // const { append } = useContext(LogsContext);
 
-  const prevCredentials = usePrevious(credentials);
+  // const prevCredentials = usePrevious(credentials);
 
   // connect client if credentials are retrieved
+
+  const iconsRef = useRef<{[x in ScreenNames]: IIcon}>({
+    [Screens.TELEMETRY_SCREEN]: Platform.select({
+      ios: {
+        name: 'stats-chart-outline',
+        type: 'ionicon',
+      },
+      android: {
+        name: 'chart-bar',
+        type: 'material-community',
+      },
+    }) as IIcon,
+    [Screens.PROPERTIES_SCREEN]: Platform.select({
+      ios: {
+        name: 'create-outline',
+        type: 'ionicon',
+      },
+      android: {
+        name: 'playlist-edit',
+        type: 'material-community',
+      },
+    }) as IIcon,
+    [Screens.HEALTH_SCREEN]: {
+      name: 'heartbeat',
+      type: 'font-awesome',
+    } as IIcon,
+    [Screens.FILE_UPLOAD_SCREEN]: Platform.select({
+      ios: {
+        name: 'cloud-upload-outline',
+        type: 'ionicon',
+      },
+      android: {
+        name: 'cloud-upload-outline',
+        type: 'material-community',
+      },
+    }) as IIcon,
+    [Screens.LOGS_SCREEN]: Platform.select({
+      ios: {
+        name: 'console',
+        type: 'material-community',
+      },
+      android: {
+        name: 'console',
+        type: 'material-community',
+      },
+    }) as IIcon,
+  });
+
   useEffect(() => {
-    if (!simulated && prevCredentials === undefined) {
-      Log('Received new credentials... connecting new client');
-      addListener(LOG_DATA, append);
-      try {
-        connect(credentials);
-      } catch (ex) {
-        console.log('Connection failed');
-      }
-    }
-    return () => removeListener(LOG_DATA, append);
+    Log(`Simulated: ${simulated}. Credentials: ${credentials}`);
+    // if (!simulated) {
+    //   addListener(LOG_DATA, append);
+    //   try {
+    //     connect(credentials);
+    //   } catch (ex) {
+    //     console.log('Connection failed');
+    //   }
+    // }
+    // return () => removeListener(LOG_DATA, append);
   }, [credentials, simulated]);
 
+  const icons = iconsRef.current;
+  console.log(`Rerender`);
   return (
     <Tab.Navigator
       key="tab"
@@ -140,106 +195,56 @@ function Root() {
         name={Screens.TELEMETRY_SCREEN}
         component={Telemetry}
         options={{
-          tabBarIcon: ({color, size}) =>
-            getIcon(
-              Platform.select({
-                ios: {
-                  name: 'stats-chart-outline',
-                  type: 'ionicon',
-                },
-                android: {
-                  name: 'chart-bar',
-                  type: 'material-community',
-                },
-              }) as IIcon,
-              color,
-              size,
-            ),
+          tabBarIcon: ({color, size}) => (
+            <TabBarIcon icon={icons.Telemetry} color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name={Screens.HEALTH_SCREEN}
         component={HealthPlatform}
         options={{
-          tabBarIcon: ({color, size}) =>
-            getIcon(
-              {
-                name: 'heartbeat',
-                type: 'font-awesome',
-              } as IIcon,
-              color,
-              size,
-            ),
+          tabBarIcon: ({color, size}) => (
+            <TabBarIcon icon={icons.Health} color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name={Screens.PROPERTIES_SCREEN}
-        component={Properties}
+        component={Property}
         options={{
-          tabBarIcon: ({color, size}) =>
-            getIcon(
-              Platform.select({
-                ios: {
-                  name: 'create-outline',
-                  type: 'ionicon',
-                },
-                android: {
-                  name: 'playlist-edit',
-                  type: 'material-community',
-                },
-              }) as IIcon,
-              color,
-              size,
-            ),
+          tabBarIcon: ({color, size}) => (
+            <TabBarIcon icon={icons.Properties} color={color} size={size} />
+          ),
         }}
       />
       <Tab.Screen
         name={Screens.FILE_UPLOAD_SCREEN}
         component={FileUpload}
         options={{
-          tabBarIcon: ({color, size}) =>
-            getIcon(
-              Platform.select({
-                ios: {
-                  name: 'cloud-upload-outline',
-                  type: 'ionicon',
-                },
-                android: {
-                  name: 'cloud-upload-outline',
-                  type: 'material-community',
-                },
-              }) as IIcon,
-              color,
-              size,
-            ),
+          tabBarIcon: ({color, size}) => (
+            <TabBarIcon
+              icon={icons['Image Upload']}
+              color={color}
+              size={size}
+            />
+          ),
         }}
       />
       <Tab.Screen
         name={Screens.LOGS_SCREEN}
         component={Logs}
         options={{
-          tabBarIcon: ({color, size}) =>
-            getIcon(
-              Platform.select({
-                ios: {
-                  name: 'console',
-                  type: 'material-community',
-                },
-                android: {
-                  name: 'console',
-                  type: 'material-community',
-                },
-              }) as IIcon,
-              color,
-              size,
-            ),
+          tabBarIcon: ({color, size}) => (
+            <TabBarIcon icon={icons.Logs} color={color} size={size} />
+          ),
         }}
       />
     </Tab.Navigator>
   );
-}
+});
 
-function Logo() {
+const Logo = React.memo(() => {
   const {colors} = useTheme();
   return (
     <View
@@ -262,9 +267,9 @@ function Logo() {
       </Text>
     </View>
   );
-}
+});
 
-function Profile(props: {navigate: any}) {
+const Profile = React.memo((props: {navigate: any}) => {
   const {colors} = useTheme();
   return (
     <View style={{marginHorizontal: 10}}>
@@ -284,9 +289,9 @@ function Profile(props: {navigate: any}) {
       />
     </View>
   );
-}
+});
 
-function BackButton(props: {goBack: any; title: string}) {
+const BackButton = React.memo((props: {goBack: any; title: string}) => {
   const {colors} = useTheme();
   const {goBack, title} = props;
   return (
@@ -297,15 +302,17 @@ function BackButton(props: {goBack: any; title: string}) {
       )}
     </View>
   );
-}
+});
 
-function getIcon(icon: IIcon, color: string, size: number) {
-  return (
-    <Icon
-      name={icon ? icon.name : 'home'}
-      type={icon ? icon.type : 'ionicon'}
-      size={size}
-      color={color}
-    />
-  );
-}
+const TabBarIcon = React.memo<{icon: IIcon; color: string; size: number}>(
+  ({icon, color, size}) => {
+    return (
+      <Icon
+        name={icon ? icon.name : 'home'}
+        type={icon ? icon.type : 'ionicon'}
+        size={size}
+        color={color}
+      />
+    );
+  },
+);

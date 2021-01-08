@@ -100,7 +100,13 @@ export function Card(
             value()
           ) : (
             <View style={{flexDirection: 'row', paddingVertical: 10}}>
-              {getValue(value, enabled, editable, onEdit, textColor)}
+              <Value
+                value={value}
+                enabled
+                editable
+                onEdit={onEdit}
+                textColor={textColor}
+              />
               {unit && enabled && (
                 <Headline style={{color: '#9490a9', alignSelf: 'flex-end'}}>
                   {unit}
@@ -122,13 +128,13 @@ export function Card(
   );
 }
 
-function getValue(
-  value: any,
-  enabled: boolean,
-  editable: boolean | undefined,
-  onEdit: EditCallback | undefined,
-  textColor: string,
-) {
+const Value = React.memo<{
+  value: any;
+  enabled: boolean;
+  editable: boolean | undefined;
+  onEdit: EditCallback | undefined;
+  textColor: string;
+}>(({value, enabled, editable, onEdit, textColor}) => {
   const [edited, setEdited] = useState(value);
 
   useEffect(() => {
@@ -177,4 +183,4 @@ function getValue(
       );
     }
   }
-}
+});

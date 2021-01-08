@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect} from 'react';
 import {IoTCCredentials} from 'react-native-azure-iotcentral-client';
 import * as Keychain from 'react-native-keychain';
 import {Log} from '../tools/CustomLogger';
@@ -8,20 +8,14 @@ const USERNAME = 'IOTC_PAD_CLIENT';
 
 type IStorageState = {
   dark?: boolean;
-  simulated?: boolean;
-  credentials?: IoTCCredentials | null;
+  simulated: boolean;
+  credentials: IoTCCredentials | null;
 };
 
 export type IStorageContext = IStorageState & {
-  save: (
-    state: IStorageState | ((currentState: IStorageState) => IStorageState),
-  ) => Promise<void>;
+  save: (state: Partial<IStorageState>) => Promise<void>;
   read: () => Promise<void>;
   clear: () => Promise<void>;
-};
-
-const initialState: IStorageState = {
-  simulated: false,
 };
 
 let StorageContext: React.Context<IStorageContext>;
@@ -30,6 +24,7 @@ const retrieveStorage = async (update: StateUpdater<IStorageState>) => {
   /**
    * Credentials must be null if not available. This value means app has been initialized but no credentials are available.
    */
+  console.log(`Retrieving credentials from storage`);
   const data = await Keychain.getGenericPassword();
   if (data && data.password) {
     const parsed = JSON.parse(data.password) as IStorageState;
@@ -37,10 +32,10 @@ const retrieveStorage = async (update: StateUpdater<IStorageState>) => {
       if (!parsed.credentials) {
         parsed.credentials = null;
       }
-      update(parsed);
+      // update(parsed);
     }
   } else {
-    update({credentials: null});
+    // update(current => ({ ...current, credentials: null }));
   }
 };
 
@@ -50,64 +45,37 @@ const persist = async (state: IStorageState) => {
 };
 
 const StorageProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
-  const [state, setState] = useState<IStorageState>(initialState);
-  const dirty = useRef<boolean>(false);
+  const [state, setState] = useState<IStorageState>({
+    credentials: null,
+    simulated: false,
+  });
   // read from storage
   useEffect(() => {
     retrieveStorage(setState);
   }, []);
 
-  useEffect(() => {
-    if (dirty.current) {
-      dirty.current = false;
-      persist(state);
-    }
-  }, [state]);
-
-  const contextObj = {
-    ...state,
-    save: async (param: any) => {
-      if (typeof param === 'function') {
-        setState((current) => {
-          const newState = param(current);
-          if (
-            current.dark !== newState.dark ||
-            current.simulated !== newState.simulated ||
-            JSON.stringify(newState.credentials) !==
-              JSON.stringify(current.credentials)
-          ) {
-            dirty.current = true;
-          }
-          return {...current, ...newState};
-        });
-      } else {
-        setState((current) => {
-          if (
-            current.dark !== param.dark ||
-            current.simulated !== param.simulated ||
-            JSON.stringify(param.credentials) !==
-              JSON.stringify(current.credentials)
-          ) {
-            dirty.current = true;
-          }
-          return {...current, ...param};
-        });
-      }
-      dirty.current = true;
-    },
-    read: async () => {
-      retrieveStorage(setState);
-    },
-    clear: async () => {
-      await Keychain.resetGenericPassword();
-      setState({credentials: null});
-      dirty.current = true;
-    },
-  };
+  const contextObj = React.useMemo(
+    () => ({
+      ...state,
+      save: async (data: Partial<IStorageState>) => {
+        const newState = {...state, data};
+        await persist(newState);
+        setState(newState);
+      },
+      read: async () => {
+        await retrieveStorage(setState);
+      },
+      clear: async () => {
+        await Keychain.resetGenericPassword();
+        setState({simulated: false, credentials: null});
+      },
+    }),
+    [state],
+  );
 
   StorageContext = React.createContext<IStorageContext>(contextObj);
   const {Provider} = StorageContext;
-  return <Provider value={contextObj}> {children}</Provider>;
+  return <Provider value={contextObj}>{children}</Provider>;
 };
 
 export {StorageProvider as default, StorageContext};
