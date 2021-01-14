@@ -1,8 +1,10 @@
-import {AVAILABLE_PROPERTIES, PropertiesProps} from './internal';
+import {ItemProps} from 'types';
+import {AVAILABLE_PROPERTIES} from './internal';
 
 export const PROPERTY_CHANGED = 'PROPERTY_CHANGED';
+type PropertyProps = {editable: boolean} & ItemProps;
 
-export const Properties: PropertiesProps[] = [
+export const Properties: PropertyProps[] = [
   {
     id: AVAILABLE_PROPERTIES.WRITEABLE_PROP,
     name: 'WriteableProp',
@@ -54,6 +56,12 @@ export const Properties: PropertiesProps[] = [
     name: 'Total Memory',
     editable: false,
   },
-];
+].map((p) => ({
+  ...p,
+  enable: () => {},
+  sendInterval: () => {},
+  enabled: true,
+  simulated: false,
+}));
 
 export * from './deviceInfo';

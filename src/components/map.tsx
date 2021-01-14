@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {StyleProp, ViewStyle} from 'react-native';
+import React, { useState } from 'react';
+import { StyleProp, ViewStyle } from 'react-native';
 import {
   Marker,
   // @ts-ignore
@@ -7,13 +7,12 @@ import {
   PROVIDER_DEFAULT,
   AnimatedRegion,
 } from 'react-native-maps';
-import {GeoCoordinates} from '../types';
+import { GeoCoordinates } from '../types';
 
-export default function Map(props: {
+const Map = React.memo<{
   location: GeoCoordinates;
-  style?: StyleProp<ViewStyle>;
-}) {
-  const {location, style} = props;
+  style?: StyleProp<ViewStyle>
+}>(({ location, style }) => {
   const [region, setRegion] = useState(
     new AnimatedRegion({
       latitude: location.lat,
@@ -25,14 +24,14 @@ export default function Map(props: {
   return (
     <Animated
       provider={PROVIDER_DEFAULT}
-      style={style ? style : {width: '100%', height: '100%'}}
+      style={style ? style : { width: '100%', height: '100%' }}
       scrollEnabled={true}
       zoomEnabled={true}
       rotateEnabled={true}
       region={region}
-      onRegionChange={setRegion}>
+      onRegionChangeComplete={setRegion}>
       <Marker
-        coordinate={{latitude: location.lat, longitude: location.lon}}
+        coordinate={{ latitude: location.lat, longitude: location.lon }}
         title="Current location"
         description={`${location.lat
           .toString()
@@ -40,4 +39,8 @@ export default function Map(props: {
       />
     </Animated>
   );
-}
+});
+
+Map.whyDidYouRender = true;
+
+export default Map;

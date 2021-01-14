@@ -10,16 +10,13 @@ import {NavigationParams, NavigationProperty, OnPressCallback} from './types';
 import QRCodeScanner, {Event} from './components/qrcodeScanner';
 import {useBoolean} from 'hooks/common';
 
-export default function Registration({
-  route,
-  navigation,
-}: {
+export const Registration = React.memo<{
   route?: RouteProp<
     Record<string, NavigationParams & {previousScreen?: string}>,
     'Registration'
   >;
   navigation?: NavigationProperty;
-}) {
+}>(({route, navigation}) => {
   const {screen, orientation} = useScreenDimensions();
   const {colors} = useTheme();
   const [showQR, setShowQR] = useBoolean(false);
@@ -31,6 +28,7 @@ export default function Registration({
   const qrCodeRef = useRef<QRCodeScanner>(null);
 
   const onQRRead = useRef(async (e: Event) => {
+    setShowQR.False();
     await connect(e.data);
   });
 
@@ -54,10 +52,11 @@ export default function Registration({
       },
     );
   }
+
   return (
     <>
       <Overlay
-        isVisible={showQR}
+        isVisible={showQR || loading}
         overlayStyle={{
           height: screen.height,
           width: screen.width,
@@ -65,16 +64,19 @@ export default function Registration({
         }}
         supportedOrientations={['portrait', 'landscape']}>
         <View style={{position: 'relative', margin: -10}}>
-          <QRCodeScanner
-            ref={qrCodeRef}
-            onRead={onQRRead.current}
-            onClose={setShowQR.False}
-            width={screen.width}
-            height={screen.height}
-            markerSize={Math.floor(
-              (orientation === 'portrait' ? screen.width : screen.height) / 1.5,
-            )}
-          />
+          {showQR && (
+            <QRCodeScanner
+              ref={qrCodeRef}
+              onRead={onQRRead.current}
+              onClose={setShowQR.False}
+              width={screen.width}
+              height={screen.height}
+              markerSize={Math.floor(
+                (orientation === 'portrait' ? screen.width : screen.height) /
+                  1.5,
+              )}
+            />
+          )}
           <Loader
             visible={loading}
             message={'Connecting client...'}
@@ -104,7 +106,7 @@ export default function Registration({
       {!showQR && !client && <EmptyClient scan={setShowQR.True} />}
     </>
   );
-}
+});
 
 const EmptyClient = React.memo<{scan: OnPressCallback}>(({scan}) => (
   <View style={style.container}>

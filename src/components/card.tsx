@@ -13,6 +13,7 @@ import {
   ColorValue,
   TouchableOpacity,
   TouchableOpacityProps,
+  ViewStyle,
 } from 'react-native';
 import {Text, Name, Headline, getRandomColor} from './typography';
 
@@ -45,6 +46,11 @@ export function Card(
 
   const textColor = enabled ? colors.text : '#9490a9';
   const barColor = useRef(getRandomColor() as ColorValue);
+  const checkboxStyle: ViewStyle = {position: 'absolute', top: -25, right: -40};
+  const iconStyle: ViewStyle = {
+    alignSelf: 'flex-end',
+    justifyContent: 'flex-end',
+  };
 
   return (
     <TouchableOpacity
@@ -89,7 +95,7 @@ export function Card(
             checkedIcon="dot-circle-o"
             uncheckedIcon="circle-o"
             checked={enabled}
-            containerStyle={{position: 'absolute', top: -25, right: -40}}
+            containerStyle={checkboxStyle}
             onPress={onToggle}
           />
         )}
@@ -103,7 +109,7 @@ export function Card(
               <Value
                 value={value}
                 enabled
-                editable
+                editable={editable}
                 onEdit={onEdit}
                 textColor={textColor}
               />
@@ -119,7 +125,7 @@ export function Card(
           <Icon
             name={icon.name}
             type={icon.type}
-            style={{alignSelf: 'flex-end', justifyContent: 'flex-end'}}
+            style={iconStyle}
             color="#9490a9"
           />
         )}

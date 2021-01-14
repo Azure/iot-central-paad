@@ -10,6 +10,8 @@ export type DeviceInfo = {
   totalMemory: number;
 };
 
+export type DeviceInfoName = keyof DeviceInfo;
+
 export async function getDeviceInfo(): Promise<DeviceInfo> {
   return {
     manufacturer: await DeviceInfo.getManufacturer(),

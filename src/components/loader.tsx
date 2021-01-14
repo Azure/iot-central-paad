@@ -22,6 +22,18 @@ export function Loader(props: ILoaderProps) {
   const {screen} = useScreenDimensions();
 
   const {visible, modal, style} = props;
+  const overlayStyle = [
+    ...[style],
+    {
+      padding: 0,
+      borderRadius: 20,
+      backgroundColor: colors.card,
+      width: screen.width / 1.5,
+    },
+  ];
+
+  const backdropStyle = {backgroundColor: colors.background};
+
   if (!visible) {
     return null;
   }
@@ -29,16 +41,8 @@ export function Loader(props: ILoaderProps) {
     return (
       <Overlay
         isVisible={visible}
-        overlayStyle={[
-          ...[style],
-          {
-            padding: 0,
-            borderRadius: 20,
-            backgroundColor: colors.card,
-            width: screen.width / 1.5,
-          },
-        ]}
-        backdropStyle={{backgroundColor: colors.background}}>
+        overlayStyle={overlayStyle}
+        backdropStyle={backdropStyle}>
         {getLoader({...props, ...screen, colors, dark})}
       </Overlay>
     );
