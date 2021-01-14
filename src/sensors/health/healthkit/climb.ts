@@ -30,7 +30,7 @@ export default class HealthKitClimb extends EventEmitter implements ISensor {
     }
     this.enabled = val;
     if (!this.enabled && this.currentRun) {
-      this.currentRun.unsubscribe();
+      this.currentRun.subscriber.removeAllSubscriptions();
     } else {
       this.run();
     }

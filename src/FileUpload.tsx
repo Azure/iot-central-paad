@@ -8,7 +8,7 @@ import {Icon} from 'react-native-elements';
 import {useTheme} from '@react-navigation/native';
 import {Headline, Text} from './components/typography';
 import {useIoTCentralClient, useSimulation} from './hooks/iotc';
-import Registration from './Registration';
+import {Registration} from './Registration';
 import {Loader} from './components/loader';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {Platform} from 'react-native';
@@ -16,7 +16,7 @@ import {StateUpdater} from './types';
 import {LogsContext} from './contexts/logs';
 
 export default function FileUpload() {
-  const client = useIoTCentralClient();
+  const [client] = useIoTCentralClient();
   const [simulated] = useSimulation();
   const insets = useSafeAreaInsets();
   const {screen} = useScreenDimensions();
@@ -123,7 +123,6 @@ export default function FileUpload() {
                           'base64',
                         );
                         if (res.status >= 200 && res.status < 300) {
-                          console.log('here');
                           append({
                             eventName: 'FILE UPLOAD',
                             eventData: `Successfully uploaded ${curfileName}`,

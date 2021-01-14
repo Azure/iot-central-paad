@@ -5,6 +5,7 @@ import {
   LineValue,
   LineDatasetConfig,
 } from 'react-native-charts-wrapper';
+import {IconProps} from 'react-native-elements';
 
 export const Screens = {
   TELEMETRY_SCREEN: 'Telemetry',
@@ -71,6 +72,18 @@ export interface ExtendedLineData extends LineData {
   }[];
 }
 
+export type ItemProps = {
+  id: string;
+  name: string;
+  value?: any;
+  icon?: IconProps;
+  enabled: boolean;
+  simulated: boolean;
+  enable(value?: boolean): void;
+  sendInterval(value: number): void;
+  unit?: string;
+};
+
 export type ItemData = {
   id: string;
   value: any;
@@ -107,6 +120,7 @@ export type GoogleFitStepResult = {
 
 // Utils types
 export type OnPressCallback = (e: GestureResponderEvent) => void;
+export type CommonCallback = (...args: any) => void | Promise<void>;
 
 /**
  * EVENTS
@@ -115,11 +129,16 @@ export type OnPressCallback = (e: GestureResponderEvent) => void;
 export const DATA_AVAILABLE_EVENT = 'DATA_AVAILABLE_EVENT';
 export const SENSOR_UNAVAILABLE_EVENT = 'SENSOR_UNAVAILABLE_EVENT';
 export const LOG_DATA = 'LOG_DATA';
-export const PROPERTY_AVAILABLE_EVENT = 'PROPERTY_AVAILABLE_EVENT';
-export const COMMAND_AVAILABLE_EVENT = 'PROPERTY_AVAILABLE_EVENT';
 
 /**
  * COMMANDS
  */
 export const ENABLE_DISABLE_COMMAND = 'enableSensors';
 export const SET_FREQUENCY_COMMAND = 'changeInterval';
+
+/**
+ * IOTC COMPONENT NAME
+ */
+export const TELEMETRY = 'sensors';
+export const HEALTH = 'health';
+export const PROPERTY = 'device_info';

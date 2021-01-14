@@ -5,7 +5,7 @@ import {View, Switch, ScrollView, Platform, Alert} from 'react-native';
 import {useTheme, useNavigation} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {ListItem} from 'react-native-elements';
-import Registration from './Registration';
+import {Registration} from './Registration';
 import {createStackNavigator} from '@react-navigation/stack';
 import {useIoTCentralClient, useSimulation} from './hooks/iotc';
 import {defaults} from './contexts/defaults';
@@ -28,7 +28,7 @@ export default function Settings() {
   const {toggle} = useContext(ThemeContext);
   const {clear} = useContext(StorageContext);
   const {clear: clearLogs} = useContext(LogsContext);
-  const client = useIoTCentralClient();
+  const [client, clearClient] = useIoTCentralClient();
   const [centralSimulated, simulate] = useSimulation();
   const {colors, dark} = useTheme();
   const insets = useSafeAreaInsets();
@@ -64,6 +64,7 @@ export default function Settings() {
           await client?.disconnect();
           await clear();
           clearLogs();
+          clearClient();
           Alert.alert('Success', 'Successfully clean data');
         },
       },
