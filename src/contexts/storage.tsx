@@ -10,10 +10,11 @@ type IStorageState = {
   dark?: boolean;
   simulated: boolean;
   credentials: IoTCCredentials | null;
+  initialized: boolean;
 };
 
 export type IStorageContext = IStorageState & {
-  save: (state: Partial<IStorageState>) => Promise<void>;
+  save: (state: Partial<IStorageState>, store?: boolean) => Promise<void>;
   read: () => Promise<void>;
   clear: () => Promise<void>;
 };
@@ -42,10 +43,10 @@ const retrieveStorage = async (update: StateUpdater<IStorageContext>) => {
       if (!parsed.credentials) {
         parsed.credentials = null;
       }
-      update((current) => ({...current, ...parsed}));
+      update((current) => ({...current, ...parsed, initialized: true}));
     }
   } else {
-    // update(current => ({ ...current, credentials: null }));
+    update((current) => ({...current, credentials: null, initialized: true}));
   }
 };
 
@@ -58,9 +59,12 @@ const StorageProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
   const [state, setState] = useState<IStorageContext>({
     credentials: null,
     simulated: false,
-    save: async (data: Partial<IStorageState>) => {
+    initialized: false,
+    save: async (data: Partial<IStorageState>, store: boolean = true) => {
       const newState = {...state, ...data};
-      await persist(newState);
+      if (store) {
+        await persist(newState);
+      }
       setState(newState);
     },
     read: async () => {

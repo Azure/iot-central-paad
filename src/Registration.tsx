@@ -33,24 +33,30 @@ export const Registration = React.memo<{
   });
 
   if (error) {
-    Alert.alert(
-      'Error',
-      'The QR code you have scanned is not an Azure IoT Central Device QR code',
-      [
+    if (qrCodeRef.current) {
+      Alert.alert(
+        'Error',
+        'The QR code you have scanned is not an Azure IoT Central Device QR code',
+        [
+          {
+            text: 'Retry',
+            onPress: qrCodeRef.current?.reactivate,
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => {
+              setShowQR.False;
+              console.log(`Loading: ${loading}`);
+              cancel({clear: false});
+            },
+          },
+        ],
         {
-          text: 'Retry',
-          onPress: qrCodeRef.current?.reactivate,
+          cancelable: false,
         },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: setShowQR.False,
-        },
-      ],
-      {
-        cancelable: false,
-      },
-    );
+      );
+    }
   }
 
   return (
