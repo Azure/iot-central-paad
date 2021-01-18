@@ -16,10 +16,11 @@ module.exports = {
       ],
       "alias": {
         "tools": "./src/tools",
-        "@hooks": "./src/hooks",
+        "hooks": "./src/hooks",
         "properties": "./src/properties",
         "contexts": "./src/contexts",
-        "sensors": "./src/sensors"
+        "sensors": "./src/sensors",
+        "types":"./src/types"
       }
     }]
   ]

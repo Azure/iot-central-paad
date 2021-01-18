@@ -1,12 +1,19 @@
-import { useNavigation } from '@react-navigation/native';
-import { defaults } from 'contexts/defaults';
+import {useNavigation} from '@react-navigation/native';
+import {defaults} from 'contexts/defaults';
 import {
   Properties as PropertiesData,
   getDeviceInfo,
   DeviceInfoName,
 } from 'properties';
-import { useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Platform } from 'react-native';
+import {
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from 'react';
+import {Platform} from 'react-native';
 import {
   AVAILABLE_SENSORS,
   AVAILABLE_HEALTH,
@@ -19,8 +26,8 @@ import {
   LogItem,
   SENSOR_UNAVAILABLE_EVENT,
   TimedLog,
-} from 'types';
-import { LogsContext } from '../contexts/logs';
+} from '../types';
+import {LogsContext} from '../contexts/logs';
 
 export type IIcon = {
   name: string;
@@ -31,12 +38,12 @@ export function useScreenIcon(icon: IIcon): void {
   const navigation = useNavigation();
 
   useEffect(() => {
-    navigation.setParams({ icon });
+    navigation.setParams({icon});
   }, [navigation, icon]);
 }
 
 export function useLogger(): [TimedLog, (logItem: LogItem) => void] {
-  const { logs, append } = useContext(LogsContext);
+  const {logs, append} = useContext(LogsContext);
   return [logs, append];
 }
 
@@ -83,12 +90,16 @@ export function useBoolean(
     setValue((cur) => !cur);
   });
 
-  const setBoolFns = useMemo(() => ({ True: setTrue.current, False: setFalse.current, Toggle: setToggle.current }), [setTrue.current, setFalse.current, setToggle.current]);
+  const setBoolFns = useMemo(
+    () => ({
+      True: setTrue.current,
+      False: setFalse.current,
+      Toggle: setToggle.current,
+    }),
+    [],
+  );
 
-  return [
-    value,
-    setBoolFns
-  ];
+  return [value, setBoolFns];
 }
 
 type EventManagementFN = (
@@ -405,5 +416,5 @@ export function useProperties() {
     loadDeviceInfo();
   }, [loadDeviceInfo]);
 
-  return { loading, properties, updateProperty };
+  return {loading, properties, updateProperty};
 }
