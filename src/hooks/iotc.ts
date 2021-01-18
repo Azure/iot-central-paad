@@ -48,13 +48,15 @@ type ConnectionOptions = {
 
 export function useConnectIoTCentralClient(): [
   (encryptedCredentials: string, options?: ConnectionOptions) => Promise<void>,
-  () => void,
+  (options?: {clear: boolean}) => void,
   {loading: boolean; client: IoTCClient | null; error: any},
 ] {
   const {client, connecting, setConnecting, setClient} = useContext(
     IoTCContext,
   );
-  const {save: store, credentials} = useContext(StorageContext);
+  const {save: saveCredentials, credentials, initialized} = useContext(
+    StorageContext,
+  );
   const [error, setError] = useState(null);
   const connectRequest = useRef(new CancellationToken());
   const eventLogger = useRef(new EventLogger(LOG_DATA));
@@ -91,46 +93,61 @@ export function useConnectIoTCentralClient(): [
         setConnecting(false);
       }
     },
-    [setClient, setError, setConnecting],
+    [setClient, setConnecting, setError],
   );
 
-  const connect = async (
-    encryptedCredentials: string,
-    options?: ConnectionOptions,
-  ) => {
-    setConnecting(true);
-    const credentials = DecryptCredentials(
-      encryptedCredentials,
-      options?.encryptionKey,
-    );
-    await _connect_internal(credentials);
-    await store({credentials});
-  };
+  const connect = useCallback(
+    async (encryptedCredentials: string, options?: ConnectionOptions) => {
+      setConnecting(true);
+      try {
+        const credentials = DecryptCredentials(
+          encryptedCredentials,
+          options?.encryptionKey,
+        );
+        await _connect_internal(credentials);
+        await saveCredentials({credentials});
+      } catch (err) {
+        setError(err);
+      }
+    },
+    [setConnecting, _connect_internal, saveCredentials],
+  );
 
-  const cancel = () => {
-    connectRequest.current.cancel();
-  };
+  const cancel = useCallback(
+    async (options?: {clear: boolean}) => {
+      connectRequest.current?.cancel();
+      // cleanup any credentials
+      if (options?.clear) {
+        //clear current credentials. connection will start over
+        await saveCredentials({credentials: null}, options.clear);
+      }
+      if (connecting) {
+        setConnecting(false);
+      }
+    },
+    [connecting, setConnecting, saveCredentials],
+  );
 
   useEffect(() => {
     // run at startup if credentials are available
-    if (credentials) {
-      if (!connecting && !client) {
+    if (initialized && credentials) {
+      if (!client) {
         Debug(
           `Setting connecting flag`,
           'useConnectIoTCentralClient',
           'useeffect_credentials_client_connecting',
         );
         setConnecting(true);
-      } else if (connecting && !client) {
+        _connect_internal(credentials);
+      } else {
         Debug(
-          `Connecting client. Connecting: ${connecting}.`,
+          `Connecting client.`,
           'useConnectIoTCentralClient',
           'useeffect_credentials_client_connecting',
         );
-        _connect_internal(credentials);
       }
     }
-  }, [client, setConnecting, connecting, credentials, _connect_internal]);
+  }, [initialized, client, setConnecting, _connect_internal, credentials]);
 
   useEffect(() => {
     const currentEventLog = eventLogger.current;
