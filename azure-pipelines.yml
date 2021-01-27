@@ -28,6 +28,7 @@ jobs:
     displayName: 'Install node dependencies'
 
 - job: Android
+  dependsOn: Init
   steps:
 
   - task: DownloadSecureFile@1
@@ -64,6 +65,9 @@ jobs:
       publishLocation: 'Container'
 
 - job: iOS
+  dependsOn:
+  - Init
+  - Android
   steps:
 
   - task: InstallAppleCertificate@2
