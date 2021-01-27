@@ -14,10 +14,8 @@ variables:
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
-
-- job: Init
+- job: Android
   steps:
-
   - task: NodeTool@0
     inputs:
       versionSpec: '12.18.4'
@@ -26,10 +24,6 @@ jobs:
   - script: npm install
     workingDirectory: .
     displayName: 'Install node dependencies'
-
-- job: Android
-  dependsOn: Init
-  steps:
 
   - task: DownloadSecureFile@1
     name: androidKeystore
@@ -65,11 +59,16 @@ jobs:
       publishLocation: 'Container'
 
 - job: iOS
-  dependsOn:
-  - Init
-  - Android
   steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '12.18.4'
+    displayName: 'Install Node'
 
+  - script: npm install
+    workingDirectory: .
+    displayName: 'Install node dependencies'
+  
   - task: InstallAppleCertificate@2
     displayName: "Install Apple Certificate"
     inputs:
