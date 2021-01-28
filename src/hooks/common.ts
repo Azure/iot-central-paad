@@ -1,5 +1,5 @@
-import {useNavigation} from '@react-navigation/native';
-import {defaults} from 'contexts/defaults';
+import { useNavigation } from '@react-navigation/native';
+import { defaults } from 'contexts/defaults';
 import {
   Properties as PropertiesData,
   getDeviceInfo,
@@ -13,7 +13,7 @@ import {
   useCallback,
   useMemo,
 } from 'react';
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
 import {
   AVAILABLE_SENSORS,
   AVAILABLE_HEALTH,
@@ -27,7 +27,7 @@ import {
   SENSOR_UNAVAILABLE_EVENT,
   TimedLog,
 } from '../types';
-import {LogsContext} from '../contexts/logs';
+import { LogsContext } from '../contexts/logs';
 
 export type IIcon = {
   name: string;
@@ -38,12 +38,12 @@ export function useScreenIcon(icon: IIcon): void {
   const navigation = useNavigation();
 
   useEffect(() => {
-    navigation.setParams({icon});
+    navigation.setParams({ icon });
   }, [navigation, icon]);
 }
 
 export function useLogger(): [TimedLog, (logItem: LogItem) => void] {
-  const {logs, append} = useContext(LogsContext);
+  const { logs, append } = useContext(LogsContext);
   return [logs, append];
 }
 
@@ -252,12 +252,14 @@ export function useSensors(): [
     sensors.forEach((s) => {
       addListener(s.id, DATA_AVAILABLE_EVENT, dataHandler);
       addListener(s.id, SENSOR_UNAVAILABLE_EVENT, availableHandler);
+      SensorMap[s.id].simulate(defaults.emulator);
       SensorMap[s.id].enable(true);
     });
     return () => {
       sensors.forEach((s) => {
         removeListener(s.id, DATA_AVAILABLE_EVENT, dataHandler);
         removeListener(s.id, SENSOR_UNAVAILABLE_EVENT, availableHandler);
+        SensorMap[s.id].simulate(!defaults.emulator);
         SensorMap[s.id].enable(false);
       });
     };
@@ -355,12 +357,14 @@ export function useHealth(): [
     health.forEach((h) => {
       addListener(h.id, DATA_AVAILABLE_EVENT, dataHandler);
       addListener(h.id, SENSOR_UNAVAILABLE_EVENT, availableHandler);
+      HealthMap[h.id].simulate(defaults.emulator);
       HealthMap[h.id].enable(true);
     });
     return () => {
       health.forEach((h) => {
         removeListener(h.id, DATA_AVAILABLE_EVENT, dataHandler);
         removeListener(h.id, SENSOR_UNAVAILABLE_EVENT, availableHandler);
+        HealthMap[h.id].simulate(!defaults.emulator);
         HealthMap[h.id].enable(false);
       });
     };
@@ -416,5 +420,5 @@ export function useProperties() {
     loadDeviceInfo();
   }, [loadDeviceInfo]);
 
-  return {loading, properties, updateProperty};
+  return { loading, properties, updateProperty };
 }

@@ -1,5 +1,5 @@
-import {EventEmitter} from 'events';
-import {ISensor, DATA_AVAILABLE_EVENT, getRandom} from './internal';
+import { EventEmitter } from 'events';
+import { ISensor, DATA_AVAILABLE_EVENT, getRandom } from './internal';
 import Geolocation from '@react-native-community/geolocation';
 
 export default class GeoLocation extends EventEmitter implements ISensor {
@@ -51,8 +51,8 @@ export default class GeoLocation extends EventEmitter implements ISensor {
       intId = setInterval(
         function (this: GeoLocation) {
           this.emit(DATA_AVAILABLE_EVENT, this.id, {
-            lat: getRandom(),
-            lon: getRandom(),
+            lat: 47.63987,
+            lon: -122.13825,
             alt: getRandom(),
           });
         }.bind(this),
@@ -62,7 +62,7 @@ export default class GeoLocation extends EventEmitter implements ISensor {
       intId = setInterval(
         function (this: GeoLocation) {
           Geolocation.getCurrentPosition(
-            ({coords}) => {
+            ({ coords }) => {
               if (coords) {
                 this.emit(DATA_AVAILABLE_EVENT, this.id, {
                   lat: coords.latitude,

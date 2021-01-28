@@ -1,8 +1,8 @@
 import React from 'react';
-import {View, FlatList} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {ItemProps} from 'types';
-import {Card} from './components/card';
+import { View, FlatList } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ItemProps } from 'types';
+import { Card } from './components/card';
 
 type CardPressCallback = (item: ItemProps) => void | Promise<void>;
 type CardEditCallback = (item: ItemProps, value: any) => void | Promise<void>;
@@ -12,7 +12,7 @@ const CardView = React.memo<{
   componentName?: string;
   onItemPress?: CardPressCallback;
   onEdit?: CardEditCallback;
-}>(({items, onItemPress, componentName, onEdit}) => {
+}>(({ items, onItemPress, componentName, onEdit }) => {
   const insets = useSafeAreaInsets();
   // const navigation = useNavigation();
   // const [, append] = useLogger();
@@ -89,8 +89,9 @@ const CardView = React.memo<{
 
   return (
     <View
-      style={{flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom}}>
+      style={{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}>
       <FlatList
+        key={`list-${items.length}`}
         numColumns={items.length > 4 ? 2 : 1}
         data={items}
         renderItem={getCard(componentName, onItemPress, onEdit)}
@@ -103,7 +104,7 @@ const getCard = (
   componentName?: string,
   onItemPress?: CardPressCallback,
   onEdit?: CardEditCallback,
-) => ({item, index}: {item: ItemProps; index: number}) => (
+) => ({ item, index }: { item: ItemProps; index: number }) => (
   <Card
     key={`${componentName ?? 'card'}-${index}`}
     title={item.name}

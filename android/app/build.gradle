@@ -185,7 +185,10 @@ android {
                 abiFilters 'arm64-v8a', 'armeabi-v7a'
             }
             matchingFallbacks = ['debug', 'release']
-            if (System.env.GOOGLE_MAPS_API_KEY) {
+            if (project.hasProperty('GOOGLE_MAPS_API_KEY')) {
+                resValue 'string', 'google_maps_api_key', GOOGLE_MAPS_API_KEY
+            }
+            else if (System.env.GOOGLE_MAPS_API_KEY) {
                 resValue 'string', 'google_maps_api_key', "\"${System.env.GOOGLE_MAPS_API_KEY}\""
             }
             if (System.env.PAAD_BETARELEASE_VERSION_CODE) {

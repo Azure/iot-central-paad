@@ -12,7 +12,7 @@ export type DeviceInfo = {
 
 export type DeviceInfoName = keyof DeviceInfo;
 
-export async function getDeviceInfo(): Promise<DeviceInfo> {
+export async function getDeviceInfo(simulated: boolean = false): Promise<DeviceInfo> {
   return {
     manufacturer: await DeviceInfo.getManufacturer(),
     model: DeviceInfo.getModel(),
