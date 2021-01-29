@@ -24,7 +24,7 @@ jobs:
     - name: PAAD_BETARELEASE_VERSION_CODE
       value: 0
     - name: PAAD_BETARELEASE_VERSION_NAME
-      value: 1.0.0
+      value: 1.1.0
   steps:
   - task: DownloadSecureFile@1
     name: androidKeystore
@@ -38,7 +38,7 @@ jobs:
       cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
       ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
     env:
-      GOOGLE_MAPS_KEY: $(googlemapskey)
+      GOOGLE_MAPS_KEY: $(x)
   - bash: env | sort
   - task: Gradle@2
     inputs:
