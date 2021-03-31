@@ -25,6 +25,13 @@
 			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
 			remoteInfo = my_first_pnp_device;
 		};
+		4ABDA6BE260283330068B64E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4A45C58725FFDC06005A8543 /* RCTTorch.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = DA5891D81BA9A9FC002B4DB2;
+			remoteInfo = RCTTorch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -108,6 +115,14 @@
 				93E589CA1B818E56A179DD6C /* libPods-my_first_pnp_device-my_first_pnp_deviceTests.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4ABDA6BB260283330068B64E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4ABDA6BF260283330068B64E /* libRCTTorch.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		6678D5C939B9D8E03D5C4EBA /* Pods */ = {
@@ -229,6 +244,12 @@
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4ABDA6BB260283330068B64E /* Products */;
+					ProjectRef = 4A45C58725FFDC06005A8543 /* RCTTorch.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* my_first_pnp_device */,
@@ -236,6 +257,16 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		4ABDA6BF260283330068B64E /* libRCTTorch.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libRCTTorch.a;
+			remoteRef = 4ABDA6BE260283330068B64E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		00E356EC1AD99517003FC87E /* Resources */ = {

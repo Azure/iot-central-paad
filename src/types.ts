@@ -1,11 +1,11 @@
-import {StackNavigationProp} from '@react-navigation/stack';
-import {GestureResponderEvent} from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { GestureResponderEvent } from 'react-native';
 import {
   LineData,
   LineValue,
   LineDatasetConfig,
 } from 'react-native-charts-wrapper';
-import {IconProps} from 'react-native-elements';
+import { IconProps } from 'react-native-elements';
 
 export const Screens = {
   TELEMETRY_SCREEN: 'Telemetry',
@@ -55,14 +55,14 @@ export type NavigationProperty = StackNavigationProp<
  */
 export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
 
-export type LogItem = {eventName: string; eventData: string};
-export type TimedLog = {timestamp: number | string; logItem: LogItem}[];
+export type LogItem = { eventName: string; eventData: string };
+export type TimedLog = { timestamp: number | string; logItem: LogItem }[];
 
 /**
  * Chart typings
  */
 
-export type CustomLineDatasetConfig = LineDatasetConfig & {rgbcolor: string};
+export type CustomLineDatasetConfig = LineDatasetConfig & { rgbcolor: string };
 export interface ExtendedLineData extends LineData {
   dataSets: {
     itemId: string;
@@ -97,6 +97,39 @@ export type GeoCoordinates = {
   latD?: number;
   lonD?: number;
 };
+
+export type LineChartOptions = {
+  brushContextMenuActions?: any[];
+  grid?: boolean;
+  includeDots?: boolean;
+  includeEnvelope?: boolean;
+  brushHandlesVisible?: boolean;
+  hideChartControlPanel?: boolean;
+  snapBrush?: boolean;
+  interpolationFunction?: '' | 'curveLinear' | 'curveMonotoneX';
+  legend?: 'shown' | 'compact' | 'hidden';
+  noAnimate?: boolean;
+  offset?: any;
+  spMeasures?: string[];
+  isTemporal?: boolean;
+  spAxisLabels?: string[];
+  stacked?: boolean;
+  theme?: 'dark' | 'light';
+  timestamp?: string;
+  tooltip?: boolean;
+  yAxisState?: 'stacked' | 'shared' | 'overlap';
+  yExtent?: [number, number];
+};
+
+export type ChartDataOptions = {
+  color: string;
+  alias: string;
+  dataType?: 'numeric' | 'categorical' | 'events';
+};
+export enum ChartType {
+  DEFAULT,
+  MAP,
+}
 
 /**
  * Health typings
@@ -135,6 +168,7 @@ export const LOG_DATA = 'LOG_DATA';
  */
 export const ENABLE_DISABLE_COMMAND = 'enableSensors';
 export const SET_FREQUENCY_COMMAND = 'changeInterval';
+export const LIGHT_TOGGLE_COMMAND = 'lightOn';
 
 /**
  * IOTC COMPONENT NAME
