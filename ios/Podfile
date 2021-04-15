@@ -5,7 +5,7 @@ platform :ios, '10.0'
 permissions_path = '../node_modules/react-native-permissions/ios'
 pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
 pod 'RNCharts', :path => '../node_modules/react-native-charts-wrapper'
-target 'my_first_pnp_device' do
+target 'IoT_PnP' do
   config = use_native_modules!
 
   use_react_native!(
@@ -14,7 +14,7 @@ target 'my_first_pnp_device' do
     :hermes_enabled => false
   )
 
-  target 'my_first_pnp_deviceTests' do
+  target 'IoT_PnPTests' do
     inherit! :complete
     # Pods for testing
   end

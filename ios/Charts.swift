@@ -1,6 +1,6 @@
 //
 //  Charts.swift
-//  my_first_pnp_device
+//  IoT_PnP
 //
 //  Created by Luca Druda on 15/03/2021.
 //

@@ -1,4 +1,8 @@
 {
-  "name": "my_first_pnp_device",
-  "displayName": "my_first_pnp_device"
+  "name": "IoT_PnP",
+  "displayName": "Azure IoT Plug and Play",
+  "svgAppIcon": {
+    "foregroundPath": "./src/assets/IoT-Plug-And-Play_Light.svg"
+  }
+
 }
