@@ -15,16 +15,19 @@ interface IThemeContext {
 
 export interface ITheme {
   backgroundColor: string;
+  textColor: string;
 }
 
 const theme: {[x in valueof<typeof ThemeMode>]: ITheme} = {
   // light
   0: {
     backgroundColor: '#FFFFFF',
+    textColor: '#121212',
   },
   // dark
   1: {
     backgroundColor: '#121212',
+    textColor: '#FFFFFF',
   },
 };
 

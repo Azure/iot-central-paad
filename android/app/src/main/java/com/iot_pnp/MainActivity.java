@@ -1,4 +1,4 @@
-package com.my_first_pnp_device;
+package com.iot_pnp;
 
 import com.facebook.react.ReactActivity;
 
@@ -10,6 +10,6 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "my_first_pnp_device";
+    return "IoT_PnP";
   }
 }

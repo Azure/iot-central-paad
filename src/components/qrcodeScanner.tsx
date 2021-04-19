@@ -19,6 +19,7 @@ interface IQRCodeScanner {
 export type IQRCodeProps = QRCodeScannerProps & {
   onRead: (e: Event) => void | Promise<void>;
   onClose?: () => void | Promise<void>;
+  bottomContent?: JSX.Element;
 };
 
 export default class QRCodeScanner
@@ -142,6 +143,12 @@ export default class QRCodeScanner
           </View>
         }
         showMarker={true}
+        bottomContent={this.props.bottomContent}
+        bottomViewStyle={{
+          position: 'absolute',
+          zIndex: 2,
+          bottom: 40,
+        }}
         cameraStyle={{height: this.props.height + 20, width: this.props.width}}
       />
     );

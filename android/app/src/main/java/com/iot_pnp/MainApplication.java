@@ -1,4 +1,4 @@
-package com.my_first_pnp_device;
+package com.iot_pnp;
 
 import android.app.Application;
 import android.content.Context;
@@ -63,7 +63,7 @@ public class MainApplication extends Application implements ReactApplication {
          We use reflection here to pick up the class that initializes Flipper,
         since Flipper library is not available in release mode
         */
-        Class<?> aClass = Class.forName("com.my_first_pnp_device.ReactNativeFlipper");
+        Class<?> aClass = Class.forName("com.IoT_PnP.ReactNativeFlipper");
         aClass
             .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
             .invoke(null, context, reactInstanceManager);

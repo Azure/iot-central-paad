@@ -40,7 +40,7 @@ export function useIoTCentralClient(
   return [client, clear];
 }
 
-type ConnectionOptions = {
+export type ConnectionOptions = {
   encryptionKey?: string;
   onSuccess?: CommonCallback;
   onFailure?: CommonCallback;
@@ -57,22 +57,40 @@ export function useConnectIoTCentralClient(): [
   const {save: saveCredentials, credentials, initialized} = useContext(
     StorageContext,
   );
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<any>(null);
   const connectRequest = useRef(new CancellationToken());
   const eventLogger = useRef(new EventLogger(LOG_DATA));
   const [, append] = useLogger();
 
   const _connect_internal = useCallback(
     async (credentials: IoTCCredentials) => {
-      const iotc = new IoTCClient(
-        credentials.deviceId,
-        credentials.scopeId,
-        IOTC_CONNECT.DEVICE_KEY,
-        credentials.deviceKey,
-        eventLogger.current,
-      );
-      if (credentials.modelId) {
-        iotc.setModelId(credentials.modelId);
+      let iotc: IoTCClient;
+      if (credentials.connectionString) {
+        iotc = IoTCClient.getFromConnectionString(credentials.connectionString);
+      } else if (
+        credentials.deviceId &&
+        credentials.scopeId &&
+        credentials.deviceKey
+      ) {
+        iotc = new IoTCClient(
+          credentials.deviceId,
+          credentials.scopeId,
+          IOTC_CONNECT.DEVICE_KEY,
+          credentials.deviceKey,
+          eventLogger.current,
+        );
+        if (credentials.modelId) {
+          iotc.setModelId(credentials.modelId);
+        }
+      } else {
+        Debug(
+          `Error connecting IoTC Client. Credentials invalid`,
+          '_connect_internal',
+          'connect_catch',
+        );
+        setError(`Credentials invalid`);
+        setConnecting(false);
+        return;
       }
       // iotc.setLogging(IOTC_LOGGING.ALL);
       try {

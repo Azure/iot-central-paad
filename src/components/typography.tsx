@@ -12,7 +12,7 @@ interface Props extends TextProperties {
   theme?: any;
 }
 
-function normalize(size: number) {
+export function normalize(size: number) {
   const newSize = size * scale;
   if (Platform.OS === 'ios') {
     return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 1;
@@ -35,6 +35,21 @@ export function Headline(props: Props) {
   );
 }
 
+export function Detail(props: Props) {
+  const {children, style} = props;
+  const {colors} = useTheme();
+
+  return (
+    <ELText
+      style={[
+        {fontSize: normalize(12), fontStyle: 'normal', color: colors.text},
+        style,
+      ]}>
+      {children}
+    </ELText>
+  );
+}
+
 export function Text(props: Props) {
   const {children, style} = props;
   const {colors} = useTheme();
@@ -48,6 +63,13 @@ export function Text(props: Props) {
       {children}
     </ELText>
   );
+}
+
+export function Link(props: Props) {
+  const {children, style} = props;
+  const {colors} = useTheme();
+
+  return <Text style={[{color: colors.primary}, style]}>{children}</Text>;
 }
 
 export function Name(props: Props) {
@@ -81,6 +103,16 @@ export function camelToName(text: string): string {
         return str.toUpperCase();
       })
   );
+}
+
+export function bytesToSize(bytes: number): string {
+  const sizes: string[] = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  if (bytes === 0) return 'n/a';
+  const i: number = parseInt(
+    Math.floor(Math.log(bytes) / Math.log(1024)).toString(),
+  );
+  if (i === 0) return `${bytes} ${sizes[i]}`;
+  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
 }
 
 export function getRandomColor(): string {

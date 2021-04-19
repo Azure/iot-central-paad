@@ -109,10 +109,11 @@ export function useSensors(): [
   EventManagementFN,
 ] {
   const [sensors, setSensors] = useState<ItemProps[]>(
-    [
+    ([
       {
         id: AVAILABLE_SENSORS.ACCELEROMETER,
         name: 'Accelerometer',
+        dataType: 'object',
         icon: {
           name: 'rocket-outline',
           type: Platform.select({
@@ -126,6 +127,8 @@ export function useSensors(): [
       {
         id: AVAILABLE_SENSORS.GYROSCOPE,
         name: 'Gyroscope',
+        dataType: 'object',
+
         enabled: true, // TODO: auto-enable based on settings
         icon: {
           name: 'compass-outline',
@@ -139,6 +142,7 @@ export function useSensors(): [
       {
         id: AVAILABLE_SENSORS.MAGNETOMETER,
         name: 'Magnetometer',
+        dataType: 'object',
         enabled: true, // TODO: auto-enable based on settings
         icon: {
           name: 'magnet-outline',
@@ -148,6 +152,7 @@ export function useSensors(): [
       },
       {
         id: AVAILABLE_SENSORS.BAROMETER,
+        dataType: 'number',
         name: 'Barometer',
         enabled: true, // TODO: auto-enable based on settings
         icon: {
@@ -159,6 +164,7 @@ export function useSensors(): [
       {
         id: AVAILABLE_SENSORS.GEOLOCATION,
         name: 'Geolocation',
+        dataType: 'object',
         enabled: true, // TODO: auto-enable based on settings
         icon: {
           name: 'location-outline',
@@ -170,6 +176,7 @@ export function useSensors(): [
       {
         id: AVAILABLE_SENSORS.BATTERY,
         name: 'Battery Level',
+        dataType: 'number',
         enabled: true, // TODO: auto-enable based on settings,
         simulated: defaults.emulator,
         icon: {
@@ -183,7 +190,7 @@ export function useSensors(): [
           }),
         },
       },
-    ].map(s => ({
+    ] as ItemProps[]).map<ItemProps>(s => ({
       ...s,
       enable: (val?: boolean) => {
         const enabled = val !== undefined ? val : true;
@@ -378,7 +385,7 @@ export function useProperties() {
         if (prop.id in devInfo) {
           return {
             ...prop,
-            value: devInfo[prop.id as DeviceInfoName],
+            ...devInfo[prop.id as DeviceInfoName], // {value,dataType}
           };
         }
         return prop;

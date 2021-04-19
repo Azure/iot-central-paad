@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { View, Platform, Alert } from 'react-native';
+import {View, Platform, Alert} from 'react-native';
 import Settings from './Settings';
 import {
   NavigationContainer,
@@ -13,7 +13,7 @@ import {
   DefaultTheme,
   useTheme,
 } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {
   Screens,
   NavigationScreens,
@@ -27,9 +27,9 @@ import {
   SET_FREQUENCY_COMMAND,
   ItemProps,
   LIGHT_TOGGLE_COMMAND,
-  ChartType
+  // ChartType,
 } from 'types';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {
   LogsProvider,
   StorageProvider,
@@ -38,11 +38,12 @@ import {
   ThemeContext,
   ThemeMode,
 } from 'contexts';
-import LogoIcon from './assets/IotcLogo.svg';
-import { Icon } from 'react-native-elements';
-import { createStackNavigator, HeaderTitle } from '@react-navigation/stack';
-import { camelToName, Text } from './components/typography';
-import { Welcome } from './Welcome';
+import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';
+import LogoDark from './assets/IoT-Plug-And-Play_Light.svg';
+import {Icon} from 'react-native-elements';
+import {createStackNavigator, HeaderTitle} from '@react-navigation/stack';
+import {Text} from './components/typography';
+import {Welcome} from './Welcome';
 import Logs from './Logs';
 import {
   IIcon,
@@ -53,9 +54,9 @@ import {
   useSimulation,
 } from 'hooks';
 import FileUpload from './FileUpload';
-import { Registration } from './Registration';
+import {Registration} from './Registration';
 import CardView from './CardView';
-import { Loader } from './components/loader';
+import {Loader} from './components/loader';
 import {
   IIoTCCommand,
   IIoTCCommandResponse,
@@ -63,53 +64,60 @@ import {
   IoTCClient,
   IOTC_EVENTS,
 } from 'react-native-azure-iotcentral-client';
-import { AVAILABLE_SENSORS } from 'sensors';
+// import { AVAILABLE_SENSORS } from 'sensors';
 import Torch from 'react-native-torch';
 import Chart from 'Chart';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createStackNavigator();
-const TITLE = 'My First PnP Device';
+const TITLE = 'Azure IoT Plug and Play';
 
 export default function App() {
   const [initialized, setInitialized] = useState(false);
-  if (initialized) {
-    return (
-      <ThemeProvider>
-        <SafeAreaProvider>
-          <IoTCProvider>
-            <StorageProvider>
-              <LogsProvider>
-                <Navigation />
-              </LogsProvider>
-            </StorageProvider>
-          </IoTCProvider>
-        </SafeAreaProvider>
-      </ThemeProvider>
-    );
-  }
-  return <Welcome setInitialized={setInitialized} />;
+  return (
+    <ThemeProvider>
+      {initialized ? (
+        <>
+          <SafeAreaProvider>
+            <IoTCProvider>
+              <StorageProvider>
+                <LogsProvider>
+                  <Navigation />
+                </LogsProvider>
+              </StorageProvider>
+            </IoTCProvider>
+          </SafeAreaProvider>
+        </>
+      ) : (
+        <Welcome title={TITLE} setInitialized={setInitialized} />
+      )}
+    </ThemeProvider>
+  );
 }
 
 const Navigation = React.memo(() => {
-  const { mode } = useContext(ThemeContext);
+  const {mode} = useContext(ThemeContext);
+  const [simulated] = useSimulation();
+  const [iotcentralClient] = useIoTCentralClient();
+
   return (
     <NavigationContainer
       theme={mode === ThemeMode.DARK ? DarkTheme : DefaultTheme}>
-      <Stack.Navigator>
+      <Stack.Navigator
+        initialRouteName={
+          !simulated && iotcentralClient === null ? 'Registration' : 'root'
+        }
+        screenOptions={({navigation}: {navigation: NavigationProperty}) => ({
+          headerTitle: () => null,
+          headerLeft: () => <Logo />,
+          headerRight: () => <Profile navigate={navigation.navigate} />,
+        })}>
         {/* @ts-ignore */}
+        <Stack.Screen name="root" component={Root} />
+        <Stack.Screen name="Registration" component={Registration} />
         <Stack.Screen
-          name="root"
-          options={({ navigation }: { navigation: NavigationProperty }) => ({
-            headerTitle: () => null,
-            headerLeft: () => <Logo />,
-            headerRight: () => <Profile navigate={navigation.navigate} />,
-          })}
-          component={Root}
-        />
-        {/* <Stack.Screen
           name="Insight"
-          component={Insight}
+          component={Chart}
           options={({route}) => {
             let data = {};
             if (route.params) {
@@ -123,27 +131,10 @@ const Navigation = React.memo(() => {
             }
             return data;
           }}
-        /> */}
-        <Stack.Screen
-          name="Insight"
-          component={Chart}
-          options={({ route }) => {
-            let data = {};
-            if (route.params) {
-              const params = route.params as NavigationParams;
-              if (params.title) {
-                data = { ...data, headerTitle: params.title };
-              }
-              if (params.backTitle) {
-                data = { ...data, headerBackTitle: params.backTitle };
-              }
-            }
-            return data;
-          }}
         />
         <Stack.Screen
           name="Settings"
-          options={({ navigation }: { navigation: NavigationProperty }) => ({
+          options={({navigation}: {navigation: NavigationProperty}) => ({
             stackAnimation: 'flip',
             headerTitle: Platform.select({
               ios: undefined,
@@ -161,7 +152,6 @@ const Navigation = React.memo(() => {
 });
 
 const Root = React.memo(() => {
-  const [simulated] = useSimulation();
   const [, append] = useLogger();
   const [sensors, addSensorListener, removeSensorListener] = useSensors();
   // const [healths, addHealthListener, removeHealthListener] = useHealth();
@@ -177,7 +167,7 @@ const Root = React.memo(() => {
       await client.sendProperty({
         [PROPERTY]: {
           __t: 'c',
-          ...properties.reduce((obj, p) => ({ ...obj, [p.id]: p.value }), {}),
+          ...properties.reduce((obj, p) => ({...obj, [p.id]: p.value}), {}),
         },
       });
     },
@@ -191,7 +181,7 @@ const Root = React.memo(() => {
 
   // connect client if credentials are retrieved
 
-  const iconsRef = useRef<{ [x in ScreenNames]: IIcon }>({
+  const iconsRef = useRef<{[x in ScreenNames]: IIcon}>({
     [Screens.TELEMETRY_SCREEN]: Platform.select({
       ios: {
         name: 'stats-chart-outline',
@@ -246,8 +236,8 @@ const Root = React.memo(() => {
     async (componentName: string, id: string, value: any) => {
       if (iotcentralClient && iotcentralClient.isConnected()) {
         await iotcentralClient.sendTelemetry(
-          { [id]: value },
-          { '$.sub': componentName },
+          {[id]: value},
+          {'$.sub': componentName},
         );
       }
     },
@@ -306,7 +296,7 @@ const Root = React.memo(() => {
 
   const onPropUpdate = useCallback(
     async (prop: IIoTCProperty) => {
-      let { name, value } = prop;
+      let {name, value} = prop;
       if (value.__t === 'c') {
         // inside a component: TODO: change sdk
         name = Object.keys(value).filter(v => v !== '__t')[0];
@@ -377,21 +367,16 @@ const Root = React.memo(() => {
     sendTelemetryHandler,
   ]);
 
-  if (!simulated) {
-    if (iotcentralClient === null) {
-      return <Registration />;
-    }
-  }
   return (
     <Tab.Navigator
       key="tab"
       tabBarOptions={Platform.select({
-        android: { safeAreaInsets: { bottom: 0 } },
+        android: {safeAreaInsets: {bottom: 0}},
       })}>
       <Tab.Screen
         name={Screens.TELEMETRY_SCREEN}
         options={{
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({color, size}) => (
             <TabBarIcon icon={icons.Telemetry} color={color} size={size} />
           ),
         }}>
@@ -409,48 +394,48 @@ const Root = React.memo(() => {
       <Tab.Screen
         name={Screens.PROPERTIES_SCREEN}
         options={{
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({color, size}) => (
             <TabBarIcon icon={icons.Properties} color={color} size={size} />
           ),
         }}>
         {propertiesLoading
           ? () => (
-            <Loader
-              message={'Waiting for properties...'}
-              visible={true}
-              style={{ flex: 1, justifyContent: 'center' }}
-            />
-          )
+              <Loader
+                message={'Waiting for properties...'}
+                visible={true}
+                style={{flex: 1, justifyContent: 'center'}}
+              />
+            )
           : () => (
-            <CardView
-              items={properties}
-              componentName="Property"
-              onEdit={async (item, value) => {
-                try {
-                  await iotcentralClient?.sendProperty({
-                    [PROPERTY]: { __t: 'c', [item.id]: value },
-                  });
-                  Alert.alert(
-                    'Property',
-                    `Property ${item.name} successfully sent to IoT Central`,
-                    [{ text: 'OK' }],
-                  );
-                } catch (e) {
-                  Alert.alert(
-                    'Property',
-                    `Property ${item.name} not sent to IoT Central`,
-                    [{ text: 'OK' }],
-                  );
-                }
-              }}
-            />
-          )}
+              <CardView
+                items={properties}
+                componentName="Property"
+                onEdit={async (item, value) => {
+                  try {
+                    await iotcentralClient?.sendProperty({
+                      [PROPERTY]: {__t: 'c', [item.id]: value},
+                    });
+                    Alert.alert(
+                      'Property',
+                      `Property ${item.name} successfully sent to IoT Central`,
+                      [{text: 'OK'}],
+                    );
+                  } catch (e) {
+                    Alert.alert(
+                      'Property',
+                      `Property ${item.name} not sent to IoT Central`,
+                      [{text: 'OK'}],
+                    );
+                  }
+                }}
+              />
+            )}
       </Tab.Screen>
       <Tab.Screen
         name={Screens.FILE_UPLOAD_SCREEN}
         component={FileUpload}
         options={{
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({color, size}) => (
             <TabBarIcon
               icon={icons['Image Upload']}
               color={color}
@@ -463,7 +448,7 @@ const Root = React.memo(() => {
         name={Screens.LOGS_SCREEN}
         component={Logs}
         options={{
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({color, size}) => (
             <TabBarIcon icon={icons.Logs} color={color} size={size} />
           ),
         }}
@@ -480,27 +465,28 @@ const getCardView = (items: ItemProps[], name: string, detail: boolean) => ({
   <CardView
     items={items}
     componentName={name}
-    onItemPress={
-      detail
-        ? item => {
-          navigation.navigate('Insight', {
-            chartType:
-              item.id === AVAILABLE_SENSORS.GEOLOCATION
-                ? ChartType.MAP
-                : ChartType.DEFAULT,
-            currentValue: item.value,
-            telemetryId: item.id,
-            title: camelToName(item.id),
-            backTitle: 'Telemetry',
-          });
-        }
-        : undefined
-    }
+    // TEMP: temporary disabled charts
+    // onItemPress={
+    //   detail
+    //     ? item => {
+    //         navigation.navigate('Insight', {
+    //           chartType:
+    //             item.id === AVAILABLE_SENSORS.GEOLOCATION
+    //               ? ChartType.MAP
+    //               : ChartType.DEFAULT,
+    //           currentValue: item.value,
+    //           telemetryId: item.id,
+    //           title: camelToName(item.id),
+    //           backTitle: 'Telemetry',
+    //         });
+    //       }
+    //     : undefined
+    // }
   />
 );
 
 const Logo = React.memo(() => {
-  const { colors } = useTheme();
+  const {colors, dark} = useTheme();
   return (
     <View
       style={{
@@ -509,7 +495,11 @@ const Logo = React.memo(() => {
         justifyContent: 'space-around',
         marginHorizontal: 10,
       }}>
-      <LogoIcon width={30} fill={colors.primary} />
+      {dark ? (
+        <LogoDark width={30} fill={colors.primary} />
+      ) : (
+        <LogoLight width={30} fill={colors.primary} />
+      )}
       <Text
         style={{
           marginStart: 10,
@@ -524,19 +514,19 @@ const Logo = React.memo(() => {
   );
 });
 
-const Profile = React.memo((props: { navigate: any }) => {
-  const { colors } = useTheme();
+const Profile = React.memo((props: {navigate: any}) => {
+  const {colors} = useTheme();
   return (
-    <View style={{ marginHorizontal: 10 }}>
+    <View style={{marginHorizontal: 10}}>
       <Icon
-        style={{ marginEnd: 20 }}
+        style={{marginEnd: 20}}
         name={
           Platform.select({
             ios: 'settings-outline',
             android: 'settings',
           }) as string
         }
-        type={Platform.select({ ios: 'ionicon', android: 'material' })}
+        type={Platform.select({ios: 'ionicon', android: 'material'})}
         color={colors.text}
         onPress={() => {
           props.navigate('Settings');
@@ -546,21 +536,21 @@ const Profile = React.memo((props: { navigate: any }) => {
   );
 });
 
-const BackButton = React.memo((props: { goBack: any; title: string }) => {
-  const { colors } = useTheme();
-  const { goBack, title } = props;
+const BackButton = React.memo((props: {goBack: any; title: string}) => {
+  const {colors} = useTheme();
+  const {goBack, title} = props;
   return (
-    <View style={{ flexDirection: 'row', marginLeft: 10, alignItems: 'center' }}>
+    <View style={{flexDirection: 'row', marginLeft: 10, alignItems: 'center'}}>
       <Icon name="close" color={colors.text} onPress={goBack} />
       {Platform.OS === 'android' && (
-        <HeaderTitle style={{ marginLeft: 20 }}>{title}</HeaderTitle>
+        <HeaderTitle style={{marginLeft: 20}}>{title}</HeaderTitle>
       )}
     </View>
   );
 });
 
-const TabBarIcon = React.memo<{ icon: IIcon; color: string; size: number }>(
-  ({ icon, color, size }) => {
+const TabBarIcon = React.memo<{icon: IIcon; color: string; size: number}>(
+  ({icon, color, size}) => {
     return (
       <Icon
         name={icon ? icon.name : 'home'}

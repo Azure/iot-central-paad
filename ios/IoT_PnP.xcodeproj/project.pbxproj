@@ -25,13 +25,6 @@
 			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
 			remoteInfo = IoT_PnP;
 		};
-		4ABDA6BE260283330068B64E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4A45C58725FFDC06005A8543 /* RCTTorch.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = DA5891D81BA9A9FC002B4DB2;
-			remoteInfo = RCTTorch;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -48,7 +41,6 @@
 		3DDA8450741F9EDB0FFEC2A6 /* Pods-IoT_PnP-IoT_PnPTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP-IoT_PnPTests.release.xcconfig"; path = "Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests.release.xcconfig"; sourceTree = "<group>"; };
 		4A45C58025FFD5B0005A8543 /* Charts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Charts.swift; sourceTree = "<group>"; };
 		4A45C58425FFD5C6005A8543 /* IoT_PnP-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IoT_PnP-Bridging-Header.h"; sourceTree = "<group>"; };
-		4A45C58725FFDC06005A8543 /* RCTTorch.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTTorch.xcodeproj; path = "../node_modules/react-native-torch/ios/RCTTorch.xcodeproj"; sourceTree = "<group>"; };
 		7190CFFA99BDCF08BD0B7BBD /* Pods-IoT_PnP.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP.release.xcconfig"; path = "Target Support Files/Pods-IoT_PnP/Pods-IoT_PnP.release.xcconfig"; sourceTree = "<group>"; };
 		8166B076FEEE5FA0B4046143 /* Pods-IoT_PnP.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP.debug.xcconfig"; path = "Target Support Files/Pods-IoT_PnP/Pods-IoT_PnP.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = IoT_PnP/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -117,14 +109,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		4ABDA6BB260283330068B64E /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				4ABDA6BF260283330068B64E /* libRCTTorch.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		6678D5C939B9D8E03D5C4EBA /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -139,7 +123,6 @@
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				4A45C58725FFDC06005A8543 /* RCTTorch.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -244,12 +227,6 @@
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 4ABDA6BB260283330068B64E /* Products */;
-					ProjectRef = 4A45C58725FFDC06005A8543 /* RCTTorch.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* IoT_PnP */,
@@ -257,16 +234,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		4ABDA6BF260283330068B64E /* libRCTTorch.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libRCTTorch.a;
-			remoteRef = 4ABDA6BE260283330068B64E /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		00E356EC1AD99517003FC87E /* Resources */ = {
@@ -475,6 +442,7 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = IoT_PnPTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -500,6 +468,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = IoT_PnPTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -527,6 +496,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 32R2QHB9WJ;
 				ENABLE_BITCODE = NO;
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = IoT_PnP/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -554,6 +524,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 32R2QHB9WJ;
+				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = IoT_PnP/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

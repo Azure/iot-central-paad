@@ -12,8 +12,8 @@ export const AVAILABLE_PROPERTIES = {
   MODEL: 'model',
   SW_VERSION: 'swVersion',
   OS_NAME: 'osName',
-  PROCESSOR_ARCHITECTURE: 'processorArchitecture',
-  PROCESSOR_MANUFACTURER: 'processorManufacturer',
+  // PROCESSOR_ARCHITECTURE: 'processorArchitecture',
+  // PROCESSOR_MANUFACTURER: 'processorManufacturer',
   TOTAL_STORAGE: 'totalStorage',
   TOTAL_MEMORY: 'totalMemory',
 };

@@ -1,11 +1,11 @@
-import { StackNavigationProp } from '@react-navigation/stack';
-import { GestureResponderEvent } from 'react-native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {GestureResponderEvent} from 'react-native';
 import {
   LineData,
   LineValue,
   LineDatasetConfig,
 } from 'react-native-charts-wrapper';
-import { IconProps } from 'react-native-elements';
+import {IconProps} from 'react-native-elements';
 
 export const Screens = {
   TELEMETRY_SCREEN: 'Telemetry',
@@ -55,14 +55,14 @@ export type NavigationProperty = StackNavigationProp<
  */
 export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
 
-export type LogItem = { eventName: string; eventData: string };
-export type TimedLog = { timestamp: number | string; logItem: LogItem }[];
+export type LogItem = {eventName: string; eventData: string};
+export type TimedLog = {timestamp: number | string; logItem: LogItem}[];
 
 /**
  * Chart typings
  */
 
-export type CustomLineDatasetConfig = LineDatasetConfig & { rgbcolor: string };
+export type CustomLineDatasetConfig = LineDatasetConfig & {rgbcolor: string};
 export interface ExtendedLineData extends LineData {
   dataSets: {
     itemId: string;
@@ -76,6 +76,7 @@ export type ItemProps = {
   id: string;
   name: string;
   value?: any;
+  dataType?: DataType;
   icon?: IconProps;
   enabled: boolean;
   simulated: boolean;
@@ -83,6 +84,8 @@ export type ItemProps = {
   sendInterval(value: number): void;
   unit?: string;
 };
+
+export type DataType = 'string' | 'number' | 'bytes' | 'object';
 
 export type ItemData = {
   id: string;
@@ -96,6 +99,12 @@ export type GeoCoordinates = {
   lat: number;
   latD?: number;
   lonD?: number;
+};
+
+export type ChartSearchSpan = {
+  from: string;
+  to: string;
+  bucketSize: string;
 };
 
 export type LineChartOptions = {
@@ -124,6 +133,7 @@ export type LineChartOptions = {
 export type ChartDataOptions = {
   color: string;
   alias: string;
+  searchSpan?: ChartSearchSpan;
   dataType?: 'numeric' | 'categorical' | 'events';
 };
 export enum ChartType {

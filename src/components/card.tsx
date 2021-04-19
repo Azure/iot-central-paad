@@ -15,7 +15,8 @@ import {
   TouchableOpacityProps,
   ViewStyle,
 } from 'react-native';
-import {Text, Name, Headline, getRandomColor} from './typography';
+import {Text, Name, Headline, getRandomColor, bytesToSize} from './typography';
+import {DataType} from 'types';
 
 type EditCallback = (value: any) => void | Promise<void>;
 
@@ -26,6 +27,7 @@ export function Card(
       onToggle?: () => void;
       enabled: boolean;
       value?: any | React.FC;
+      dataType?: DataType;
       unit?: string;
       icon?: IconProps;
       editable?: boolean;
@@ -41,6 +43,8 @@ export function Card(
     value,
     unit,
     icon,
+    onPress,
+    dataType,
     ...otherProps
   } = props;
   const {dark, colors} = useTheme();
@@ -78,7 +82,9 @@ export function Card(
         },
         containerStyle,
       ]}
-      {...otherProps}>
+      {...otherProps}
+      disabled={!onPress}
+      onPress={onPress}>
       <View style={{flex: 1, position: 'relative'}}>
         {enabled && (
           <View
@@ -110,6 +116,7 @@ export function Card(
               <Value
                 value={value}
                 enabled
+                type={dataType}
                 editable={editable}
                 onEdit={onEdit}
                 textColor={textColor}
@@ -141,7 +148,8 @@ const Value = React.memo<{
   editable: boolean | undefined;
   onEdit: EditCallback | undefined;
   textColor: string;
-}>(({value, enabled, editable, onEdit, textColor}) => {
+  type?: DataType;
+}>(({value, enabled, editable, onEdit, textColor, type}) => {
   const [edited, setEdited] = useState(value);
 
   useEffect(() => {
@@ -155,21 +163,37 @@ const Value = React.memo<{
     return <Text>N/A</Text>;
   }
 
-  if (typeof value !== 'string' && typeof value !== 'number') {
+  if (type === 'object') {
     return (
       <View>
         {Object.keys(value).map((v, i) => {
-          const strVal: string = value[v].toString();
+          let strVal: string = value[v].toString();
+          if (typeof value[v] === 'number') {
+            strVal = (value[v] as number).toLocaleString(undefined, {
+              maximumFractionDigits: 3,
+            });
+          }
           return (
             <Text key={`data-${i}`}>
-              {v}: {strVal.length > 6 ? `${strVal.substring(0, 6)}...` : strVal}
+              {v}: {strVal}
             </Text>
           );
         })}
       </View>
     );
   } else {
-    const strVal: string = value.toString();
+    let strVal = value.toString();
+    switch (type) {
+      case 'bytes':
+        strVal = bytesToSize(value as number);
+        break;
+      case 'number':
+        strVal = (value as number).toLocaleString(undefined, {
+          maximumFractionDigits: 3,
+        });
+        break;
+    }
+
     if (editable && onEdit) {
       return (
         <View style={{flex: 1}}>
@@ -184,8 +208,9 @@ const Value = React.memo<{
       );
     } else {
       return (
-        <Headline style={{fontSize: 26, marginEnd: 5, color: textColor}}>
-          {strVal.length > 6 ? `${strVal.substring(0, 6)}...` : strVal}
+        <Headline style={{fontSize: 24, marginEnd: 5, color: textColor}}>
+          {/* {strVal.length > 6 ? `${strVal.substring(0, 6)}...` : strVal} */}
+          {strVal}
         </Headline>
       );
     }

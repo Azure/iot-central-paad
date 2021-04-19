@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.my_first_pnp_device">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.iot_pnp">
 
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.CAMERA" />
