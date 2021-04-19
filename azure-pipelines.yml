@@ -14,49 +14,49 @@ variables:
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
-- job: Android
-  steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: '12.18.4'
-    displayName: 'Install Node'
+# - job: Android
+#   steps:
+#   - task: NodeTool@0
+#     inputs:
+#       versionSpec: '12.18.4'
+#     displayName: 'Install Node'
 
-  - script: npm install
-    workingDirectory: .
-    displayName: 'Install node dependencies'
+#   - script: npm install
+#     workingDirectory: .
+#     displayName: 'Install node dependencies'
 
-  - task: DownloadSecureFile@1
-    name: androidKeystore
-    inputs:
-      secureFile: iotc-paad.keystore
+#   - task: DownloadSecureFile@1
+#     name: androidKeystore
+#     inputs:
+#       secureFile: iotc-paad.keystore
 
-  - bash: |
-      PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
-      echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
-      echo "Using variable: $GOOGLE_MAPS_API_KEY"
-      echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
-      cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
-      ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
-    env:
-      GOOGLE_MAPS_KEY: $(googlemapskey)
+#   - bash: |
+#       PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
+#       echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
+#       echo "Using variable: $GOOGLE_MAPS_API_KEY"
+#       echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
+#       cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
+#       ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
+#     env:
+#       GOOGLE_MAPS_KEY: $(googlemapskey)
 
-  - bash: env | sort
+#   - bash: env | sort
 
-  - task: Gradle@2
-    inputs:
-      workingDirectory: 'android'
-      gradleWrapperFile: 'android/gradlew'
-      gradleOptions: '-Xmx3072m'
-      publishJUnitResults: false
-      testResultsFiles: '**/TEST-*.xml'
-      tasks: 'assembleBetaRelease'
+#   - task: Gradle@2
+#     inputs:
+#       workingDirectory: 'android'
+#       gradleWrapperFile: 'android/gradlew'
+#       gradleOptions: '-Xmx3072m'
+#       publishJUnitResults: false
+#       testResultsFiles: '**/TEST-*.xml'
+#       tasks: 'assembleBetaRelease'
 
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish Build Artifact"
-    inputs:
-      PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
-      ArtifactName: 'android'
-      publishLocation: 'Container'
+#   - task: PublishBuildArtifacts@1
+#     displayName: "Publish Build Artifact"
+#     inputs:
+#       PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
+#       ArtifactName: 'android'
+#       publishLocation: 'Container'
 
 - job: iOS
   steps:
