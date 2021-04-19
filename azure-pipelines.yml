@@ -93,6 +93,7 @@ jobs:
       configuration: 'Release'
       xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
+      sdk: 'iphoneos14.4'
       packageApp: true
       exportPath: 'output/package'
       archivePath: 'output/archive'
