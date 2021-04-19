@@ -14,7 +14,7 @@
 		220F32EA28F3DF9B2DF11CD2 /* libPods-IoT_PnP.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 05366595F36F300B95145CC2 /* libPods-IoT_PnP.a */; };
 		4A45C58125FFD5B0005A8543 /* Charts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A45C58025FFD5B0005A8543 /* Charts.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		EB0046AEC35627DBD1408441 /* libPods-IoT_PnP-IoT_PnPTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 93E589CA1B818E56A179DD6C /* libPods-IoT_PnP-IoT_PnPTests.a */; };
+		A8BA495356B43DCC81A804D2 /* libPods-IoT_PnP-IoT_PnPTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C1C34B47A0207A371B124691 /* libPods-IoT_PnP-IoT_PnPTests.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,21 +32,21 @@
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* IoT_PnPTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = IoT_PnPTests.m; sourceTree = "<group>"; };
 		05366595F36F300B95145CC2 /* libPods-IoT_PnP.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-IoT_PnP.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		12D9C30E3A7C3314AFFFB44F /* Pods-IoT_PnP-IoT_PnPTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP-IoT_PnPTests.release.xcconfig"; path = "Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* IoT_PnP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IoT_PnP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = IoT_PnP/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = IoT_PnP/AppDelegate.m; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = IoT_PnP/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = IoT_PnP/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = IoT_PnP/main.m; sourceTree = "<group>"; };
-		3DDA8450741F9EDB0FFEC2A6 /* Pods-IoT_PnP-IoT_PnPTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP-IoT_PnPTests.release.xcconfig"; path = "Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests.release.xcconfig"; sourceTree = "<group>"; };
 		4A45C58025FFD5B0005A8543 /* Charts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Charts.swift; sourceTree = "<group>"; };
 		4A45C58425FFD5C6005A8543 /* IoT_PnP-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IoT_PnP-Bridging-Header.h"; sourceTree = "<group>"; };
 		7190CFFA99BDCF08BD0B7BBD /* Pods-IoT_PnP.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP.release.xcconfig"; path = "Target Support Files/Pods-IoT_PnP/Pods-IoT_PnP.release.xcconfig"; sourceTree = "<group>"; };
 		8166B076FEEE5FA0B4046143 /* Pods-IoT_PnP.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP.debug.xcconfig"; path = "Target Support Files/Pods-IoT_PnP/Pods-IoT_PnP.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = IoT_PnP/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		93E589CA1B818E56A179DD6C /* libPods-IoT_PnP-IoT_PnPTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-IoT_PnP-IoT_PnPTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		9880DA3DD6DDDDE6993EBAE0 /* Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig"; path = "Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig"; sourceTree = "<group>"; };
+		C1C34B47A0207A371B124691 /* libPods-IoT_PnP-IoT_PnPTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-IoT_PnP-IoT_PnPTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		FFB99918EC61C1DC5D22603C /* Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig"; path = "Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,7 +54,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EB0046AEC35627DBD1408441 /* libPods-IoT_PnP-IoT_PnPTests.a in Frameworks */,
+				A8BA495356B43DCC81A804D2 /* libPods-IoT_PnP-IoT_PnPTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,7 +104,7 @@
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				05366595F36F300B95145CC2 /* libPods-IoT_PnP.a */,
-				93E589CA1B818E56A179DD6C /* libPods-IoT_PnP-IoT_PnPTests.a */,
+				C1C34B47A0207A371B124691 /* libPods-IoT_PnP-IoT_PnPTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -114,8 +114,8 @@
 			children = (
 				8166B076FEEE5FA0B4046143 /* Pods-IoT_PnP.debug.xcconfig */,
 				7190CFFA99BDCF08BD0B7BBD /* Pods-IoT_PnP.release.xcconfig */,
-				9880DA3DD6DDDDE6993EBAE0 /* Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig */,
-				3DDA8450741F9EDB0FFEC2A6 /* Pods-IoT_PnP-IoT_PnPTests.release.xcconfig */,
+				FFB99918EC61C1DC5D22603C /* Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig */,
+				12D9C30E3A7C3314AFFFB44F /* Pods-IoT_PnP-IoT_PnPTests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -160,12 +160,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 00E357021AD99517003FC87E /* Build configuration list for PBXNativeTarget "IoT_PnPTests" */;
 			buildPhases = (
-				E8655E970C2C933F420282CC /* [CP] Check Pods Manifest.lock */,
+				3F8DC4B8BFCBA4AA01FDFA6D /* [CP] Check Pods Manifest.lock */,
 				00E356EA1AD99517003FC87E /* Sources */,
 				00E356EB1AD99517003FC87E /* Frameworks */,
 				00E356EC1AD99517003FC87E /* Resources */,
-				EE82BEE620DFD428B4DBA593 /* [CP] Embed Pods Frameworks */,
-				D0CB8F520DAE00F0C0A0F955 /* [CP] Copy Pods Resources */,
+				09071F403F5BF76D730D3A03 /* [CP] Embed Pods Frameworks */,
+				30224859AAF215E25D988959 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -269,6 +269,23 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
 		};
+		09071F403F5BF76D730D3A03 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		26D93C0EC1B9F32BD5943622 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -285,6 +302,45 @@
 			);
 			outputPaths = (
 				"$(DERIVED_FILE_DIR)/Pods-IoT_PnP-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		30224859AAF215E25D988959 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		3F8DC4B8BFCBA4AA01FDFA6D /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-IoT_PnP-IoT_PnPTests-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -308,23 +364,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP/Pods-IoT_PnP-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D0CB8F520DAE00F0C0A0F955 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		DCD8EFB6C40EF666367B2D07 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -340,45 +379,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP/Pods-IoT_PnP-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		E8655E970C2C933F420282CC /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-IoT_PnP-IoT_PnPTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		EE82BEE620DFD428B4DBA593 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-IoT_PnP-IoT_PnPTests/Pods-IoT_PnP-IoT_PnPTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		FD10A7F022414F080027D42C /* Start Packager */ = {
@@ -434,7 +434,7 @@
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9880DA3DD6DDDDE6993EBAE0 /* Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig */;
+			baseConfigurationReference = FFB99918EC61C1DC5D22603C /* Pods-IoT_PnP-IoT_PnPTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -463,7 +463,7 @@
 		};
 		00E356F71AD99517003FC87E /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3DDA8450741F9EDB0FFEC2A6 /* Pods-IoT_PnP-IoT_PnPTests.release.xcconfig */;
+			baseConfigurationReference = 12D9C30E3A7C3314AFFFB44F /* Pods-IoT_PnP-IoT_PnPTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -493,6 +493,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 32R2QHB9WJ;
 				ENABLE_BITCODE = NO;
@@ -509,6 +511,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = IoT_PnP;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "IoT_PnP-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;

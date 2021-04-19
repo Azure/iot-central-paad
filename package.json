@@ -1,5 +1,5 @@
 {
-  "name": "my_first_pnp_device",
+  "name": "iotc-paad",
   "version": "0.0.1",
   "private": true,
   "scripts": {

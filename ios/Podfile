@@ -16,6 +16,7 @@ target 'IoT_PnP' do
 
   target 'IoT_PnPTests' do
     inherit! :complete
+    use_react_native!
     # Pods for testing
   end
 
@@ -27,5 +28,13 @@ target 'IoT_PnP' do
 
   post_install do |installer|
     react_native_post_install(installer)
+    # Error when archiving. Workaround.
+    # Opened issue: https://github.com/facebook/react-native/issues/30335
+    installer.pods_project.targets.each do |target|
+      if target.name == "React-Core.common-AccessibilityResources"
+       target.remove_from_project
+      end
+    end
+    # End of workaround
   end
 end
