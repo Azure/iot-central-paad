@@ -91,7 +91,6 @@ jobs:
     inputs:
       actions: 'build'
       configuration: 'Release'
-      sdk: 'iphoneos13.6'
       xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
       packageApp: true
