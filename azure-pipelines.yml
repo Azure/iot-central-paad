@@ -102,28 +102,28 @@ jobs:
       scriptPath: 'bumpVersion.sh'
     condition: succeededOrFailed()
 
-  # - task: Xcode@5
-  #   displayName: "Build Mobile Application"
-  #   inputs:
-  #     actions: 'build'
-  #     configuration: 'Release'
-  #     xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
-  #     scheme: '$(Project_Name)'
-  #     sdk: 'iphoneos14.4'
-  #     packageApp: true
-  #     exportPath: 'output/package'
-  #     archivePath: 'output/archive'
-  #     signingOption: 'manual'
-  #     signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
-  #     provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
-  #     xcodeVersion: 'specifyPath'
-  #     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
-  #   condition: succeededOrFailed()
+  - task: Xcode@5
+    displayName: "Build Mobile Application"
+    inputs:
+      actions: 'build'
+      configuration: 'Release'
+      xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
+      scheme: '$(Project_Name)'
+      sdk: 'iphoneos14.4'
+      packageApp: true
+      exportPath: 'output/package'
+      archivePath: 'output/archive'
+      signingOption: 'manual'
+      signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+      provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+      xcodeVersion: 'specifyPath'
+      xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
+    condition: succeededOrFailed()
 
-  # - task: PublishBuildArtifacts@1
-  #   displayName: "Publish Build Artifact"
-  #   inputs:
-  #     PathtoPublish: 'output/package/$(Project_Name).ipa'
-  #     ArtifactName: 'ios'
-  #     publishLocation: 'Container'
-  #   condition: succeededOrFailed()
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifact"
+    inputs:
+      PathtoPublish: 'output/package/$(Project_Name).ipa'
+      ArtifactName: 'ios'
+      publishLocation: 'Container'
+    condition: succeededOrFailed()
