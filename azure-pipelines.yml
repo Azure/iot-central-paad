@@ -86,17 +86,20 @@ jobs:
     inputs:
       certSecureFile: '$(Certificate_Name)'
       certPwd: '$(Certificate_Password)'
+    condition: succeededOrFailed()
 
   - task: InstallAppleProvisioningProfile@1
     displayName: "Install Apple provisioning profile"
     inputs:
       provisioningProfileLocation: 'secureFiles'
       provProfileSecureFile: '$(Provisioning_Profile)'
+    condition: succeededOrFailed()
 
   - task: Shell++@0
     inputs:
       type: 'FilePath'
       scriptPath: 'bumpVersion.sh'
+    condition: succeededOrFailed()
 
   - task: Xcode@5
     displayName: "Build Mobile Application"
@@ -114,6 +117,7 @@ jobs:
       provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
       xcodeVersion: 'specifyPath'
       xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
+    condition: succeededOrFailed()
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
@@ -121,3 +125,4 @@ jobs:
       PathtoPublish: 'output/package/$(Project_Name).ipa'
       ArtifactName: 'ios'
       publishLocation: 'Container'
+    condition: succeededOrFailed()
