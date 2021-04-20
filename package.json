@@ -10,7 +10,7 @@
     "test": "jest",
     "lint": "tsc --noEmit && eslint --ext .js,.jsx,.ts,.tsx ./src",
     "podinstall": "node ./podinstall.js",
-    "postinstall": "npx jetify && npm run podinstall",
+    "postinstall": "npx jetify",
     "format": "prettier --write src/"
   },
   "dependencies": {
@@ -33,7 +33,6 @@
     "react-native-get-random-values": "^1.6.0",
     "react-native-image-picker": "^3.3.2",
     "react-native-keychain": "^6.2.0",
-    "react-native-linear-gradient": "^2.5.6",
     "react-native-maps": "^0.27.1",
     "react-native-permissions": "^3.0.1",
     "react-native-progress": "^4.1.2",

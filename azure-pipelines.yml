@@ -68,6 +68,18 @@ jobs:
   - script: npm install
     workingDirectory: .
     displayName: 'Install node dependencies'
+
+  - task: Cache@2
+    inputs:
+      key: 'pods | "$(Agent.OS)" | Podfile.lock'
+      path: 'ios/Pods'
+      cacheHitVar: 'PODS_CACHE_RESTORED'
+
+  - task: CocoaPods@0
+    inputs:
+      workingDirectory: ios
+    displayName: 'pod install using the CocoaPods task with defaults'
+    condition: ne(variables.PODS_CACHE_RESTORED, 'true')
   
   - task: InstallAppleCertificate@2
     displayName: "Install Apple Certificate"
