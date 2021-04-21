@@ -59,7 +59,6 @@ export function useThemeMode() {
         return 'light';
       default:
         const str = Appearance.getColorScheme() as string;
-        console.log(str);
         return str;
     }
   }, [mode]);

@@ -65,9 +65,8 @@ export function Welcome(props: {
   const initDefaults = useCallback(async () => {
     defaults.emulator = await DeviceInfo.isEmulator();
     defaults.dev = __DEV__;
-    // while (!animationHasEnded) {
-    //   await new Promise(r => setTimeout(r, 2000));
-    // }
+
+    await new Promise(r => setTimeout(r, 2000));
     await read();
   }, [read]);
 
