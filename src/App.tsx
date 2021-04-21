@@ -1,10 +1,4 @@
-import React, {
-  useContext,
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-} from 'react';
+import React, {useState, useRef, useEffect, useCallback} from 'react';
 import {View, Platform, Alert} from 'react-native';
 import Settings from './Settings';
 import {
@@ -35,8 +29,6 @@ import {
   StorageProvider,
   IoTCProvider,
   ThemeProvider,
-  ThemeContext,
-  ThemeMode,
 } from 'contexts';
 import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';
 import LogoDark from './assets/IoT-Plug-And-Play_Light.svg';
@@ -52,6 +44,7 @@ import {
   useProperties,
   useSensors,
   useSimulation,
+  useThemeMode,
 } from 'hooks';
 import FileUpload from './FileUpload';
 import {Registration} from './Registration';
@@ -67,10 +60,11 @@ import {
 // import { AVAILABLE_SENSORS } from 'sensors';
 import Torch from 'react-native-torch';
 import Chart from 'Chart';
+import Strings from 'strings';
+import ThemeScreen from 'Theme';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createStackNavigator();
-const TITLE = 'Azure IoT Plug and Play';
 
 export default function App() {
   const [initialized, setInitialized] = useState(false);
@@ -89,20 +83,19 @@ export default function App() {
           </SafeAreaProvider>
         </>
       ) : (
-        <Welcome title={TITLE} setInitialized={setInitialized} />
+        <Welcome title={Strings.Title} setInitialized={setInitialized} />
       )}
     </ThemeProvider>
   );
 }
 
 const Navigation = React.memo(() => {
-  const {mode} = useContext(ThemeContext);
+  const mode = useThemeMode();
   const [simulated] = useSimulation();
   const [iotcentralClient] = useIoTCentralClient();
 
   return (
-    <NavigationContainer
-      theme={mode === ThemeMode.DARK ? DarkTheme : DefaultTheme}>
+    <NavigationContainer theme={mode === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack.Navigator
         initialRouteName={
           !simulated && iotcentralClient === null ? 'Registration' : 'root'
@@ -145,6 +138,20 @@ const Navigation = React.memo(() => {
             ),
           })}
           component={Settings}
+        />
+        <Stack.Screen
+          name="Theme"
+          options={({navigation}: {navigation: NavigationProperty}) => ({
+            stackAnimation: 'flip',
+            headerTitle: Platform.select({
+              ios: undefined,
+              android: '',
+            }),
+            headerLeft: () => (
+              <BackButton goBack={navigation.goBack} title="Settings" />
+            ),
+          })}
+          component={ThemeScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -508,7 +515,7 @@ const Logo = React.memo(() => {
           fontSize: 16,
           letterSpacing: 0.1,
         }}>
-        {TITLE}
+        {Strings.Title}
       </Text>
     </View>
   );

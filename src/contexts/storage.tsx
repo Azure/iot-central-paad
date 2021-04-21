@@ -1,13 +1,13 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {IoTCCredentials} from 'react-native-azure-iotcentral-client';
 import * as Keychain from 'react-native-keychain';
 import {Debug, Log} from '../tools/CustomLogger';
-import {StateUpdater} from '../types';
+import {StateUpdater, ThemeMode} from '../types';
 
 const USERNAME = 'IOTC_PAD_CLIENT';
 
 type IStorageState = {
-  dark?: boolean;
+  themeMode: ThemeMode;
   simulated: boolean;
   credentials: IoTCCredentials | null;
   initialized: boolean;
@@ -60,6 +60,7 @@ const StorageProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
     credentials: null,
     simulated: false,
     initialized: false,
+    themeMode: ThemeMode.DEVICE,
     save: async (data: Partial<IStorageState>, store: boolean = true) => {
       const newState = {...state, ...data};
       if (store) {
@@ -79,24 +80,6 @@ const StorageProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
       }));
     },
   });
-  // read from storage
-  useEffect(() => {
-    Debug(
-      `Currently credentials:${state.credentials}`,
-      'storage_provider',
-      'initial_useeffect',
-    );
-    retrieveStorage(setState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // const contextObj = React.useMemo(
-  //   () => ({
-  //     ...state,
-  //    ,
-  //   }),
-  // [state],
-  // );
   return <Provider value={state}>{children}</Provider>;
 };
 

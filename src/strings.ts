@@ -1,4 +1,23 @@
 const Strings = {
+  Title: 'IoT Plug and Play',
+  Settings: {
+    Title: 'Settings',
+    Theme: {
+      Title: 'Theme',
+      Dark: {
+        Name: 'Dark',
+        Detail: 'Always use dark theme',
+      },
+      Light: {
+        Name: 'Light',
+        Detail: 'Always use light theme',
+      },
+      Device: {
+        Name: 'Your device',
+        Detail: "Use system's setting",
+      },
+    },
+  },
   Registration: {
     Header:
       'Welcome! Connect your phone to the Azure IoT cloud and experience the simplicity of IoT Plug and Play in just a few steps.​',
@@ -28,6 +47,9 @@ const Strings = {
         },
         ConnectionInfo: 'Connection info',
       },
+    },
+    Connection: {
+      Loading: 'Connecting client...',
     },
   },
 };

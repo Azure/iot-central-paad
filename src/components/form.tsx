@@ -1,3 +1,4 @@
+import {useTheme} from '@react-navigation/native';
 import React from 'react';
 import {Keyboard} from 'react-native';
 import {Input} from 'react-native-elements';
@@ -21,6 +22,7 @@ type FormProps = {
 
 const Form = React.memo<FormProps>(({title, items, submit, onSubmitting}) => {
   const [values, setValues] = React.useState<{[itemId: string]: string}>({});
+  const {dark} = useTheme();
 
   React.useEffect(() => {
     if (submit) {
@@ -37,6 +39,7 @@ const Form = React.memo<FormProps>(({title, items, submit, onSubmitting}) => {
           value={values[item.id]}
           label={item.label}
           inputStyle={{fontSize: normalize(14)}}
+          placeholderTextColor={dark ? '#444' : '#BBB'}
           onChangeText={text =>
             setValues(current => ({...current, [item.id]: text}))
           }

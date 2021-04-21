@@ -1,22 +1,14 @@
-import React, {
-  useState,
-  useEffect,
-  // useRef,
-  useCallback,
-  useContext,
-} from 'react';
-import {StyleSheet, View} from 'react-native';
+import React, {useEffect, useCallback, useContext, useMemo} from 'react';
+import {View} from 'react-native';
 import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';
 import LogoDark from './assets/IoT-Plug-And-Play_Light.svg';
 import * as Animatable from 'react-native-animatable';
-// import LinearGradient from 'react-native-linear-gradient';
 import {defaults} from './contexts/defaults';
 import DeviceInfo from 'react-native-device-info';
-import {StateUpdater} from './types';
+import {StateUpdater, StyleDefinition, ThemeMode} from './types';
 import ProgressCircleSnail from 'react-native-progress/CircleSnail';
 import {useScreenDimensions} from './hooks/layout';
-// import {Text} from 'react-native-elements';
-import {ThemeContext, ThemeMode} from 'contexts';
+import {StorageContext, ThemeContext} from 'contexts';
 import {Name} from 'components/typography';
 
 const animations = {
@@ -45,84 +37,58 @@ export function Welcome(props: {
   setInitialized: StateUpdater<boolean>;
 }) {
   const {setInitialized, title} = props;
-  // const [animationStarted, setAnimationStarted] = useState(false);
-  const [animationEnded] = useState(false);
+  const {read, initialized} = useContext(StorageContext);
   const {screen} = useScreenDimensions();
   const {mode, theme} = useContext(ThemeContext);
-  // const animation = useRef<any>();
 
-  const initDefaults = useCallback(
-    async (animationHasEnded: boolean) => {
-      defaults.emulator = await DeviceInfo.isEmulator();
-      defaults.dev = __DEV__;
-      // while (!animationHasEnded) {
-      //   await new Promise(r => setTimeout(r, 2000));
-      // }
-      await new Promise(r => setTimeout(r, 5000));
-      setInitialized(true);
-    },
-    [setInitialized],
+  const style = useMemo<StyleDefinition>(
+    () => ({
+      container: {
+        flex: 1,
+        backgroundColor: theme.backgroundColor,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      logo: {
+        paddingVertical: 100,
+      },
+      name: {
+        color: theme.textColor,
+      },
+      spinner: {
+        marginTop: 50,
+      },
+    }),
+    [theme.backgroundColor, theme.textColor],
   );
+
+  const initDefaults = useCallback(async () => {
+    defaults.emulator = await DeviceInfo.isEmulator();
+    defaults.dev = __DEV__;
+    // while (!animationHasEnded) {
+    //   await new Promise(r => setTimeout(r, 2000));
+    // }
+    await read();
+  }, [read]);
+
+  useEffect(() => {
+    setInitialized(initialized);
+  }, [initialized, setInitialized]);
   // init authentication
   useEffect(() => {
-    initDefaults(animationEnded);
-  }, [animationEnded, initDefaults]);
-  // return (
-  //   <LinearGradient colors={['#041b5c', '#136BFB']} style={style.container}>
-  //     <View style={{ flexDirection: 'row', marginBottom: 80 }}>
-  //       <Animatable.View
-  //         ref={animation}
-  //         animation="slideOutLogo"
-  //         delay={1000}
-  //         onAnimationBegin={() => setAnimationStarted(true)}
-  //         style={style.logo}>
-  //         {mode === ThemeMode.DARK ? <LogoDark width={100} height={100} /> : <LogoLight width={100} height={100} />}
-  //       </Animatable.View>
-  //       {animationStarted ? (
-  //         <Animatable.View
-  //           animation="slideInName"
-  //           style={style.name}
-  //           onAnimationEnd={() => {
-  //             setTimeout(() => {
-  //               setAnimationEnded(true);
-  //             }, 1000);
-  //           }}>
-  //           <Text
-  //             style={{
-  //               color: 'white',
-  //               fontWeight: 'bold',
-  //               fontSize: 20,
-  //               letterSpacing: 0.1,
-  //             }}>
-  //             {title}
-  //           </Text>
-  //         </Animatable.View>
-  //       ) : null}
-  //     </View>
-  //     <View style={{ alignItems: 'center' }}>
-  //       <ProgressCircleSnail
-  //         size={Math.floor(screen.width / 8)}
-  //         indeterminate={true}
-  //         color="white"
-  //         thickness={3}
-  //         spinDuration={1000}
-  //         duration={1000}
-  //       />
-  //     </View>
-  //     {/* <Button title='Animate' onPress={() => {
-  //               animation.current?.animate();
-  //           }} /> */}
-  //   </LinearGradient>
-  // );
+    initDefaults();
+  }, [initDefaults]);
+
   return (
     <View style={style.container}>
       {mode === ThemeMode.DARK ? (
-        <LogoDark width={100} height={100} />
+        <LogoDark width={100} height={100} style={style.logo} />
       ) : (
-        <LogoLight width={100} height={100} />
+        <LogoLight width={100} height={100} style={style.logo} />
       )}
-      <Name style={{color: theme.textColor}}>{title}</Name>
+      <Name style={style.name}>{title}</Name>
       <ProgressCircleSnail
+        style={style.spinner}
         size={Math.floor(screen.width / 8)}
         indeterminate={true}
         thickness={3}
@@ -133,24 +99,3 @@ export function Welcome(props: {
     </View>
   );
 }
-
-const style = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logo: {
-    position: 'absolute',
-    top: '50%',
-    transform: [{translateX: -50}, {translateY: -50}],
-  },
-  name: {
-    position: 'absolute',
-    top: '50%',
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{translateX: -80}, {translateY: -20}],
-  },
-});

@@ -1,5 +1,10 @@
 import {StackNavigationProp} from '@react-navigation/stack';
-import {GestureResponderEvent} from 'react-native';
+import {
+  GestureResponderEvent,
+  StyleProp,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
 import {
   LineData,
   LineValue,
@@ -57,6 +62,8 @@ export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
 
 export type LogItem = {eventName: string; eventData: string};
 export type TimedLog = {timestamp: number | string; logItem: LogItem}[];
+
+export type StyleDefinition = {[x: string]: StyleProp<ViewStyle | TextStyle>};
 
 /**
  * Chart typings
@@ -186,3 +193,12 @@ export const LIGHT_TOGGLE_COMMAND = 'lightOn';
 export const TELEMETRY = 'sensors';
 export const HEALTH = 'health';
 export const PROPERTY = 'device_info';
+
+/**
+ * THEME
+ */
+export enum ThemeMode {
+  LIGHT,
+  DARK,
+  DEVICE,
+}

@@ -1,6 +1,5 @@
 import React from 'react';
 import {View, FlatList} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {ItemProps} from 'types';
 import {Card} from './components/card';
 
@@ -13,11 +12,8 @@ const CardView = React.memo<{
   onItemPress?: CardPressCallback;
   onEdit?: CardEditCallback;
 }>(({items, onItemPress, componentName, onEdit}) => {
-  const insets = useSafeAreaInsets();
-
   return (
-    <View
-      style={{flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom}}>
+    <View style={{flex: 1, paddingVertical: 10}}>
       <FlatList
         numColumns={items.length > 4 ? 2 : 1}
         data={items}

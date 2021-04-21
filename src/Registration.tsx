@@ -1,32 +1,30 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   StyleSheet,
   Alert,
   Linking,
-  StyleProp,
-  ViewStyle,
   Platform,
   ScrollView,
 } from 'react-native';
-import { Link, Name, Text, Detail } from './components/typography';
-import { Button, CheckBox, Overlay } from 'react-native-elements';
-import { useScreenDimensions } from './hooks/layout';
+import {Link, Name, Text, Detail} from './components/typography';
+import {Button, CheckBox} from 'react-native-elements';
+import {useScreenDimensions} from './hooks/layout';
 import {
   RouteProp,
   useIsFocused,
   useNavigation,
   useTheme,
 } from '@react-navigation/native';
-import { Loader } from './components/loader';
-import { ConnectionOptions, useConnectIoTCentralClient } from './hooks/iotc';
-import { NavigationParams, NavigationProperty } from './types';
-import QRCodeScanner, { Event } from './components/qrcodeScanner';
+import {Loader} from './components/loader';
+import {ConnectionOptions, useConnectIoTCentralClient} from './hooks/iotc';
+import {NavigationParams, NavigationProperty, StyleDefinition} from './types';
+import QRCodeScanner, {Event} from './components/qrcodeScanner';
 import Strings from 'strings';
-import { createStackNavigator } from '@react-navigation/stack';
-import Form, { FormItem } from 'components/form';
-import { useBoolean } from 'hooks/common';
-import { Buffer } from 'buffer';
+import {createStackNavigator} from '@react-navigation/stack';
+import Form, {FormItem} from 'components/form';
+import {useBoolean} from 'hooks/common';
+import {Buffer} from 'buffer';
 
 const Stack = createStackNavigator();
 const screens = {
@@ -37,20 +35,19 @@ const screens = {
 
 export const Registration = React.memo<{
   route?: RouteProp<
-    Record<string, NavigationParams & { previousScreen?: string }>,
+    Record<string, NavigationParams & {previousScreen?: string}>,
     'Registration'
   >;
   navigation?: any;
-}>(({ navigation: parentNavigation }) => {
-  const { colors } = useTheme();
+}>(({navigation: parentNavigation}) => {
+  const {colors} = useTheme();
   const [
     connect,
     cancel,
-    { loading, client, error },
+    {loading, client, error},
   ] = useConnectIoTCentralClient();
   // const isFocused = useIsFocused();
   const qrCodeRef = useRef<QRCodeScanner>(null);
-  const { screen } = useScreenDimensions();
 
   useEffect(() => {
     if (client && !loading) {
@@ -73,7 +70,7 @@ export const Registration = React.memo<{
             style: 'cancel',
             onPress: () => {
               console.log(`Loading: ${loading}`);
-              cancel({ clear: false });
+              cancel({clear: false});
             },
           },
         ],
@@ -83,18 +80,16 @@ export const Registration = React.memo<{
       );
     }
   }
-  if (loading && !client) {
+  if ((!client || !client.isConnected()) && loading) {
     return (
-      <Overlay
-        isVisible={true}
-        overlayStyle={{
-          height: screen.height,
-          width: screen.width,
-          backgroundColor: colors.background,
-        }}
-        supportedOrientations={['portrait', 'landscape']}>
-        <Loader visible={true} message={'Connecting client...'} />
-      </Overlay>
+      <View style={{flex: 1, justifyContent: 'center'}}>
+        <Loader
+          visible={true}
+          message={
+            loading ? Strings.Registration.Connection.Loading : 'Loading...'
+          }
+        />
+      </View>
     );
   }
   return (
@@ -104,7 +99,7 @@ export const Registration = React.memo<{
         options={{
           headerShown: false,
         }}>
-        {({ navigation }) => (
+        {({navigation}) => (
           <EmptyClient
             navigation={navigation}
             parentNavigation={parentNavigation}
@@ -123,7 +118,7 @@ export const Registration = React.memo<{
       </Stack.Screen>
       <Stack.Screen
         name={screens.MANUAL}
-        options={({ navigation }: { navigation: NavigationProperty }) => {
+        options={({navigation}: {navigation: NavigationProperty}) => {
           return {
             headerTitle: Strings.Registration.Manual.Title,
             headerBackTitle: ' ', // HACK: empty,null or undefined causes library to use screen name.
@@ -140,9 +135,9 @@ const QRCodeScreen = React.memo<{
     encryptedCredentials: string,
     options?: ConnectionOptions,
   ) => Promise<void>;
-}>(({ connect }) => {
-  const { screen, orientation } = useScreenDimensions();
-  const { navigate } = useNavigation();
+}>(({connect}) => {
+  const {screen, orientation} = useScreenDimensions();
+  const {navigate} = useNavigation();
 
   const onRead = useCallback(
     async (e: Event) => {
@@ -186,12 +181,12 @@ const ManualConnect = React.memo<{
     encryptedCredentials: string,
     options?: ConnectionOptions,
   ) => Promise<void>;
-}>(({ connect }) => {
+}>(({connect}) => {
   const [checked, setChecked] = useState<'dps' | 'cstring'>('dps');
-  const { orientation } = useScreenDimensions();
+  const {orientation} = useScreenDimensions();
   const [startConnect, setStartConnect] = useBoolean(false);
-  const { navigate } = useNavigation();
-  const style = useMemo<{ [x: string]: StyleProp<ViewStyle> }>(
+  const {navigate} = useNavigation();
+  const style = useMemo<StyleDefinition>(
     () => ({
       container: {
         flex: 1,
@@ -262,7 +257,7 @@ const ManualConnect = React.memo<{
         </View>
         <View style={style.body}>
           <Name>{Strings.Registration.Manual.Body.ConnectionType.Title}</Name>
-          <View style={{ flex: 1 }}>
+          <View style={{flex: 1}}>
             <CheckBox
               containerStyle={{
                 marginStart: 0,
@@ -288,7 +283,7 @@ const ManualConnect = React.memo<{
               onPress={() => setChecked('cstring')}
             />
           </View>
-          <View style={{ flex: 2 }}>
+          <View style={{flex: 2}}>
             <Form
               title={Strings.Registration.Manual.Body.ConnectionInfo}
               items={formItems}
@@ -313,7 +308,7 @@ const ManualConnect = React.memo<{
         </View>
       </ScrollView>
       <Button
-        type={Platform.select({ ios: 'clear', android: 'solid' })}
+        type={Platform.select({ios: 'clear', android: 'solid'})}
         containerStyle={style.footer}
         title={Strings.Registration.Manual.Footer.Connect}
         onPress={setStartConnect.True}
@@ -325,7 +320,7 @@ const ManualConnect = React.memo<{
 const EmptyClient = React.memo<{
   navigation: any;
   parentNavigation: NavigationProperty;
-}>(({ navigation, parentNavigation }) => {
+}>(({navigation, parentNavigation}) => {
   /**
    * ---- UX TWEAK ----
    * All connection screens (qrcode and manual) must run on full screen.

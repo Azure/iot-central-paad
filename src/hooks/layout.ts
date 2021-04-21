@@ -1,5 +1,7 @@
-import {useState, useEffect, useCallback} from 'react';
-import {Dimensions, ScaledSize} from 'react-native';
+import {StorageContext, ThemeContext} from 'contexts';
+import {useState, useEffect, useCallback, useContext, useMemo} from 'react';
+import {Appearance, Dimensions, ScaledSize} from 'react-native';
+import {ThemeMode} from 'types';
 
 type Orientation = 'portrait' | 'landscape';
 function getOrientation(width: number, height: number): Orientation {
@@ -36,4 +38,30 @@ export function useScreenDimensions() {
     };
   }, [orientation, onChange]);
   return {screen: screenData, orientation};
+}
+
+export function useThemeMode() {
+  const {mode, set} = useContext(ThemeContext);
+  const {themeMode} = useContext(StorageContext);
+
+  // if storage changes thememode, let apply to themecontext
+  useEffect(() => {
+    if (themeMode !== mode) {
+      set(themeMode);
+    }
+  }, [themeMode, mode, set]);
+
+  const strMode = useMemo(() => {
+    switch (mode) {
+      case ThemeMode.DARK:
+        return 'dark';
+      case ThemeMode.LIGHT:
+        return 'light';
+      default:
+        const str = Appearance.getColorScheme() as string;
+        console.log(str);
+        return str;
+    }
+  }, [mode]);
+  return strMode;
 }

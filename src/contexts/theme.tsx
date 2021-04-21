@@ -1,16 +1,11 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {Appearance} from 'react-native';
-import {valueof} from '../types';
-
-export enum ThemeMode {
-  LIGHT = 0,
-  DARK = 1,
-}
+import {ThemeMode} from 'types';
 
 interface IThemeContext {
   mode: ThemeMode;
   theme: ITheme;
-  toggle: () => void;
+  set: (mode: ThemeMode) => void;
 }
 
 export interface ITheme {
@@ -18,16 +13,21 @@ export interface ITheme {
   textColor: string;
 }
 
-const theme: {[x in valueof<typeof ThemeMode>]: ITheme} = {
+const theme: {[x in ThemeMode]: ITheme} = {
   // light
-  0: {
+  [ThemeMode.LIGHT]: {
     backgroundColor: '#FFFFFF',
     textColor: '#121212',
   },
   // dark
-  1: {
+  [ThemeMode.DARK]: {
     backgroundColor: '#121212',
     textColor: '#FFFFFF',
+  },
+  [ThemeMode.DEVICE]: {
+    backgroundColor:
+      Appearance.getColorScheme() === 'dark' ? '#121212' : '#FFFFFF',
+    textColor: Appearance.getColorScheme() === 'dark' ? '#FFFFFF' : '#121212',
   },
 };
 
@@ -47,19 +47,22 @@ const ThemeProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
   const [state, setState] = useState<{mode: ThemeMode; theme: ITheme}>(
     initialState,
   );
-  const contextObj = React.useMemo(
-    () => ({
-      ...state,
-      toggle: () => {
-        setState(current => ({
-          ...current,
-          mode: +!current.mode,
-          theme: theme[+!current.mode as valueof<typeof ThemeMode>],
-        }));
-      },
-    }),
-    [state, setState],
+
+  const set = useCallback(
+    (themeMode: ThemeMode) => {
+      setState(current => ({
+        ...current,
+        mode: themeMode,
+        theme: theme[themeMode],
+      }));
+    },
+    [setState],
   );
-  return <Provider value={contextObj}>{children}</Provider>;
+
+  const value = {
+    ...state,
+    set,
+  };
+  return <Provider value={value}>{children}</Provider>;
 };
 export {ThemeProvider as default, ThemeContext};
