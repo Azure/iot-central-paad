@@ -39,6 +39,7 @@ import { Welcome } from './Welcome';
 import Logs from './Logs';
 import {
   IIcon,
+  useDeliveryInterval,
   useIoTCentralClient,
   useLogger,
   useProperties,
@@ -61,7 +62,8 @@ import {
 import Torch from 'react-native-torch';
 import Chart from 'Chart';
 import Strings from 'strings';
-import ThemeScreen from 'Theme';
+import { Option } from 'components/options';
+import Options from 'components/options';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createStackNavigator();
@@ -85,9 +87,10 @@ export default function App() {
 }
 
 const Navigation = React.memo(() => {
-  const mode = useThemeMode();
+  const { mode, type: themeType, setThemeMode } = useThemeMode();
   const [simulated] = useSimulation();
   const [iotcentralClient] = useIoTCentralClient();
+  const [deliveryInterval, setDeliveryInterval] = useDeliveryInterval();
 
   return (
     <NavigationContainer theme={mode === 'dark' ? DarkTheme : DefaultTheme}>
@@ -146,8 +149,71 @@ const Navigation = React.memo(() => {
               <BackButton goBack={navigation.goBack} title="Settings" />
             ),
           })}
-          component={ThemeScreen}
-        />
+        >
+          {() => (
+            <Options items={[
+              {
+                id: 'DEVICE',
+                name: Strings.Settings.Theme.Device.Name,
+                details: Strings.Settings.Theme.Device.Detail,
+              },
+              {
+                id: 'DARK',
+                name: Strings.Settings.Theme.Dark.Name,
+                details: Strings.Settings.Theme.Dark.Detail
+              },
+              {
+                id: 'LIGHT',
+                name: Strings.Settings.Theme.Light.Name,
+                details: Strings.Settings.Theme.Light.Detail,
+              },
+            ]} defaultId={themeType}
+              onChange={(item: Option) => {
+                setThemeMode(item.id);
+              }}
+            />)}
+        </Stack.Screen>
+        <Stack.Screen
+          name="Interval"
+          options={({ navigation }: { navigation: NavigationProperty }) => ({
+            stackAnimation: 'flip',
+            headerTitle: Platform.select({
+              ios: undefined,
+              android: '',
+            }),
+            headerLeft: () => (
+              <BackButton goBack={navigation.goBack} title="Settings" />
+            ),
+          })}
+        >
+          {() => (
+            <Options items={[
+              {
+                id: '2',
+                name: Strings.Settings.DeliveryInterval[2]
+              },
+              {
+                id: '5',
+                name: Strings.Settings.DeliveryInterval[5]
+              },
+              {
+                id: '10',
+                name: Strings.Settings.DeliveryInterval[10]
+              },
+              {
+                id: '30',
+                name: Strings.Settings.DeliveryInterval[30]
+              },
+              {
+                id: '45',
+                name: Strings.Settings.DeliveryInterval[45]
+              },
+            ]} defaultId={`${deliveryInterval}`}
+              onChange={async (item: Option) => {
+                await setDeliveryInterval(+item.id)
+              }}
+            />)}
+        </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );

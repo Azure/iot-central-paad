@@ -1,20 +1,20 @@
-import {useContext, useMemo} from 'react';
-import {ThemeContext} from './contexts/theme';
+import { useContext, useMemo } from 'react';
+import { ThemeContext } from './contexts/theme';
 import React from 'react';
-import {View, Switch, ScrollView, Platform, Alert} from 'react-native';
-import {useTheme, useNavigation} from '@react-navigation/native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {Icon, ListItem} from 'react-native-elements';
-import {Registration} from './Registration';
-import {createStackNavigator} from '@react-navigation/stack';
-import {useIoTCentralClient, useSimulation} from './hooks/iotc';
-import {defaults} from './contexts/defaults';
-import {StorageContext} from './contexts/storage';
-import {LogsContext} from './contexts/logs';
+import { View, Switch, ScrollView, Platform, Alert } from 'react-native';
+import { useTheme, useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Icon, ListItem } from 'react-native-elements';
+import { Registration } from './Registration';
+import { createStackNavigator } from '@react-navigation/stack';
+import { useDeliveryInterval, useIoTCentralClient, useSimulation } from './hooks/iotc';
+import { defaults } from './contexts/defaults';
+import { StorageContext } from './contexts/storage';
+import { LogsContext } from './contexts/logs';
 import Strings from 'strings';
-import {camelToName} from 'components/typography';
-import {useBoolean} from 'hooks/common';
-import {ThemeMode} from 'types';
+import { camelToName } from 'components/typography';
+import { useBoolean } from 'hooks/common';
+import { ThemeMode } from 'types';
 
 const Stack = createStackNavigator();
 
@@ -30,13 +30,15 @@ type ProfileItem = {
 };
 
 export default function Settings() {
-  const {clear} = useContext(StorageContext);
-  const {clear: clearLogs} = useContext(LogsContext);
+  const { clear } = useContext(StorageContext);
+  const { clear: clearLogs } = useContext(LogsContext);
   const [client, clearClient] = useIoTCentralClient();
   const [centralSimulated, simulate] = useSimulation();
-  const {mode} = useContext(ThemeContext);
-  const {colors, dark} = useTheme();
+  const { mode } = useContext(ThemeContext);
+  const { colors, dark } = useTheme();
   const insets = useSafeAreaInsets();
+  const [deliveryInterval] = useDeliveryInterval();
+  console.log(deliveryInterval);
 
   // const updateUIItems = (title: string, val: any) => {
   //   setItems(current =>
@@ -57,7 +59,7 @@ export default function Settings() {
         action: {
           type: 'expand',
           fn: navigation => {
-            navigation.navigate('Registration', {previousScreen: 'root'});
+            navigation.navigate('Registration', { previousScreen: 'root' });
           },
         },
       },
@@ -82,36 +84,35 @@ export default function Settings() {
         action: {
           type: 'expand',
           fn: navigation => {
-            navigation.navigate('Theme', {previousScreen: 'root'});
+            navigation.navigate('Theme', { previousScreen: 'root' });
           },
         },
       },
-      // {
-      //   title: Strings.Settings.Theme,
-      //   icon: dark ? 'moon-outline' : 'moon',
-      //   action: {
-      //     type: 'switch',
-      //     fn: val => {
-      //       updateUIItems(Strings.Settings.Theme, val);
-      //       toggle();
-      //     },
-      //   },
-      //   value: dark,
-      // },
+      {
+        title: Strings.Settings.DeliveryInterval.Title,
+        icon: 'timer-outline',
+        subtitle: camelToName(Strings.Settings.DeliveryInterval[`${deliveryInterval}` as keyof typeof Strings.Settings.DeliveryInterval]),
+        action: {
+          type: 'expand',
+          fn: navigation => {
+            navigation.navigate('Interval', { previousScreen: 'root' });
+          },
+        },
+      },
       ...(defaults.dev
         ? [
-            {
-              title: 'Simulation Mode',
-              icon: dark ? 'sync-outline' : 'sync',
-              action: {
-                type: 'switch',
-                fn: async val => {
-                  await simulate(val);
-                },
+          {
+            title: 'Simulation Mode',
+            icon: dark ? 'sync-outline' : 'sync',
+            action: {
+              type: 'switch',
+              fn: async val => {
+                await simulate(val);
               },
-              value: centralSimulated,
-            } as ProfileItem,
-          ]
+            },
+            value: centralSimulated,
+          } as ProfileItem,
+        ]
         : []),
     ],
     [
@@ -127,9 +128,9 @@ export default function Settings() {
   );
 
   return (
-    <View style={{flex: 1, marginTop: insets.top, marginBottom: insets.bottom}}>
+    <View style={{ flex: 1, marginTop: insets.top, marginBottom: insets.bottom }}>
       <Stack.Navigator
-        screenOptions={({route}) => ({
+        screenOptions={({ route }) => ({
           headerShown: false, // TODO: fix header
         })}>
         <Stack.Screen name="setting_root">
@@ -145,7 +146,7 @@ const RightElement = React.memo<{
   item: ProfileItem;
   colors: any;
   dark: boolean;
-}>(({item, colors, dark}) => {
+}>(({ item, colors, dark }) => {
   const [enabled, setEnabled] = useBoolean(item.value as boolean);
   if (item.action && item.action.type === 'switch') {
     return (
@@ -159,9 +160,9 @@ const RightElement = React.memo<{
           thumbColor: item.value
             ? colors.primary
             : dark
-            ? colors.text
-            : colors.background,
-          trackColor: {true: colors.border, false: colors.border},
+              ? colors.text
+              : colors.background,
+          trackColor: { true: colors.border, false: colors.border },
         })}
       />
     );
@@ -169,16 +170,16 @@ const RightElement = React.memo<{
   return null;
 });
 
-const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
-  ({items, colors, dark}) => {
+const Root = React.memo<{ items: ProfileItem[]; colors: any; dark: boolean }>(
+  ({ items, colors, dark }) => {
     const nav = useNavigation<any>();
     return (
-      <ScrollView style={{flex: 1}}>
+      <ScrollView style={{ flex: 1 }}>
         {items.map((item, index) => (
           <ListItem
             key={`setting-${index}`}
             bottomDivider
-            containerStyle={{backgroundColor: colors.card}}
+            containerStyle={{ backgroundColor: colors.card }}
             onPress={
               item.action && item.action.type !== 'switch'
                 ? item.action.fn.bind(null, nav)
@@ -186,7 +187,7 @@ const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
             }>
             <Icon name={item.icon} type="ionicon" color={colors.text} />
             <ListItem.Content>
-              <ListItem.Title style={{color: colors.text}}>
+              <ListItem.Title style={{ color: colors.text }}>
                 {item.title}
               </ListItem.Title>
               {item.subtitle && (

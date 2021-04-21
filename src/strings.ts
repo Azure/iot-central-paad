@@ -17,6 +17,14 @@ const Strings = {
         Detail: "Use system's setting",
       },
     },
+    DeliveryInterval: {
+      Title: 'Delivery interval',
+      2: '2 seconds',
+      5: '5 seconds (default)',
+      10: '10 seconds',
+      30: '30 seconds',
+      45: '45 seconds',
+    },
   },
   Registration: {
     Header:
