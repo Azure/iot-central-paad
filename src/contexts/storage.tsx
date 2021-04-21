@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {IoTCCredentials} from 'react-native-azure-iotcentral-client';
 import * as Keychain from 'react-native-keychain';
 import {Debug, Log} from '../tools/CustomLogger';
@@ -13,6 +13,13 @@ type IStorageState = {
   initialized: boolean;
 };
 
+const initialState: IStorageState = {
+  themeMode: ThemeMode.DEVICE,
+  credentials: null,
+  simulated: false,
+  initialized: false,
+};
+
 export type IStorageContext = IStorageState & {
   save: (state: Partial<IStorageState>, store?: boolean) => Promise<void>;
   read: () => Promise<void>;
@@ -22,7 +29,7 @@ export type IStorageContext = IStorageState & {
 const StorageContext = React.createContext({} as IStorageContext);
 const {Provider} = StorageContext;
 
-const retrieveStorage = async (update: StateUpdater<IStorageContext>) => {
+const retrieveStorage = async (update: StateUpdater<IStorageState>) => {
   /**
    * Credentials must be null if not available. This value means app has been initialized but no credentials are available.
    */
@@ -56,31 +63,42 @@ const persist = async (state: IStorageState) => {
 };
 
 const StorageProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
-  const [state, setState] = useState<IStorageContext>({
-    credentials: null,
-    simulated: false,
-    initialized: false,
-    themeMode: ThemeMode.DEVICE,
-    save: async (data: Partial<IStorageState>, store: boolean = true) => {
-      const newState = {...state, ...data};
-      if (store) {
+  const [state, setState] = useState<IStorageState>(initialState);
+
+  const save = useCallback(
+    async (data: Partial<IStorageState>, store: boolean = true) => {
+      let newState;
+      setState(current => {
+        newState = {...current, ...data};
+        return newState;
+      });
+      if (store && newState) {
         await persist(newState);
       }
-      setState(newState);
     },
-    read: async () => {
-      await retrieveStorage(setState);
-    },
-    clear: async () => {
-      await Keychain.resetGenericPassword();
-      setState(current => ({
-        ...current,
-        simulated: false,
-        credentials: null,
-      }));
-    },
-  });
-  return <Provider value={state}>{children}</Provider>;
+    [],
+  );
+
+  const read = useCallback(async () => {
+    await retrieveStorage(setState);
+  }, [setState]);
+
+  const clear = useCallback(async () => {
+    await Keychain.resetGenericPassword();
+    setState(current => ({
+      ...current,
+      simulated: false,
+      credentials: null,
+    }));
+  }, []);
+  const value = {
+    ...state,
+    save,
+    read,
+    clear,
+  };
+
+  return <Provider value={value}>{children}</Provider>;
 };
 
 export {StorageProvider as default, StorageContext};
