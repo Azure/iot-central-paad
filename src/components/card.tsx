@@ -96,7 +96,8 @@ export function Card(
               borderRadius: 5,
             }}></View>
         )}
-        {onToggle && (
+        {/* round checkbox for enable/disable */}
+        {/* {onToggle && (
           <CheckBox
             center
             checkedIcon="dot-circle-o"
@@ -105,7 +106,7 @@ export function Card(
             containerStyle={checkboxStyle}
             onPress={onToggle}
           />
-        )}
+        )} */}
 
         <View style={{flex: 2}}>
           <Name style={{color: textColor}}>{otherProps.title}</Name>
