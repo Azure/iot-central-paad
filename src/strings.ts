@@ -55,6 +55,10 @@ const Strings = {
         },
         ConnectionInfo: 'Connection info',
       },
+      KeyTypes:{
+        Group:'Group key',
+        Device:'Device key'
+      }
     },
     Connection: {
       Loading: 'Connecting client...',

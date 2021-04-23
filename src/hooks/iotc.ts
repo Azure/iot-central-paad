@@ -109,6 +109,7 @@ export function useConnectIoTCentralClient(): [
         );
         setError(err);
         setConnecting(false);
+        throw err;
       }
     },
     [setClient, setConnecting, setError],
@@ -122,6 +123,7 @@ export function useConnectIoTCentralClient(): [
           encryptedCredentials,
           options?.encryptionKey,
         );
+        console.log(JSON.stringify(credentials));
         await _connect_internal(credentials);
         await saveCredentials({ credentials });
       } catch (err) {
