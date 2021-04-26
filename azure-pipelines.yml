@@ -81,9 +81,8 @@ jobs:
       provisioningProfileLocation: 'secureFiles'
       provProfileSecureFile: '$(Provisioning_Profile)'
 
-  - task: Shell++@0
+  - task: ShellScript@2
     inputs:
-      type: 'FilePath'
       scriptPath: 'bumpVersion.sh'
 
   - task: Xcode@5
