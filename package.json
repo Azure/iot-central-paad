@@ -10,7 +10,7 @@
     "test": "jest",
     "lint": "tsc --noEmit && eslint --ext .js,.jsx,.ts,.tsx ./src",
     "podinstall": "node ./podinstall.js",
-    "postinstall": "npx jetify",
+    "postinstall": "npx jetify && npm run podinstall",
     "format": "prettier --write src/"
   },
   "dependencies": {
