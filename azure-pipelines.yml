@@ -59,6 +59,7 @@ jobs:
       publishLocation: 'Container'
 
 - job: iOS
+  timeoutInMinutes: 90
   steps:
   - task: NodeTool@0
     inputs:
