@@ -170,7 +170,7 @@ export default function FileUpload() {
       />
       <BottomSheet
         isVisible={showSelector}
-        containerStyle={{backgroundColor: 'rgba(0.5, 0.25, 0, 0.2)'}}
+        containerStyle={{backgroundColor: 'rgba(0.5, 0.25, 0, 0.7)'}}
         modalProps={{}}>
         <ListItem
           onPress={() => {
