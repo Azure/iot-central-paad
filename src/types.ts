@@ -20,6 +20,19 @@ export const Screens = {
   FILE_UPLOAD_SCREEN: 'Image Upload',
 } as const;
 
+export const Pages = {
+  ROOT: 'Root',
+  REGISTRATION: 'Registration',
+  INSIGHT: 'Insight',
+  INTERVAL: 'Interval',
+  THEME: 'Theme',
+  SETTINGS: 'Settings',
+} as const;
+
+/**
+ * NAVIGATION
+ */
+
 /**
  * Parameters available for all routes
  */
@@ -43,6 +56,7 @@ export type valueof<T> = T[keyof T];
 export type Ref<T> = React.RefObject<T>;
 
 export type ScreenNames = typeof Screens[keyof typeof Screens];
+export type PagesNames = typeof Pages[keyof typeof Pages];
 /**
  * Defines type of screens
  */
@@ -54,6 +68,21 @@ export type NavigationProperty = StackNavigationProp<
   NavigationScreens,
   ScreenNames
 >;
+
+export type NavigationPages = {
+  [k in valueof<typeof Pages>]: NavigationParams | undefined;
+};
+
+export type PagesNavigator = StackNavigationProp<NavigationPages, PagesNames>;
+
+export const NavigatorRoots = {
+  MAIN: 'ROOT',
+  SETTINGS: 'SETTINGS',
+};
+
+/**
+ * ------- END NAVIGATION ----------
+ */
 
 /**
  *  Utils

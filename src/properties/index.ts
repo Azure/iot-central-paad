@@ -7,13 +7,13 @@ type PropertyProps = {editable: boolean} & ItemProps;
 export const Properties: PropertyProps[] = [
   {
     id: AVAILABLE_PROPERTIES.WRITEABLE_PROP,
-    name: 'WriteableProp',
+    name: 'Cloud-Side Property',
     editable: false,
   },
   {
     id: AVAILABLE_PROPERTIES.READONLY_PROP,
-    name: 'ReadOnlyProp',
-    value: 'readonly',
+    name: 'Editable Property',
+    value: 'editable',
     editable: true,
   },
   {

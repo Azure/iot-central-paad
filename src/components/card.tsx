@@ -1,12 +1,5 @@
 import React, {useRef, useState, useEffect} from 'react';
-import {
-  CardProps,
-  IconProps,
-  Icon,
-  CheckBox,
-  Input,
-  Button,
-} from 'react-native-elements';
+import {CardProps, IconProps, Icon, Input, Button} from 'react-native-elements';
 import {useTheme} from '@react-navigation/native';
 import {
   View,
@@ -51,7 +44,6 @@ export function Card(
 
   const textColor = enabled ? colors.text : '#9490a9';
   const barColor = useRef(getRandomColor() as ColorValue);
-  const checkboxStyle: ViewStyle = {position: 'absolute', top: -25, right: -40};
   const iconStyle: ViewStyle = {
     alignSelf: 'flex-end',
     justifyContent: 'flex-end',

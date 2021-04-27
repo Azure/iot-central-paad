@@ -1,22 +1,21 @@
-import { useContext, useMemo } from 'react';
-import { ThemeContext } from './contexts/theme';
+import {useContext, useMemo} from 'react';
+import {ThemeContext} from './contexts/theme';
 import React from 'react';
-import { View, Switch, ScrollView, Platform, Alert } from 'react-native';
-import { useTheme, useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Icon, ListItem } from 'react-native-elements';
-import { Registration } from './Registration';
-import { createStackNavigator } from '@react-navigation/stack';
-import { useDeliveryInterval, useIoTCentralClient, useSimulation } from './hooks/iotc';
-import { defaults } from './contexts/defaults';
-import { StorageContext } from './contexts/storage';
-import { LogsContext } from './contexts/logs';
+import {View, Switch, ScrollView, Platform, Alert} from 'react-native';
+import {useTheme, useNavigation} from '@react-navigation/native';
+import {Icon, ListItem} from 'react-native-elements';
+import {
+  useDeliveryInterval,
+  useIoTCentralClient,
+  useSimulation,
+} from './hooks/iotc';
+import {defaults} from './contexts/defaults';
+import {StorageContext} from './contexts/storage';
+import {LogsContext} from './contexts/logs';
 import Strings from 'strings';
-import { camelToName } from 'components/typography';
-import { useBoolean } from 'hooks/common';
-import { ThemeMode } from 'types';
-
-const Stack = createStackNavigator();
+import {camelToName} from 'components/typography';
+import {useBoolean} from 'hooks/common';
+import {NavigatorRoots, ThemeMode} from 'types';
 
 type ProfileItem = {
   title: string;
@@ -30,26 +29,13 @@ type ProfileItem = {
 };
 
 export default function Settings() {
-  const { clear } = useContext(StorageContext);
-  const { clear: clearLogs } = useContext(LogsContext);
-  const [client, clearClient] = useIoTCentralClient();
+  const {clear} = useContext(StorageContext);
+  const {clear: clearLogs} = useContext(LogsContext);
+  const [client, , clearClient] = useIoTCentralClient();
   const [centralSimulated, simulate] = useSimulation();
-  const { mode } = useContext(ThemeContext);
-  const { colors, dark } = useTheme();
-  const insets = useSafeAreaInsets();
+  const {mode} = useContext(ThemeContext);
+  const {colors, dark} = useTheme();
   const [deliveryInterval] = useDeliveryInterval();
-  console.log(deliveryInterval);
-
-  // const updateUIItems = (title: string, val: any) => {
-  //   setItems(current =>
-  //     current.map(i => {
-  //       if (i.title === title) {
-  //         i = { ...i, value: val };
-  //       }
-  //       return i;
-  //     }),
-  //   );
-  // };
 
   const items = useMemo<ProfileItem[]>(
     () => [
@@ -59,7 +45,11 @@ export default function Settings() {
         action: {
           type: 'expand',
           fn: navigation => {
-            navigation.navigate('Registration', { previousScreen: 'root' });
+            // TIPS: use push as we may already have a registration screen stacked.
+            // this happens when a device is not registered and user goes on Registration through settings instead of from home screen
+            navigation.push('Registration', {
+              previousScreen: NavigatorRoots.SETTINGS,
+            });
           },
         },
       },
@@ -84,38 +74,43 @@ export default function Settings() {
         action: {
           type: 'expand',
           fn: navigation => {
-            navigation.navigate('Theme', { previousScreen: 'root' });
+            navigation.navigate('Theme', {previousScreen: 'root'});
           },
         },
       },
       {
         title: Strings.Settings.DeliveryInterval.Title,
         icon: 'timer-outline',
-        subtitle: camelToName(Strings.Settings.DeliveryInterval[`${deliveryInterval}` as keyof typeof Strings.Settings.DeliveryInterval]),
+        subtitle: camelToName(
+          Strings.Settings.DeliveryInterval[
+            `${deliveryInterval}` as keyof typeof Strings.Settings.DeliveryInterval
+          ],
+        ),
         action: {
           type: 'expand',
           fn: navigation => {
-            navigation.navigate('Interval', { previousScreen: 'root' });
+            navigation.navigate('Interval', {previousScreen: 'root'});
           },
         },
       },
       ...(defaults.dev
         ? [
-          {
-            title: 'Simulation Mode',
-            icon: dark ? 'sync-outline' : 'sync',
-            action: {
-              type: 'switch',
-              fn: async val => {
-                await simulate(val);
+            {
+              title: 'Simulation Mode',
+              icon: dark ? 'sync-outline' : 'sync',
+              action: {
+                type: 'switch',
+                fn: async val => {
+                  await simulate(val);
+                },
               },
-            },
-            value: centralSimulated,
-          } as ProfileItem,
-        ]
+              value: centralSimulated,
+            } as ProfileItem,
+          ]
         : []),
     ],
     [
+      deliveryInterval,
       mode,
       centralSimulated,
       clear,
@@ -128,16 +123,21 @@ export default function Settings() {
   );
 
   return (
-    <View style={{ flex: 1, marginTop: insets.top, marginBottom: insets.bottom }}>
-      <Stack.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false, // TODO: fix header
-        })}>
-        <Stack.Screen name="setting_root">
-          {() => <Root items={items} colors={colors} dark={dark} />}
+    <View style={{flex: 1, marginVertical: 10}}>
+      <Root items={items} colors={colors} dark={dark} />
+      {/* <Stack.Navigator
+      // screenOptions={({ route }) => ({
+      //   headerShown: false, // TODO: fix header
+      // })}
+      >
+        <Stack.Screen name={NavigatorRoots.SETTINGS}
+          options={{
+            headerShown: false
+          }}>
+          {() => }
         </Stack.Screen>
         <Stack.Screen name="Registration" component={Registration} />
-      </Stack.Navigator>
+      </Stack.Navigator> */}
     </View>
   );
 }
@@ -146,23 +146,23 @@ const RightElement = React.memo<{
   item: ProfileItem;
   colors: any;
   dark: boolean;
-}>(({ item, colors, dark }) => {
+}>(({item, colors, dark}) => {
   const [enabled, setEnabled] = useBoolean(item.value as boolean);
   if (item.action && item.action.type === 'switch') {
     return (
       <Switch
         value={enabled}
-        onValueChange={() => {
-          item.action?.fn();
+        onValueChange={val => {
+          item.action?.fn(val);
           setEnabled.Toggle();
         }}
         {...(Platform.OS === 'android' && {
           thumbColor: item.value
             ? colors.primary
             : dark
-              ? colors.text
-              : colors.background,
-          trackColor: { true: colors.border, false: colors.border },
+            ? colors.text
+            : colors.background,
+          trackColor: {true: colors.border, false: colors.border},
         })}
       />
     );
@@ -170,16 +170,16 @@ const RightElement = React.memo<{
   return null;
 });
 
-const Root = React.memo<{ items: ProfileItem[]; colors: any; dark: boolean }>(
-  ({ items, colors, dark }) => {
+const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
+  ({items, colors, dark}) => {
     const nav = useNavigation<any>();
     return (
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView style={{flex: 1}}>
         {items.map((item, index) => (
           <ListItem
             key={`setting-${index}`}
             bottomDivider
-            containerStyle={{ backgroundColor: colors.card }}
+            containerStyle={{backgroundColor: colors.card}}
             onPress={
               item.action && item.action.type !== 'switch'
                 ? item.action.fn.bind(null, nav)
@@ -187,7 +187,7 @@ const Root = React.memo<{ items: ProfileItem[]; colors: any; dark: boolean }>(
             }>
             <Icon name={item.icon} type="ionicon" color={colors.text} />
             <ListItem.Content>
-              <ListItem.Title style={{ color: colors.text }}>
+              <ListItem.Title style={{color: colors.text}}>
                 {item.title}
               </ListItem.Title>
               {item.subtitle && (

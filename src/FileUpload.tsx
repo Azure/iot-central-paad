@@ -1,27 +1,38 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
-import ImagePicker from 'react-native-image-picker';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {
+  Callback,
+  ImageLibraryOptions,
+  launchCamera,
+  launchImageLibrary,
+} from 'react-native-image-picker';
 import {View} from 'react-native-animatable';
 import {Card} from './components/card';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useScreenDimensions} from './hooks/layout';
-import {Icon} from 'react-native-elements';
+import {Icon, BottomSheet, ListItem} from 'react-native-elements';
 import {useTheme} from '@react-navigation/native';
 import {Headline, Text} from './components/typography';
 import {useIoTCentralClient, useSimulation} from './hooks/iotc';
-import {Registration} from './Registration';
-import {Loader} from './components/loader';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {Platform} from 'react-native';
-import {StateUpdater} from './types';
 import {LogsContext} from './contexts/logs';
+import Strings from 'strings';
+import {ISetBooleanFunctions, useBoolean} from 'hooks/common';
 
 export default function FileUpload() {
+  const {colors} = useTheme();
   const [client] = useIoTCentralClient();
   const [simulated] = useSimulation();
-  const insets = useSafeAreaInsets();
   const {screen} = useScreenDimensions();
   const {append} = useContext(LogsContext);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useBoolean(false);
+  const [showSelector, setShowSelector] = useBoolean(false);
   const [uploadStatus, setuploadStatus] = useState<boolean | undefined>(
     undefined,
   );
@@ -29,9 +40,89 @@ export default function FileUpload() {
   const fileName = useRef('');
   const fileSize = useRef('');
 
+  const styles = useMemo(
+    () => ({
+      listItem: {
+        backgroundColor: colors.card,
+      },
+      listItemText: {
+        color: colors.text,
+      },
+      closeItemText: {
+        color: 'gray',
+      },
+    }),
+    [colors],
+  );
+
   useEffect(() => {
     setuploadStatus(undefined);
   }, [uploading]);
+
+  const startUpload = useCallback(
+    (fn: (options: ImageLibraryOptions, callback: Callback) => void) => {
+      fn(
+        {
+          mediaType: 'photo',
+          includeBase64: true, //TODO: remove and use uri
+        },
+        async response => {
+          setShowSelector.False();
+          if (response.didCancel) {
+            console.log('User cancelled');
+          } else if (response.errorMessage) {
+            console.log('ImagePicker Error: ', response.errorMessage);
+          } else {
+            // send response data
+            let fileType = 'image/jpg';
+            if (response.type) {
+              fileType = response.type;
+            }
+
+            let curfileName = response.fileName;
+            if (!curfileName && Platform.OS === 'ios') {
+              curfileName = response.uri?.split('/').pop();
+            }
+            console.log(`Current file name: ${curfileName}`);
+            try {
+              setUploading.True();
+              append({
+                eventName: 'FILE UPLOAD',
+                eventData: `Starting upload of file ${curfileName}`,
+              });
+              fileName.current = curfileName as string;
+              fileSize.current = formatBytes(response.fileSize!);
+              await new Promise(r => setTimeout(r, 6000));
+              const res = await client?.uploadFile(
+                curfileName as string,
+                fileType,
+                response.base64,
+                'base64',
+              );
+              if (res && res.status >= 200 && res.status < 300) {
+                append({
+                  eventName: 'FILE UPLOAD',
+                  eventData: `Successfully uploaded ${curfileName}`,
+                });
+                setuploadStatus(true);
+              } else {
+                append({
+                  eventName: 'FILE UPLOAD',
+                  eventData: `Error uploading ${curfileName}${
+                    res?.errorMessage ? `. Reason:${res?.errorMessage}` : '.'
+                  }`,
+                });
+                setuploadStatus(false);
+              }
+            } catch (e) {
+              console.log(e);
+            }
+          }
+        },
+      );
+    },
+    [setShowSelector, setUploading, append, client],
+  );
 
   if (simulated) {
     return (
@@ -43,33 +134,18 @@ export default function FileUpload() {
           marginHorizontal: 30,
         }}>
         <Headline style={{textAlign: 'center'}}>
-          Simulation mode is enabled
+          {Strings.Simulation.Enabled}
         </Headline>
         <Text style={{textAlign: 'center'}}>
           {' '}
-          File upload is not available. Disable simulation mode and connect to
-          IoT Central to work with file uploads.
+          {Strings.FileUpload.NotAvailable} {Strings.Simulation.Disable}
         </Text>
       </View>
     );
   }
-  if (client === null) {
-    return <Registration />;
-  }
-
-  if (client === undefined) {
-    return <Loader message={'Connecting to IoT Central ...'} visible={true} />;
-  }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        paddingTop: insets.top,
-        paddingBottom: insets.bottom,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
+    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
       <Card
         containerStyle={{
           flex: 0,
@@ -78,70 +154,7 @@ export default function FileUpload() {
         }}
         enabled={false}
         title=""
-        onPress={
-          uploading
-            ? undefined
-            : () => {
-                ImagePicker.launchImageLibrary(
-                  {
-                    mediaType: 'photo',
-                  },
-                  async response => {
-                    if (response.didCancel) {
-                      console.log('User cancelled');
-                    } else if (response.errorMessage) {
-                      console.log('ImagePicker Error: ', response.errorMessage);
-                    } else {
-                      // send response data
-                      let fileType = 'image/jpg';
-                      if (response.type) {
-                        fileType = response.type;
-                      }
-
-                      let curfileName = response.fileName;
-                      if (!curfileName && Platform.OS === 'ios') {
-                        curfileName = response.uri?.split('/').pop();
-                      }
-                      try {
-                        setUploading(true);
-                        append({
-                          eventName: 'FILE UPLOAD',
-                          eventData: `Starting upload of file ${curfileName}`,
-                        });
-                        fileName.current = curfileName as string;
-                        fileSize.current = formatBytes(response.fileSize!);
-                        await new Promise(r => setTimeout(r, 6000));
-                        const res = await client.uploadFile(
-                          curfileName as string,
-                          fileType,
-                          response.base64,
-                          'base64',
-                        );
-                        if (res.status >= 200 && res.status < 300) {
-                          append({
-                            eventName: 'FILE UPLOAD',
-                            eventData: `Successfully uploaded ${curfileName}`,
-                          });
-                          setuploadStatus(true);
-                        } else {
-                          append({
-                            eventName: 'FILE UPLOAD',
-                            eventData: `Error uploading ${curfileName}${
-                              res.errorMessage
-                                ? `. Reason:${res.errorMessage}`
-                                : '.'
-                            }`,
-                          });
-                          setuploadStatus(false);
-                        }
-                      } catch (e) {
-                        console.log(e);
-                      }
-                    }
-                  },
-                );
-              }
-        }
+        onPress={setShowSelector.True}
         value={
           uploading
             ? () => (
@@ -155,6 +168,42 @@ export default function FileUpload() {
             : UploadIcon
         }
       />
+      <BottomSheet
+        isVisible={showSelector}
+        containerStyle={{backgroundColor: 'rgba(0.5, 0.25, 0, 0.2)'}}
+        modalProps={{}}>
+        <ListItem
+          onPress={() => {
+            startUpload(launchImageLibrary);
+          }}
+          containerStyle={styles.listItem}>
+          <ListItem.Content>
+            <ListItem.Title style={styles.listItemText}>
+              {Strings.FileUpload.Modes.Library}
+            </ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+        <ListItem
+          onPress={() => {
+            startUpload(launchCamera);
+          }}
+          containerStyle={styles.listItem}>
+          <ListItem.Content>
+            <ListItem.Title style={styles.listItemText}>
+              {Strings.FileUpload.Modes.Camera}
+            </ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+        <ListItem
+          onPress={setShowSelector.False}
+          containerStyle={styles.listItem}>
+          <ListItem.Content style={{alignItems: 'center'}}>
+            <ListItem.Title style={styles.closeItemText}>
+              {Strings.Core.Close}
+            </ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+      </BottomSheet>
     </View>
   );
 }
@@ -169,9 +218,7 @@ function UploadIcon() {
         type="material-community"
         color={colors.text}
       />
-      <Text style={{marginTop: 30}}>
-        Select image to upload on Azure Storage
-      </Text>
+      <Text style={{marginTop: 30}}>{Strings.FileUpload.Start}</Text>
     </View>
   );
 }
@@ -180,7 +227,7 @@ function UploadProgress(props: {
   filename: string;
   size: string;
   uploadStatus: boolean | undefined;
-  setUploading: StateUpdater<boolean>;
+  setUploading: ISetBooleanFunctions;
 }) {
   const {colors: themeColors} = useTheme();
   const [fill, setFill] = useState(1);
@@ -231,7 +278,7 @@ function UploadProgress(props: {
       setShowResult(true);
       // wait before go back to standard screen
       setTimeout(() => {
-        setUploading(false);
+        setUploading.False();
       }, 3000);
 
       // @ts-ignore
@@ -281,7 +328,12 @@ function UploadProgress(props: {
         style={rotationStyle}>
         {() => <Text style={rotationStyle}>{size}</Text>}
       </AnimatedCircularProgress>
-      <Text style={{marginTop: 30}}>{filename}</Text>
+      <Text
+        style={{color: 'red', paddingVertical: 10}}
+        onPress={setUploading.False}>
+        {Strings.Core.Cancel}
+      </Text>
+      <Text style={{}}>{filename}</Text>
     </View>
   );
 }

@@ -1,5 +1,9 @@
 const Strings = {
   Title: 'IoT Plug and Play',
+  Core: {
+    Close: 'Close',
+    Cancel: 'Cancel',
+  },
   Settings: {
     Title: 'Settings',
     Theme: {
@@ -40,6 +44,15 @@ const Strings = {
     Manual: {
       Title: 'Manually connect',
       Header: 'Need help locating this information? ',
+      Registered: 'Registered using:',
+      RegisterNew: {
+        Title: 'Register as a new device',
+        Alert: {
+          Title: 'Register as new device?',
+          Text:
+            "Once you register as a new device, your old connection will be cleared and you'll be able to connect as a new device. Data previously sent will remain in the cloud until you delete it.",
+        },
+      },
       Footer: {
         Connect: 'Connect',
       },
@@ -55,15 +68,52 @@ const Strings = {
         },
         ConnectionInfo: 'Connection info',
       },
-      KeyTypes:{
-        Group:'Group key',
-        Device:'Device key'
-      }
+      KeyTypes: {
+        Group: 'Application key',
+        Device: 'Device key',
+      },
     },
     Connection: {
       Loading: 'Connecting client...',
     },
+    Clear: 'Clear registration',
+  },
+  Client: {
+    Properties: {
+      Delivery: {
+        Success: 'Property "{{0}}" successfully sent to Azure IoT.',
+        Failure: 'Failed to send property "{{0}}" to Azure IoT.',
+      },
+      Loading: 'Waiting for properties...',
+    },
+  },
+  FileUpload: {
+    Start: 'Select image to be uploaded on Azure Storage',
+    Footer: "You'll need to configure file upload in your app.",
+    LearnMore: {
+      Title: 'Learn more',
+      Url: 'https://aka.ms/iot-paad-fileupload',
+    },
+    NotAvailable: 'File upload is not available.',
+    Modes: {
+      Library: 'Take from image gallery',
+      Camera: 'Capture photo with camera',
+    },
+  },
+  LogScreen: {
+    Header:
+      'Connection information between your device and Azure IoT will show up below.',
+  },
+  Simulation: {
+    Enabled: 'Simulation mode is enabled.',
+    Disable:
+      'Disable simulation mode and connect to Azure IoT to work with file uploads.',
   },
 };
+
+export function resolveString(data: string, ...values: string[]) {
+  values.forEach(val => (data = data.replace(/\{\{[\S]\}\}/, val)));
+  return data;
+}
 
 export default Strings;

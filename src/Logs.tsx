@@ -4,6 +4,7 @@ import {useLogger} from './hooks/common';
 import {Text} from './components/typography';
 import {ScrollView} from 'react-native-gesture-handler';
 import {useTheme} from '@react-navigation/native';
+import Strings from 'strings';
 
 const Logs = React.memo(() => {
   const {colors} = useTheme();
@@ -11,10 +12,10 @@ const Logs = React.memo(() => {
 
   return (
     <View style={{flex: 1, padding: 10}}>
-      <Text>Received commands will be logged below.</Text>
+      <Text>{Strings.LogScreen.Header}</Text>
       <ScrollView
         style={{
-          margin: 10,
+          margin: 5,
           borderWidth: 1,
           borderColor: colors.border,
           paddingHorizontal: 10,

@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
   StyleSheet,
@@ -8,25 +15,36 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from 'react-native';
-import { Link, Name, Text, Detail } from './components/typography';
-import { Button, CheckBox } from 'react-native-elements';
-import { useScreenDimensions } from './hooks/layout';
+import {Link, Name, Text, Detail} from './components/typography';
+import {Button, CheckBox} from 'react-native-elements';
+import {useScreenDimensions} from './hooks/layout';
 import {
   RouteProp,
   useIsFocused,
   useNavigation,
   useTheme,
 } from '@react-navigation/native';
-import { Loader } from './components/loader';
-import { ConnectionOptions, useConnectIoTCentralClient } from './hooks/iotc';
-import { NavigationParams, NavigationProperty, StyleDefinition } from './types';
-import QRCodeScanner, { Event } from './components/qrcodeScanner';
+import {Loader} from './components/loader';
+import {
+  ConnectionOptions,
+  useConnectIoTCentralClient,
+  useIoTCentralClient,
+  useSimulation,
+} from './hooks/iotc';
+import {
+  NavigationParams,
+  NavigationProperty,
+  NavigatorRoots,
+  StyleDefinition,
+} from './types';
+import QRCodeScanner, {Event} from './components/qrcodeScanner';
 import Strings from 'strings';
-import { createStackNavigator } from '@react-navigation/stack';
-import Form, { FormItem } from 'components/form';
-import { useBoolean } from 'hooks/common';
-import { Buffer } from 'buffer';
-import { computeKey } from 'react-native-azure-iotcentral-client';
+import {createStackNavigator} from '@react-navigation/stack';
+import Form, {FormItem, FormValues} from 'components/form';
+import {ISetBooleanFunctions, useBoolean, usePrevious} from 'hooks/common';
+import {Buffer} from 'buffer';
+import {computeKey} from 'react-native-azure-iotcentral-client';
+import {StorageContext} from 'contexts';
 
 const Stack = createStackNavigator();
 const screens = {
@@ -36,26 +54,52 @@ const screens = {
 };
 
 export const Registration = React.memo<{
-  route?: RouteProp<
-    Record<string, NavigationParams & { previousScreen?: string }>,
+  route: RouteProp<
+    Record<string, NavigationParams & {previousScreen?: string}>,
     'Registration'
   >;
-  navigation?: any;
-}>(({ navigation: parentNavigation }) => {
-  const { colors } = useTheme();
+  navigation: any;
+}>(({navigation: parentNavigation, route}) => {
+  const {colors} = useTheme();
+  const {clear} = useContext(StorageContext);
+  const [simulated] = useSimulation();
   const [
     connect,
     cancel,
-    { loading, client, error },
+    clearClient,
+    {loading, client, error},
   ] = useConnectIoTCentralClient();
   // const isFocused = useIsFocused();
   const qrCodeRef = useRef<QRCodeScanner>(null);
+  const previousLoading = usePrevious(loading);
+
+  const connectDevice = useCallback(
+    async (values: FormValues) => {
+      if (values.keyType) {
+        if (values.keyType === 'group' && values.deviceId) {
+          // generate deviceKey
+          values['deviceKey'] = computeKey(values.authKey, values.deviceId);
+        } else {
+          values['deviceKey'] = values.authKey;
+        }
+      }
+      await connect(Buffer.from(JSON.stringify(values)).toString('base64'));
+      parentNavigation.navigate(NavigatorRoots.MAIN);
+    },
+    [parentNavigation, connect],
+  );
 
   useEffect(() => {
-    if (client && !loading) {
-      parentNavigation?.navigate('root');
+    if (client && previousLoading && !loading) {
+      parentNavigation?.navigate(NavigatorRoots.MAIN);
     }
-  }, [client, loading, parentNavigation]);
+  }, [client, previousLoading, loading, parentNavigation]);
+
+  useEffect(() => {
+    if (simulated) {
+      parentNavigation?.navigate(NavigatorRoots.MAIN);
+    }
+  }, [simulated, parentNavigation]);
 
   if (error) {
     if (qrCodeRef.current) {
@@ -72,7 +116,7 @@ export const Registration = React.memo<{
             style: 'cancel',
             onPress: () => {
               console.log(`Loading: ${loading}`);
-              cancel({ clear: false });
+              cancel({clear: false});
             },
           },
         ],
@@ -84,7 +128,7 @@ export const Registration = React.memo<{
   }
   if ((!client || !client.isConnected()) && loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center' }}>
+      <View style={{flex: 1, justifyContent: 'center'}}>
         <Loader
           visible={true}
           message={
@@ -94,14 +138,57 @@ export const Registration = React.memo<{
       </View>
     );
   }
+
+  if (client && client.isConnected()) {
+    return (
+      <ManualConnect
+        readonly={true}
+        submit={values => {}}
+        footer={submitForm => (
+          <>
+            <Button
+              type={Platform.select({ios: 'clear', android: 'solid'})}
+              title={Strings.Registration.Manual.RegisterNew.Title}
+              onPress={() => {
+                Alert.alert(
+                  Strings.Registration.Manual.RegisterNew.Alert.Title,
+                  Strings.Registration.Manual.RegisterNew.Alert.Text,
+                  [
+                    {
+                      text: 'Proceed',
+                      onPress: async () => {
+                        // IMPORTANT!: clear stored credentials before cleaning client, otherwise device will continue to re-connect
+                        await client.disconnect();
+                        await clear();
+                        clearClient();
+                      },
+                    },
+                    {
+                      text: 'Cancel',
+                      style: 'cancel',
+                      onPress: () => {},
+                    },
+                  ],
+                  {
+                    cancelable: false,
+                  },
+                );
+              }}
+            />
+            <Button
+              type="clear"
+              title={Strings.Registration.Clear}
+              titleStyle={{color: 'red'}}
+            />
+          </>
+        )}
+      />
+    );
+  }
   return (
     <Stack.Navigator initialRouteName={screens.EMPTY}>
-      <Stack.Screen
-        name={screens.EMPTY}
-        options={{
-          headerShown: false,
-        }}>
-        {({ navigation }) => (
+      <Stack.Screen name={screens.EMPTY} options={{headerShown: false}}>
+        {({navigation}) => (
           <EmptyClient
             navigation={navigation}
             parentNavigation={parentNavigation}
@@ -120,13 +207,24 @@ export const Registration = React.memo<{
       </Stack.Screen>
       <Stack.Screen
         name={screens.MANUAL}
-        options={({ navigation }: { navigation: NavigationProperty }) => {
+        options={({navigation}: {navigation: NavigationProperty}) => {
           return {
             headerTitle: Strings.Registration.Manual.Title,
             headerBackTitle: ' ', // HACK: empty,null or undefined causes library to use screen name.
           };
         }}>
-        {() => <ManualConnect connect={connect} />}
+        {() => (
+          <ManualConnect
+            footer={submitForm => (
+              <Button
+                type={Platform.select({ios: 'clear', android: 'solid'})}
+                title={Strings.Registration.Manual.Footer.Connect}
+                onPress={submitForm.True}
+              />
+            )}
+            submit={connectDevice}
+          />
+        )}
       </Stack.Screen>
     </Stack.Navigator>
   );
@@ -137,9 +235,9 @@ const QRCodeScreen = React.memo<{
     encryptedCredentials: string,
     options?: ConnectionOptions,
   ) => Promise<void>;
-}>(({ connect }) => {
-  const { screen, orientation } = useScreenDimensions();
-  const { navigate } = useNavigation();
+}>(({connect}) => {
+  const {screen, orientation} = useScreenDimensions();
+  const {navigate} = useNavigation();
 
   const onRead = useCallback(
     async (e: Event) => {
@@ -179,15 +277,16 @@ const QRCodeScreen = React.memo<{
 });
 
 const ManualConnect = React.memo<{
-  connect: (
-    encryptedCredentials: string,
-    options?: ConnectionOptions,
-  ) => Promise<void>;
-}>(({ connect }) => {
-  const [checked, setChecked] = useState<'dps' | 'cstring'>('dps');
-  const { orientation } = useScreenDimensions();
-  const [startConnect, setStartConnect] = useBoolean(false);
-  const { navigate } = useNavigation();
+  submit: (values: FormValues) => void | Promise<void>;
+  footer: (sumbitForm: ISetBooleanFunctions) => JSX.Element;
+  readonly?: boolean;
+}>(({submit, footer, readonly}) => {
+  const [, credentials] = useIoTCentralClient();
+  const [checked, setChecked] = useState<'dps' | 'cstring'>(
+    credentials && credentials.connectionString ? 'cstring' : 'dps',
+  );
+  const {orientation} = useScreenDimensions();
+  const [startSubmit, setStartSubmit] = useBoolean(false);
   const style = useMemo<StyleDefinition>(
     () => ({
       container: {
@@ -202,8 +301,8 @@ const ManualConnect = React.memo<{
         flex: 4,
       },
       footer: {
-        paddingTop: 20,
-        marginBottom: 40,
+        paddingTop: 40,
+        marginBottom: 100,
       },
     }),
     [orientation],
@@ -217,31 +316,39 @@ const ManualConnect = React.memo<{
           label: 'Device Id',
           placeHolder: 'Enter a unique ID to identify this device',
           multiline: false,
-          value: 'testdps'
+          readonly,
+          value: credentials?.deviceId,
         },
         {
           id: 'scopeId',
           label: 'ID Scope',
           placeHolder: 'Enter your provisioning service ID',
           multiline: false,
-          value: '0ne00239E49'
+          readonly,
+          value: credentials?.scopeId,
         },
         {
           id: 'keyType',
           choices: [
-            { id: 'group', label: Strings.Registration.Manual.KeyTypes.Group, default: true },
-            { id: 'device', label: Strings.Registration.Manual.KeyTypes.Device }
+            {
+              id: 'group',
+              label: Strings.Registration.Manual.KeyTypes.Group,
+              default: true,
+            },
+            {id: 'device', label: Strings.Registration.Manual.KeyTypes.Device},
           ],
           label: 'Key type',
           multiline: false,
-          value: 'group'
+          readonly,
+          value: credentials?.keyType,
         },
         {
           id: 'authKey',
           label: 'Shared access signature (SAS) key',
           placeHolder: 'Enter or paste SAS key',
           multiline: true,
-          value: 'dFZ70a+BfG4S7FyzBmsY9e5f4f3qCL5JeoQIZ+iTj9Argri7P0uwFFlQZ5sj1q8zFmq2zUdf0wk2+nCFQ1OZzg=='
+          readonly,
+          value: credentials?.authKey,
         },
       ];
     } else {
@@ -251,15 +358,21 @@ const ManualConnect = React.memo<{
           label: 'IoT Hub device connection string',
           placeHolder: 'Enter or paste connection string',
           multiline: true,
+          readonly,
+          value: credentials?.connectionString,
         },
       ];
     }
-  }, [checked]);
+  }, [checked, readonly, credentials]);
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={style.container}>
-      <ScrollView bounces={false} style={style.scroll}>
+      <ScrollView
+        bounces={false}
+        style={style.scroll}
+        keyboardShouldPersistTaps="handled">
         <View style={style.header}>
           <Detail>
             {Strings.Registration.Manual.Header}
@@ -272,16 +385,23 @@ const ManualConnect = React.memo<{
           </Detail>
         </View>
         <View style={style.body}>
-          <Name>{Strings.Registration.Manual.Body.ConnectionType.Title}</Name>
-          <View style={{ flex: 1 }}>
+          <Name>
+            {readonly
+              ? Strings.Registration.Manual.Registered
+              : Strings.Registration.Manual.Body.ConnectionType.Title}
+          </Name>
+          <View style={{flex: 1}}>
             <CheckBox
               containerStyle={{
                 marginStart: 0,
                 backgroundColor: undefined,
                 borderWidth: 0,
               }}
+              disabled={readonly}
               checkedIcon="dot-circle-o"
               uncheckedIcon="circle-o"
+              checkedColor={readonly ? 'gray' : undefined}
+              uncheckedColor={readonly ? 'gray' : undefined}
               checked={checked === 'dps'}
               title={Strings.Registration.Manual.Body.ConnectionType.Dps}
               onPress={() => setChecked('dps')}
@@ -292,59 +412,40 @@ const ManualConnect = React.memo<{
                 backgroundColor: undefined,
                 borderWidth: 0,
               }}
+              disabled={readonly}
               checkedIcon="dot-circle-o"
               uncheckedIcon="circle-o"
+              checkedColor={readonly ? 'gray' : undefined}
+              uncheckedColor={readonly ? 'gray' : undefined}
               checked={checked === 'cstring'}
               title={Strings.Registration.Manual.Body.ConnectionType.CString}
               onPress={() => setChecked('cstring')}
             />
           </View>
-          <View style={{ flex: 2 }}>
+          <View style={{flex: 2}}>
             <Form
               title={Strings.Registration.Manual.Body.ConnectionInfo}
               items={formItems}
-              submit={startConnect}
-              onSubmitting={async values => {
-                console.log(JSON.stringify(values));
-                // TODO: pass object instead of encoded string
-                if (values.keyType) {
-                  if (values.keyType === 'group' && values.deviceId) {
-                    // generate deviceKey
-                    values['deviceKey'] = computeKey(values.authKey, values.deviceId);
-                  }
-                  else {
-                    values['deviceKey'] = values.authKey;
-                  }
-                }
-                console.log(JSON.stringify(values));
-                await connect(
-                  Buffer.from(JSON.stringify(values)).toString('base64'),
-                );
-                navigate('root');
-              }}
+              submit={startSubmit}
+              onSubmitting={submit}
             />
           </View>
         </View>
       </ScrollView>
-
-      <Button
-        type={Platform.select({ ios: 'clear', android: 'solid' })}
-        containerStyle={style.footer}
-        title={Strings.Registration.Manual.Footer.Connect}
-        onPress={setStartConnect.True}
-      />
-    </KeyboardAvoidingView >
+      <View style={style.footer}>{footer(setStartSubmit)}</View>
+    </KeyboardAvoidingView>
   );
 });
 
 const EmptyClient = React.memo<{
   navigation: any;
   parentNavigation: NavigationProperty;
-}>(({ navigation, parentNavigation }) => {
+}>(({navigation, parentNavigation}) => {
   /**
    * ---- UX TWEAK ----
    * All connection screens (qrcode and manual) must run on full screen.
-   * If parent navigator is running, hide headers and footers
+   * If parent navigator is running, hide headers and footers.
+   * For "EmptyClient" screen show immediate parent.
    */
   const isFocused = useIsFocused();
   useEffect(() => {

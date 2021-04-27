@@ -40,13 +40,13 @@
 		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>"Azure IoT Plug and Play" needs access to your camera for scanning QR codes</string>
+	<string>"IoT Plug and Play" needs access to your camera for scanning QR codes</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>"Azure IoT Plug and Play" needs access to your location</string>
+	<string>"IoT Plug and Play" needs access to your location</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>"Azure IoT Plug and Play" wants to access your gallery to upload pictures</string>
+	<string>"IoT Plug and Play" wants to access your gallery to upload pictures</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>FontAwesome.ttf</string>

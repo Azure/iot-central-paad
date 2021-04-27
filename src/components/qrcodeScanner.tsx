@@ -147,7 +147,7 @@ export default class QRCodeScanner
         bottomViewStyle={{
           position: 'absolute',
           zIndex: 2,
-          bottom: 40,
+          bottom: 100,
         }}
         cameraStyle={{height: this.props.height + 20, width: this.props.width}}
       />

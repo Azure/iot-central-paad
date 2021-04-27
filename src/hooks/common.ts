@@ -65,7 +65,7 @@ export interface IUseBooleanCallbacks {
   toggle: () => void;
 }
 
-type ISetBooleanFunctions = {
+export type ISetBooleanFunctions = {
   True: () => void;
   False: () => void;
   Toggle: () => void;
