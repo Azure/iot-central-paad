@@ -3,7 +3,7 @@ const Strings = {
   Core: {
     Close: 'Close',
     Cancel: 'Cancel',
-    Loading: 'Loading...'
+    Loading: 'Loading...',
   },
   Settings: {
     Title: 'Settings',
@@ -35,13 +35,13 @@ const Strings = {
       Alert: {
         Title: 'Do you really want to clear all data?',
         Text:
-          "Proceeding will clear all stored device credentials and user preferences like theme mode and telemetry delivery interval.",
+          'Proceeding will clear all stored device credentials and user preferences like theme mode and telemetry delivery interval.',
       },
       Success: {
         Title: 'Success',
-        Text: 'Successfully cleared data!'
-      }
-    }
+        Text: 'Successfully cleared data!',
+      },
+    },
   },
   Registration: {
     Header:

@@ -1,10 +1,9 @@
 import React from 'react';
-import { Text as ELText, TextProps } from 'react-native-elements';
-import { Dimensions, Platform, PixelRatio } from 'react-native';
-import { useTheme } from '@react-navigation/native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import {Text as ELText, TextProps} from 'react-native-elements';
+import {Dimensions, Platform, PixelRatio} from 'react-native';
+import {useTheme} from '@react-navigation/native';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
 // based on iphone 5s's scale
 const scale = SCREEN_WIDTH / 350;
@@ -23,12 +22,12 @@ export function normalize(size: number) {
 }
 
 export function Headline(props: Props) {
-  const { children, style } = props;
-  const { colors } = useTheme();
+  const {children, style} = props;
+  const {colors} = useTheme();
   return (
     <ELText
       style={[
-        { fontSize: normalize(20), fontWeight: 'bold', color: colors.text },
+        {fontSize: normalize(20), fontWeight: 'bold', color: colors.text},
         style,
       ]}>
       {children}
@@ -37,13 +36,13 @@ export function Headline(props: Props) {
 }
 
 export function Detail(props: Props) {
-  const { children, style } = props;
-  const { colors } = useTheme();
+  const {children, style} = props;
+  const {colors} = useTheme();
 
   return (
     <ELText
       style={[
-        { fontSize: normalize(12), fontStyle: 'normal', color: colors.text },
+        {fontSize: normalize(12), fontStyle: 'normal', color: colors.text},
         style,
       ]}>
       {children}
@@ -52,32 +51,35 @@ export function Detail(props: Props) {
 }
 
 export function Text(props: Props) {
-  const { children, style, ...otherProps } = props;
-  const { colors } = useTheme();
+  const {children, style, ...otherProps} = props;
+  const {colors} = useTheme();
 
   return (
     <ELText
       style={[
-        { fontSize: normalize(14), fontStyle: 'normal', color: colors.text },
+        {fontSize: normalize(14), fontStyle: 'normal', color: colors.text},
         style,
-      ]} {...otherProps}>
+      ]}
+      {...otherProps}>
       {children}
     </ELText>
   );
 }
 
 export function Link(props: Props) {
-  const { children, style, ...otherProps } = props;
-  const { colors } = useTheme();
+  const {children, style, ...otherProps} = props;
+  const {colors} = useTheme();
 
   return (
-    <Text style={[{ color: colors.primary }, style]} {...otherProps}>{children}</Text>
+    <Text style={[{color: colors.primary}, style]} {...otherProps}>
+      {children}
+    </Text>
   );
 }
 
 export function Name(props: Props) {
-  const { children, style } = props;
-  const { colors } = useTheme();
+  const {children, style} = props;
+  const {colors} = useTheme();
 
   return (
     <ELText

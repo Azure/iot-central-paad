@@ -1,4 +1,4 @@
-import { useContext, useState, useRef, useEffect, useCallback } from 'react';
+import {useContext, useState, useRef, useEffect, useCallback} from 'react';
 import {
   DecryptCredentials,
   CancellationToken,
@@ -7,16 +7,16 @@ import {
   IOTC_EVENTS,
   IoTCCredentials,
 } from 'react-native-azure-iotcentral-client';
-import { StorageContext, IoTCContext } from 'contexts';
-import { Debug, EventLogger } from 'tools';
-import { CommonCallback, LOG_DATA } from 'types';
-import { useLogger } from './common';
+import {StorageContext, IoTCContext} from 'contexts';
+import {Debug, EventLogger} from 'tools';
+import {CommonCallback, LOG_DATA} from 'types';
+import {useLogger} from './common';
 
 export function useIoTCentralClient(
   onConnectionRefresh?: (client: IoTCClient) => void | Promise<void>,
 ): [IoTCClient | null, any, () => void] {
-  const { client, setClient } = useContext(IoTCContext);
-  const { credentials } = useContext(StorageContext);
+  const {client, setClient} = useContext(IoTCContext);
+  const {credentials} = useContext(StorageContext);
   const previousConnectionStatus = useRef(false);
 
   const clear = useCallback(() => {
@@ -63,16 +63,14 @@ export type ConnectionOptions = {
  */
 export function useConnectIoTCentralClient(): [
   (credentialsData: any, options?: ConnectionOptions) => Promise<void>,
-  (options?: { clear: boolean }) => void,
+  (options?: {clear: boolean}) => void,
   () => void,
-  { loading: boolean; client: IoTCClient | null; error: any },
+  {loading: boolean; client: IoTCClient | null; error: any},
 ] {
-  const { client, connecting, setConnecting, setClient } = useContext(
+  const {client, connecting, setConnecting, setClient} = useContext(
     IoTCContext,
   );
-  const { save: saveCredentials } = useContext(
-    StorageContext,
-  );
+  const {save: saveCredentials} = useContext(StorageContext);
   const [error, setError] = useState<any>(null);
   const connectRequest = useRef(new CancellationToken());
   const eventLogger = useRef(new EventLogger(LOG_DATA));
@@ -114,7 +112,7 @@ export function useConnectIoTCentralClient(): [
       }
       // iotc.setLogging(IOTC_LOGGING.ALL);
       try {
-        iotc.on(IOTC_EVENTS.Properties, () => { });
+        iotc.on(IOTC_EVENTS.Properties, () => {});
         await iotc.connect({
           cleanSession: false,
           timeout: 30,
@@ -143,15 +141,14 @@ export function useConnectIoTCentralClient(): [
         let credentials;
         if (options && options.restore) {
           credentials = credentialsData;
-        }
-        else {
+        } else {
           credentials = DecryptCredentials(
             credentialsData,
             options?.encryptionKey,
           );
         }
         await _connect_internal(credentials);
-        await saveCredentials({ credentials });
+        await saveCredentials({credentials});
       } catch (err) {
         setError(err);
         throw err;
@@ -161,12 +158,12 @@ export function useConnectIoTCentralClient(): [
   );
 
   const cancel = useCallback(
-    async (options?: { clear: boolean }) => {
+    async (options?: {clear: boolean}) => {
       connectRequest.current?.cancel();
       // cleanup any credentials
       if (options?.clear) {
         //clear current credentials. connection will start over
-        await saveCredentials({ credentials: null }, options.clear);
+        await saveCredentials({credentials: null}, options.clear);
       }
       if (connecting) {
         setConnecting(false);
@@ -174,7 +171,6 @@ export function useConnectIoTCentralClient(): [
     },
     [connecting, setConnecting, saveCredentials],
   );
-
 
   useEffect(() => {
     const currentEventLog = eventLogger.current;
@@ -202,10 +198,10 @@ export function useConnectIoTCentralClient(): [
 }
 
 export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
-  const { save, simulated } = useContext(StorageContext);
+  const {save, simulated} = useContext(StorageContext);
 
   const setSimulated = async (simulated: boolean) => {
-    save({ simulated });
+    save({simulated});
   };
   return [simulated, setSimulated];
 }
@@ -214,10 +210,10 @@ export function useDeliveryInterval(): [
   number,
   (interv: number) => Promise<void>,
 ] {
-  const { deliveryInterval, save } = useContext(StorageContext);
+  const {deliveryInterval, save} = useContext(StorageContext);
   const setDeliveryInterval = useCallback(
     async (delInterval: number) => {
-      await save({ deliveryInterval: delInterval });
+      await save({deliveryInterval: delInterval});
     },
     [save],
   );
