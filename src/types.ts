@@ -1,4 +1,4 @@
-import {StackNavigationProp} from '@react-navigation/stack';
+import { StackNavigationProp } from '@react-navigation/stack';
 import {
   GestureResponderEvent,
   StyleProp,
@@ -10,7 +10,7 @@ import {
   LineValue,
   LineDatasetConfig,
 } from 'react-native-charts-wrapper';
-import {IconProps} from 'react-native-elements';
+import { IconProps } from 'react-native-elements';
 
 export const Screens = {
   TELEMETRY_SCREEN: 'Telemetry',
@@ -45,7 +45,9 @@ export type NavigationParams = {
     name: string;
     type: string;
   };
+  previousScreen?: string;
 };
+
 
 // Type for getting the values of an object (lookup)
 export type valueof<T> = T[keyof T];
@@ -75,10 +77,6 @@ export type NavigationPages = {
 
 export type PagesNavigator = StackNavigationProp<NavigationPages, PagesNames>;
 
-export const NavigatorRoots = {
-  MAIN: 'ROOT',
-  SETTINGS: 'SETTINGS',
-};
 
 /**
  * ------- END NAVIGATION ----------
@@ -89,16 +87,16 @@ export const NavigatorRoots = {
  */
 export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
 
-export type LogItem = {eventName: string; eventData: string};
-export type TimedLog = {timestamp: number | string; logItem: LogItem}[];
+export type LogItem = { eventName: string; eventData: string };
+export type TimedLog = { timestamp: number | string; logItem: LogItem }[];
 
-export type StyleDefinition = {[x: string]: StyleProp<ViewStyle | TextStyle>};
+export type StyleDefinition = { [x: string]: StyleProp<ViewStyle | TextStyle> };
 
 /**
  * Chart typings
  */
 
-export type CustomLineDatasetConfig = LineDatasetConfig & {rgbcolor: string};
+export type CustomLineDatasetConfig = LineDatasetConfig & { rgbcolor: string };
 export interface ExtendedLineData extends LineData {
   dataSets: {
     itemId: string;

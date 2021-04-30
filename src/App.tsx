@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useContext } from 'react';
 import { View, Platform, Alert } from 'react-native';
 import Settings from './Settings';
 import {
@@ -22,9 +22,9 @@ import {
   SET_FREQUENCY_COMMAND,
   ItemProps,
   LIGHT_TOGGLE_COMMAND,
-  NavigatorRoots,
   Pages,
   PagesNavigator,
+  NavigationPages,
   // ChartType,
 } from 'types';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -33,16 +33,18 @@ import {
   StorageProvider,
   IoTCProvider,
   ThemeProvider,
+  StorageContext,
 } from 'contexts';
 import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';
 import LogoDark from './assets/IoT-Plug-And-Play_Light.svg';
 import { Icon } from 'react-native-elements';
-import { createStackNavigator, HeaderTitle } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { Text } from './components/typography';
 import { Welcome } from './Welcome';
 import Logs from './Logs';
 import {
   IIcon,
+  useConnectIoTCentralClient,
   useDeliveryInterval,
   useIoTCentralClient,
   useLogger,
@@ -68,9 +70,10 @@ import Chart from 'Chart';
 import Strings, { resolveString } from 'strings';
 import { Option } from 'components/options';
 import Options from 'components/options';
+import HeaderCloseButton from 'components/headerCloseButton'
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<NavigationPages>();
 
 export default function App() {
   const [initialized, setInitialized] = useState(false);
@@ -99,42 +102,51 @@ export default function App() {
 const Navigation = React.memo(() => {
   const { mode, type: themeType, setThemeMode } = useThemeMode();
   const [simulated] = useSimulation();
-  const [iotcentralClient] = useIoTCentralClient();
+  const { credentials, initialized } = useContext(StorageContext);
   const [deliveryInterval, setDeliveryInterval] = useDeliveryInterval();
+  const [connect, , , { client, loading }] = useConnectIoTCentralClient();
+
+  useEffect(() => {
+    if (credentials && initialized && !client) {
+      connect(credentials, { restore: true });
+    }
+  }, [credentials, initialized]);
 
   return (
     <NavigationContainer theme={mode === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack.Navigator
-        initialRouteName={
-          !simulated && iotcentralClient === null
-            ? Pages.REGISTRATION
-            : Pages.ROOT
-        }
-        screenOptions={{ gestureEnabled: false }}
+        initialRouteName={(simulated || client) ? Pages.ROOT : Pages.REGISTRATION}
+        screenOptions={({ navigation, route }) => {
+          const defaultOptions = { gestureEnabled: false, headerBackTitleVisible: false };
+          if (route.name === Pages.ROOT || (route.name === Pages.REGISTRATION && !route.params?.previousScreen)) {
+            return {
+              ...defaultOptions,
+              headerTitle: () => null,
+              headerLeft: () => <Logo />,
+              headerRight: () => <Profile navigate={navigation.navigate} />
+            }
+          }
+          return defaultOptions;
+        }}
       >
         {/* @ts-ignore */}
         <Stack.Screen
-          name={NavigatorRoots.MAIN}
+          name={Pages.ROOT}
           component={Root}
-          options={({ navigation }: { navigation: NavigationProperty }) => ({
-            headerTitle: () => null,
-            headerLeft: () => <Logo />,
-            headerRight: () => <Profile navigate={navigation.navigate} />,
-          })}
         />
         <Stack.Screen
           name={Pages.REGISTRATION}
           component={Registration}
-          options={({ route, navigation }) => {
-            if (!route.params || !(route.params as any).previousScreen) {
-              return {
-                headerTitle: () => null,
-                headerLeft: () => <Logo />,
-                headerRight: () => <Profile navigate={navigation.navigate} />,
-              };
-            }
-            return {};
-          }}
+        // options={({ route, navigation }) => {
+        //   if (!route.params || !(route.params as any).previousScreen) {
+        //     return {
+        //       headerTitle: () => null,
+        //       headerLeft: () => <Logo />,
+        //       headerRight: () => <Profile navigate={navigation.navigate} />,
+        //     };
+        //   }
+        //   return {};
+        // }}
         // options={({ navigation }: { navigation: NavigationProperty }) => {
         //   return {
         //     stackAnimation: 'flip',
@@ -168,17 +180,17 @@ const Navigation = React.memo(() => {
         />
         <Stack.Screen
           name={Pages.SETTINGS}
-          options={({ navigation }: { navigation: NavigationProperty }) => ({
-            stackAnimation: 'flip',
-            headerTitle: Platform.select({
-              ios: undefined,
-              android: '',
-            }),
-            headerLeft: () => (
-              <BackButton goBack={navigation.goBack} title={Pages.SETTINGS} />
-            ),
-            headerRight: () => null,
-          })}
+          // options={({ navigation }: { navigation: NavigationProperty }) => ({
+          //   stackAnimation: 'flip',
+          //   headerTitle: Platform.select({
+          //     ios: undefined,
+          //     android: '',
+          //   }),
+          //   headerLeft: () => (
+          //     <BackButton goBack={navigation.goBack} title={Pages.SETTINGS} />
+          //   ),
+          //   headerRight: () => null,
+          // })}
           component={Settings}
         />
         <Stack.Screen
@@ -190,7 +202,7 @@ const Navigation = React.memo(() => {
               android: '',
             }),
             headerLeft: () => (
-              <BackButton goBack={navigation.goBack} title={Pages.SETTINGS} />
+              <HeaderCloseButton goBack={navigation.goBack} title={Pages.SETTINGS} />
             ),
           })}>
           {() => (
@@ -228,7 +240,7 @@ const Navigation = React.memo(() => {
               android: '',
             }),
             headerLeft: () => (
-              <BackButton goBack={navigation.goBack} title={Pages.SETTINGS} />
+              <HeaderCloseButton goBack={navigation.goBack} title={Pages.SETTINGS} />
             ),
           })}>
           {() => (
@@ -263,6 +275,7 @@ const Navigation = React.memo(() => {
           )}
         </Stack.Screen>
       </Stack.Navigator>
+      <Loader visible={loading} modal={true} message={Strings.Registration.Connection.Loading} />
     </NavigationContainer>
   );
 });
@@ -276,7 +289,6 @@ const Root = React.memo<{
 }>(({ navigation }) => {
   const [, append] = useLogger();
   const [sensors, addSensorListener, removeSensorListener] = useSensors();
-  const [simulated] = useSimulation();
   // const [healths, addHealthListener, removeHealthListener] = useHealth();
   const {
     loading: propertiesLoading,
@@ -297,12 +309,6 @@ const Root = React.memo<{
     [properties],
   );
   const [iotcentralClient] = useIoTCentralClient(onConnectionRefresh);
-  // const { connect, addListener, removeListener } = useContext(IoTCContext);
-  // const { append } = useContext(LogsContext);
-
-  // const prevCredentials = usePrevious(credentials);
-
-  // connect client if credentials are retrieved
 
   const iconsRef = useRef<{ [x in ScreenNames]: IIcon }>({
     [Screens.TELEMETRY_SCREEN]: Platform.select({
@@ -444,6 +450,7 @@ const Root = React.memo<{
     const currentSensorRef = sensorRef.current;
     // const currentHealthRef = healthRef.current;
     if (iotcentralClient) {
+      console.log('Device just connected');
       currentSensorRef.forEach(s =>
         addSensorListener(s.id, DATA_AVAILABLE_EVENT, sendTelemetryHandler),
       );
@@ -468,6 +475,13 @@ const Root = React.memo<{
       iotcentralClient.on(IOTC_EVENTS.Properties, onPropUpdate);
       iotcentralClient.fetchTwin();
     }
+    else {
+      // device has been disconnected. reset to registration
+      navigation.reset({
+        index: 1, // as per issue: https://github.com/react-navigation/react-navigation/issues/7839
+        routes: [{ name: Pages.REGISTRATION }]
+      });
+    }
 
     return () => {
       currentSensorRef.forEach(s =>
@@ -490,11 +504,6 @@ const Root = React.memo<{
     sendTelemetryHandler,
   ]);
 
-  useEffect(() => {
-    if (!simulated && !iotcentralClient) {
-      navigation.push(Pages.REGISTRATION);
-    }
-  }, [navigation, simulated, iotcentralClient]);
 
   return (
     <Tab.Navigator
@@ -592,6 +601,7 @@ const Root = React.memo<{
   );
 });
 
+
 const getCardView = (items: ItemProps[], name: string, detail: boolean) => ({
   navigation,
 }: {
@@ -671,18 +681,6 @@ const Profile = React.memo((props: { navigate: any }) => {
   );
 });
 
-const BackButton = React.memo((props: { goBack: any; title: string }) => {
-  const { colors } = useTheme();
-  const { goBack, title } = props;
-  return (
-    <View style={{ flexDirection: 'row', marginLeft: 10, alignItems: 'center' }}>
-      <Icon name="close" color={colors.text} onPress={goBack} />
-      {Platform.OS === 'android' && (
-        <HeaderTitle style={{ marginLeft: 20 }}>{title}</HeaderTitle>
-      )}
-    </View>
-  );
-});
 
 const TabBarIcon = React.memo<{ icon: IIcon; color: string; size: number }>(
   ({ icon, color, size }) => {

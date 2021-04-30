@@ -1,7 +1,8 @@
-import {StorageContext, ThemeContext} from 'contexts';
-import {useState, useEffect, useCallback, useContext, useMemo} from 'react';
-import {Appearance, Dimensions, ScaledSize} from 'react-native';
-import {ThemeMode} from 'types';
+import { StorageContext, ThemeContext } from 'contexts';
+import { useState, useEffect, useCallback, useContext, useMemo } from 'react';
+import { Appearance, Dimensions, ScaledSize } from 'react-native';
+import { Debug } from 'tools/CustomLogger';
+import { ThemeMode } from 'types';
 
 type Orientation = 'portrait' | 'landscape';
 function getOrientation(width: number, height: number): Orientation {
@@ -18,7 +19,7 @@ export function useScreenDimensions() {
   );
 
   const onChange = useCallback(
-    (result: {window: ScaledSize; screen: ScaledSize}) => {
+    (result: { window: ScaledSize; screen: ScaledSize }) => {
       setScreenData(result.window);
       const currentOrientation = getOrientation(
         result.window.width,
@@ -37,15 +38,16 @@ export function useScreenDimensions() {
       Dimensions.removeEventListener('change', onChange);
     };
   }, [orientation, onChange]);
-  return {screen: screenData, orientation};
+  return { screen: screenData, orientation };
 }
 
 export function useThemeMode() {
-  const {mode, set} = useContext(ThemeContext);
-  const {themeMode, save} = useContext(StorageContext);
+  const { mode, set } = useContext(ThemeContext);
+  const { themeMode, save } = useContext(StorageContext);
 
   // if storage changes thememode, let apply to themecontext
   useEffect(() => {
+    Debug(`Theme changed in storage. Now ${ThemeMode[themeMode]}.`, 'useThemeMode Hook', 'layout.ts:50');
     set(themeMode);
   }, [themeMode, set]);
 
@@ -53,7 +55,7 @@ export function useThemeMode() {
     async (modeStr: string) => {
       const theme = ThemeMode[modeStr as keyof typeof ThemeMode];
       set(theme);
-      await save({themeMode: theme});
+      await save({ themeMode: theme });
     },
     [set, save],
   );
@@ -69,5 +71,5 @@ export function useThemeMode() {
         return str;
     }
   }, [mode]);
-  return {mode: strMode, type: ThemeMode[mode].toString(), setThemeMode};
+  return { mode: strMode, type: ThemeMode[mode].toString(), setThemeMode };
 }
