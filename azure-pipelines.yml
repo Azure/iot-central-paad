@@ -105,8 +105,8 @@ jobs:
   - task: Bash@3
     inputs:
       targetType: 'inline'
-      script: 'echo "hello" > output/package/test.txt'
-      
+      script: 'mkdir -p output/package && echo "hello" > output/package/test.txt'
+
   - task: EsrpCodeSigning@1
     inputs:
       ConnectedServiceName: 'IoT PnP PaaD'
