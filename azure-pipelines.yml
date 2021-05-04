@@ -110,7 +110,7 @@ jobs:
   - task: EsrpCodeSigning@1
     inputs:
       ConnectedServiceName: 'IoT PnP PaaD'
-      FolderPath: 'output\package'
+      FolderPath: 'output/package'
       Pattern: '*.txt'
       signConfigType: 'inlineSignParams'
       inlineOperation: |
