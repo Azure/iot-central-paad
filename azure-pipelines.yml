@@ -102,12 +102,16 @@ jobs:
   #     provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
   #     xcodeVersion: 'specifyPath'
   #     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
-  
+  - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: 'echo "hello" > output/package/test.txt'
+      
   - task: EsrpCodeSigning@1
     inputs:
       ConnectedServiceName: 'IoT PnP PaaD'
       FolderPath: 'output\package'
-      Pattern: '*.ipa'
+      Pattern: '*.txt'
       signConfigType: 'inlineSignParams'
       inlineOperation: |
         [
