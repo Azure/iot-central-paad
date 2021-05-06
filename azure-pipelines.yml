@@ -61,57 +61,53 @@ jobs:
 - job: iOS
   timeoutInMinutes: 90
   steps:
-  # - task: NodeTool@0
-  #   inputs:
-  #     versionSpec: '12.18.4'
-  #   displayName: 'Install Node'
-
-  # - script: npm install
-  #   workingDirectory: .
-  #   displayName: 'Install node dependencies'
-  
-  # - task: InstallAppleCertificate@2
-  #   displayName: "Install Apple Certificate"
-  #   inputs:
-  #     certSecureFile: '$(Certificate_Name)'
-  #     certPwd: '$(Certificate_Password)'
-
-  # - task: InstallAppleProvisioningProfile@1
-  #   displayName: "Install Apple provisioning profile"
-  #   inputs:
-  #     provisioningProfileLocation: 'secureFiles'
-  #     provProfileSecureFile: '$(Provisioning_Profile)'
-
-  # - task: ShellScript@2
-  #   inputs:
-  #     scriptPath: 'bumpVersion.sh'
-
-  # - task: Xcode@5
-  #   displayName: "Build Mobile Application"
-  #   inputs:
-  #     actions: 'build'
-  #     configuration: 'Release'
-  #     xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
-  #     scheme: '$(Project_Name)'
-  #     sdk: 'iphoneos14.4'
-  #     packageApp: true
-  #     exportPath: 'output/package'
-  #     archivePath: 'output/archive'
-  #     signingOption: 'manual'
-  #     signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
-  #     provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
-  #     xcodeVersion: 'specifyPath'
-  #     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
-  - task: Bash@3
+  - task: NodeTool@0
     inputs:
-      targetType: 'inline'
-      script: 'mkdir -p output/package && echo "hello" > output/package/test.txt'
+      versionSpec: '12.18.4'
+    displayName: 'Install Node'
+
+  - script: npm install
+    workingDirectory: .
+    displayName: 'Install node dependencies'
+  
+  - task: InstallAppleCertificate@2
+    displayName: "Install Apple Certificate"
+    inputs:
+      certSecureFile: '$(Certificate_Name)'
+      certPwd: '$(Certificate_Password)'
+
+  - task: InstallAppleProvisioningProfile@1
+    displayName: "Install Apple provisioning profile"
+    inputs:
+      provisioningProfileLocation: 'secureFiles'
+      provProfileSecureFile: '$(Provisioning_Profile)'
+
+  - task: ShellScript@2
+    inputs:
+      scriptPath: 'bumpVersion.sh'
+
+  - task: Xcode@5
+    displayName: "Build Mobile Application"
+    inputs:
+      actions: 'build'
+      configuration: 'Release'
+      xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
+      scheme: '$(Project_Name)'
+      sdk: 'iphoneos14.4'
+      packageApp: true
+      exportPath: 'output/package'
+      archivePath: 'output/archive'
+      signingOption: 'nosign'
+      signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+      provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+      xcodeVersion: 'specifyPath'
+      xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
 
   - task: EsrpCodeSigning@1
     inputs:
       ConnectedServiceName: 'IoT PnP PaaD'
       FolderPath: 'output/package'
-      Pattern: '*.txt'
+      Pattern: '*.ipa'
       signConfigType: 'inlineSignParams'
       inlineOperation: |
         [
@@ -127,9 +123,9 @@ jobs:
       MaxConcurrency: '50'
       MaxRetryAttempts: '5'
 
-  # - task: PublishBuildArtifacts@1
-  #   displayName: "Publish Build Artifact"
-  #   inputs:
-  #     PathtoPublish: 'output/package/$(Project_Name).ipa'
-  #     ArtifactName: 'ios'
-  #     publishLocation: 'Container'
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifact"
+    inputs:
+      PathtoPublish: 'output/package/$(Project_Name).ipa'
+      ArtifactName: 'ios'
+      publishLocation: 'Container'
