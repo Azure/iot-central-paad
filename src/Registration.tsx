@@ -110,18 +110,6 @@ export const Registration = React.memo<{
       );
     }
   }
-  // if ((!client || !client.isConnected()) && loading) {
-  //   return (
-  //     <View style={{ flex: 1, justifyContent: 'center' }}>
-  //       <Loader
-  //         visible={true}
-  //         message={
-  //           loading ? Strings.Registration.Connection.Loading : 'Loading...'
-  //         }
-  //       />
-  //     </View>
-  //   );
-  // }
 
   return (
     <Stack.Navigator
