@@ -148,15 +148,16 @@ export function useConnectIoTCentralClient(): [
             credentialsData,
             options?.encryptionKey,
           );
+          console.log(credentials);
         }
         await _connect_internal(credentials);
         await saveCredentials({ credentials });
       } catch (err) {
         setError(err);
-        throw err;
+        setConnecting(false);
       }
     },
-    [setConnecting, _connect_internal, saveCredentials],
+    [setConnecting, connecting, _connect_internal, saveCredentials],
   );
 
   const cancel = useCallback(
@@ -170,8 +171,11 @@ export function useConnectIoTCentralClient(): [
       if (connecting) {
         setConnecting(false);
       }
+      if (error) {
+        setError(null);
+      }
     },
-    [connecting, setConnecting, saveCredentials],
+    [connecting, error, setError, setConnecting, saveCredentials],
   );
 
   useEffect(() => {
