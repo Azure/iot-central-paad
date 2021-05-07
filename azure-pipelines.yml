@@ -69,7 +69,12 @@ jobs:
   - script: npm install
     workingDirectory: .
     displayName: 'Install node dependencies'
-  
+
+  - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
+    workingDirectory: .
+    displayName: 'Increment version in package.json'
+
+
   - task: InstallAppleCertificate@2
     displayName: "Install Apple Certificate"
     inputs:
@@ -98,6 +103,7 @@ jobs:
       exportPath: 'output/package'
       archivePath: 'output/archive'
       signingOption: 'nosign'
+      teamId: 'UBF8T346G9'
       signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
       provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
       xcodeVersion: 'specifyPath'

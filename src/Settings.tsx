@@ -1,28 +1,30 @@
-import {useCallback, useContext, useMemo} from 'react';
-import {ThemeContext} from './contexts/theme';
+import { useCallback, useContext, useMemo } from 'react';
+import { ThemeContext } from './contexts/theme';
 import React from 'react';
-import {View, Switch, ScrollView, Platform, Alert} from 'react-native';
-import {useTheme, useNavigation} from '@react-navigation/native';
-import {Icon, ListItem} from 'react-native-elements';
+import { View, Switch, ScrollView, Platform, Alert } from 'react-native';
+import { useTheme, useNavigation } from '@react-navigation/native';
+import { Icon, ListItem } from 'react-native-elements';
 import {
   useDeliveryInterval,
   useIoTCentralClient,
   useSimulation,
 } from './hooks/iotc';
-import {defaults} from './contexts/defaults';
-import {StorageContext} from './contexts/storage';
-import {LogsContext} from './contexts/logs';
+import { defaults } from './contexts/defaults';
+import { StorageContext } from './contexts/storage';
+import { LogsContext } from './contexts/logs';
 import Strings from 'strings';
-import {camelToName} from 'components/typography';
-import {useBoolean} from 'hooks/common';
-import {Pages, PagesNavigator, ThemeMode} from 'types';
-import {Loader} from 'components/loader';
+import { camelToName, Text } from 'components/typography';
+import { useBoolean } from 'hooks/common';
+import { Pages, PagesNavigator, ThemeMode } from 'types';
+import { Loader } from 'components/loader';
+
+const pkg = require('../package.json');
 
 type ProfileItem = {
   title: string;
   subtitle?: string;
-  icon: string;
-  value?: boolean;
+  icon?: string;
+  value?: boolean | string;
   action?: {
     type: 'switch' | 'expand' | 'select';
     fn: (...args: any) => void;
@@ -30,12 +32,12 @@ type ProfileItem = {
 };
 
 export default function Settings() {
-  const {clear} = useContext(StorageContext);
-  const {clear: clearLogs} = useContext(LogsContext);
+  const { clear } = useContext(StorageContext);
+  const { clear: clearLogs } = useContext(LogsContext);
   const [client, , clearClient] = useIoTCentralClient();
   const [centralSimulated, simulate] = useSimulation();
-  const {mode} = useContext(ThemeContext);
-  const {colors, dark} = useTheme();
+  const { mode } = useContext(ThemeContext);
+  const { colors, dark } = useTheme();
   const [deliveryInterval] = useDeliveryInterval();
   const [loading, setLoading] = useBoolean(false);
 
@@ -63,7 +65,7 @@ export default function Settings() {
         {
           text: 'Cancel',
           style: 'cancel',
-          onPress: () => {},
+          onPress: () => { },
         },
       ],
       {
@@ -103,7 +105,7 @@ export default function Settings() {
         action: {
           type: 'expand',
           fn: navigation => {
-            navigation.navigate('Theme', {previousScreen: 'root'});
+            navigation.navigate('Theme', { previousScreen: 'root' });
           },
         },
       },
@@ -112,36 +114,40 @@ export default function Settings() {
         icon: 'timer-outline',
         subtitle: camelToName(
           Strings.Settings.DeliveryInterval[
-            `${deliveryInterval}` as keyof typeof Strings.Settings.DeliveryInterval
+          `${deliveryInterval}` as keyof typeof Strings.Settings.DeliveryInterval
           ],
         ),
         action: {
           type: 'expand',
           fn: navigation => {
-            navigation.navigate('Interval', {previousScreen: 'root'});
+            navigation.navigate('Interval', { previousScreen: 'root' });
           },
         },
       },
       ...(defaults.dev
         ? [
-            {
-              title: 'Simulation Mode',
-              icon: dark ? 'sync-outline' : 'sync',
-              action: {
-                type: 'switch',
-                fn: async val => {
-                  await simulate(val);
-                },
+          {
+            title: 'Simulation Mode',
+            icon: dark ? 'sync-outline' : 'sync',
+            action: {
+              type: 'switch',
+              fn: async val => {
+                await simulate(val);
               },
-              value: centralSimulated,
-            } as ProfileItem,
-          ]
+            },
+            value: centralSimulated,
+          } as ProfileItem,
+        ]
         : []),
+      {
+        title: 'Version',
+        value: pkg.version
+      }
     ],
     [deliveryInterval, mode, centralSimulated, dark, simulate, clearStorage],
   );
   return (
-    <View style={{flex: 1, marginVertical: 10}}>
+    <View style={{ flex: 1, marginVertical: 10 }}>
       <Root items={items} colors={colors} dark={dark} />
       <Loader visible={loading} message={Strings.Core.Loading} modal={true} />
     </View>
@@ -152,7 +158,7 @@ const RightElement = React.memo<{
   item: ProfileItem;
   colors: any;
   dark: boolean;
-}>(({item, colors, dark}) => {
+}>(({ item, colors, dark }) => {
   const [enabled, setEnabled] = useBoolean(item.value as boolean);
   if (item.action && item.action.type === 'switch') {
     return (
@@ -166,9 +172,9 @@ const RightElement = React.memo<{
           thumbColor: item.value
             ? colors.primary
             : dark
-            ? colors.text
-            : colors.background,
-          trackColor: {true: colors.border, false: colors.border},
+              ? colors.text
+              : colors.background,
+          trackColor: { true: colors.border, false: colors.border },
         })}
       />
     );
@@ -176,34 +182,36 @@ const RightElement = React.memo<{
   return null;
 });
 
-const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
-  ({items, colors, dark}) => {
+const Root = React.memo<{ items: ProfileItem[]; colors: any; dark: boolean }>(
+  ({ items, colors, dark }) => {
     const nav = useNavigation<PagesNavigator>();
     return (
-      <ScrollView style={{flex: 1}}>
+      <ScrollView style={{ flex: 1 }}>
         {items.map((item, index) => (
           <ListItem
             key={`setting-${index}`}
             bottomDivider
-            containerStyle={{backgroundColor: colors.card}}
+            containerStyle={{ backgroundColor: colors.card }}
             onPress={
               item.action && item.action.type !== 'switch'
                 ? item.action.fn.bind(null, nav)
                 : undefined
             }>
-            <Icon name={item.icon} type="ionicon" color={colors.text} />
+            {item.icon && <Icon name={item.icon} type="ionicon" color={colors.text} />}
             <ListItem.Content>
-              <ListItem.Title style={{color: colors.text}}>
+              <ListItem.Title style={{ color: colors.text }}>
                 {item.title}
               </ListItem.Title>
               {item.subtitle && (
                 <ListItem.Subtitle>{item.subtitle}</ListItem.Subtitle>
               )}
             </ListItem.Content>
-            <RightElement item={item} colors={colors} dark={dark} />
-            {item.action && item.action.type === 'expand' && (
-              <ListItem.Chevron />
-            )}
+            {item.action && <>
+              <RightElement item={item} colors={colors} dark={dark} />
+              {item.action.type === 'expand' && (
+                <ListItem.Chevron />
+              )}</>}
+            {item.value && typeof (item.value) === 'string' && <Text>{item.value}</Text>}
           </ListItem>
         ))}
       </ScrollView>

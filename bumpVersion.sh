@@ -29,7 +29,7 @@ echo "Build Name: $BUILD_NAME"
 echo "Version Name: $CUSTOM_MARKETING"
 
 
-if [ "$AGENT_OS" == "Darwin" ]
+if [ "$AGENT_OS" == "Darwin" ] # iOS build
 then
 # iOS
     cd ios
