@@ -14,7 +14,7 @@ variables:
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
-esp# - job: Android
+- job: Android
 #   steps:
 #   - task: NodeTool@0
 #     inputs:
