@@ -105,7 +105,6 @@ jobs:
       signingOption: 'nosign'
       exportOptions: 'specify'
       exportMethod: 'app-store'
-      exportTeamId: 'UBF8T346G9'
       provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
       xcodeVersion: 'specifyPath'
       xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
