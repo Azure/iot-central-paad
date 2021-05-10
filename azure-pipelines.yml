@@ -122,7 +122,7 @@ jobs:
       TargetFolder: 'output/package'
       flattenFolders: true
 
-  - task: ArchiveFile@2
+  - task: ArchiveFiles@2
     displayName: 'Create zip for signing'
     inputs:
       rootFolderOrFile: 'output/package'
