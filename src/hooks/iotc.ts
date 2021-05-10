@@ -206,9 +206,9 @@ export function useConnectIoTCentralClient(): [
 export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
   const { save, simulated } = useContext(StorageContext);
 
-  const setSimulated = async (simulated: boolean) => {
-    save({ simulated });
-  };
+  const setSimulated = useCallback(async (simulated: boolean) => {
+    await save({ simulated });
+  }, [save]);
   return [simulated, setSimulated];
 }
 

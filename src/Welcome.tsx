@@ -1,15 +1,15 @@
-import React, {useEffect, useCallback, useContext, useMemo} from 'react';
-import {View} from 'react-native';
+import React, { useEffect, useCallback, useContext, useMemo } from 'react';
+import { View } from 'react-native';
 import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';
 import LogoDark from './assets/IoT-Plug-And-Play_Light.svg';
 import * as Animatable from 'react-native-animatable';
-import {defaults} from './contexts/defaults';
+import { defaults } from './contexts/defaults';
 import DeviceInfo from 'react-native-device-info';
-import {StateUpdater, StyleDefinition, ThemeMode} from './types';
+import { StateUpdater, StyleDefinition, ThemeMode } from './types';
 import ProgressCircleSnail from 'react-native-progress/CircleSnail';
-import {useScreenDimensions} from './hooks/layout';
-import {StorageContext, ThemeContext} from 'contexts';
-import {Name} from 'components/typography';
+import { useScreenDimensions } from './hooks/layout';
+import { StorageContext, ThemeContext } from 'contexts';
+import { Name } from 'components/typography';
 
 const animations = {
   slideOutLogo: {
@@ -36,10 +36,10 @@ export function Welcome(props: {
   title: string;
   setInitialized: StateUpdater<boolean>;
 }) {
-  const {setInitialized, title} = props;
-  const {read, initialized} = useContext(StorageContext);
-  const {screen} = useScreenDimensions();
-  const {mode, theme} = useContext(ThemeContext);
+  const { setInitialized, title } = props;
+  const { read, initialized } = useContext(StorageContext);
+  const { screen } = useScreenDimensions();
+  const { mode, theme } = useContext(ThemeContext);
 
   const style = useMemo<StyleDefinition>(
     () => ({
@@ -54,6 +54,7 @@ export function Welcome(props: {
       },
       name: {
         color: theme.textColor,
+        fontSize: 20
       },
       spinner: {
         marginTop: 50,

@@ -131,7 +131,7 @@ export default function Settings() {
             icon: dark ? 'sync-outline' : 'sync',
             action: {
               type: 'switch',
-              fn: async val => {
+              fn: async (val) => {
                 await simulate(val);
               },
             },
@@ -185,6 +185,23 @@ const RightElement = React.memo<{
 const Root = React.memo<{ items: ProfileItem[]; colors: any; dark: boolean }>(
   ({ items, colors, dark }) => {
     const nav = useNavigation<PagesNavigator>();
+    const [simulated] = useSimulation();
+
+    React.useEffect(
+      () =>
+        nav.addListener('beforeRemove', (e) => {
+          // Prevent default behavior of leaving the screen
+          e.preventDefault();
+          if (simulated) {
+            nav.navigate(Pages.ROOT);
+          }
+          else {
+            nav.dispatch(e.data.action);
+          }
+
+        }),
+      [nav, simulated]
+    );
     return (
       <ScrollView style={{ flex: 1 }}>
         {items.map((item, index) => (

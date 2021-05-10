@@ -15,8 +15,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from 'react-native';
-import { Link, Name, Text, Detail } from './components/typography';
-import { Button, CheckBox } from 'react-native-elements';
 import { useScreenDimensions } from './hooks/layout';
 import {
   getFocusedRouteNameFromRoute,
@@ -24,8 +22,7 @@ import {
   useNavigation,
   useTheme,
 } from '@react-navigation/native';
-import { Loader } from './components/loader';
-import { ConnectionOptions, useConnectIoTCentralClient } from './hooks/iotc';
+import { ConnectionOptions, useConnectIoTCentralClient, useSimulation } from './hooks/iotc';
 import {
   NavigationParams,
   NavigationProperty,
@@ -33,15 +30,13 @@ import {
   PagesNavigator,
   StyleDefinition,
 } from './types';
-import QRCodeScanner, { Event } from './components/qrcodeScanner';
 import Strings from 'strings';
 import { createStackNavigator } from '@react-navigation/stack';
-import Form, { FormItem, FormValues } from 'components/form';
+import { Form, FormItem, FormValues, HeaderCloseButton, QRCodeScanner, Event, Loader, Button, Link, Name, Text, ButtonGroup, ButtonGroupItem } from 'components';
 import { useBoolean, usePrevious } from 'hooks/common';
 import { Buffer } from 'buffer';
 import { computeKey } from 'react-native-azure-iotcentral-client';
 import { StorageContext } from 'contexts';
-import HeaderCloseButton from 'components/headerCloseButton';
 
 const Stack = createStackNavigator();
 const screens = {
@@ -80,7 +75,7 @@ export const Registration = React.memo<{
   }, [parentNavigator, route]);
 
   useEffect(() => {
-    if (!loading && previousLoading && client && client.isConnected()) {
+    if ((!loading && previousLoading && client && client.isConnected())) {
       parentNavigator?.navigate(Pages.ROOT);
     }
   }, [client, loading, parentNavigator, previousLoading]);
@@ -230,8 +225,8 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
           flex: 4,
         },
         footer: {
-          paddingTop: 40,
-          marginBottom: 100,
+          paddingTop: 20,
+          marginBottom: 30,
         },
       }),
       [orientation],
@@ -264,21 +259,32 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
       }
     }, [setChecked, credentials, checked]);
 
+    const connectionTypes = useMemo<ButtonGroupItem[]>(() => ([
+      {
+        id: 'dps',
+        label: Strings.Registration.Manual.Body.ConnectionType.Dps
+      },
+      {
+        id: 'cstring',
+        label: Strings.Registration.Manual.Body.ConnectionType.CString
+      }
+    ]), []);
+
     const formItems = useMemo<FormItem[]>(() => {
       if (checked === 'dps') {
         return [
           {
             id: 'deviceId',
-            label: 'Device Id',
-            placeHolder: 'Enter a unique ID to identify this device',
+            label: Strings.Registration.Manual.DeviceId.Label,
+            placeHolder: Strings.Registration.Manual.DeviceId.PlaceHolder,
             multiline: false,
             readonly,
             value: credentials?.deviceId,
           },
           {
             id: 'scopeId',
-            label: 'ID Scope',
-            placeHolder: 'Enter your provisioning service ID',
+            label: Strings.Registration.Manual.ScopeId.Label,
+            placeHolder: Strings.Registration.Manual.ScopeId.PlaceHolder,
             multiline: false,
             readonly,
             value: credentials?.scopeId,
@@ -296,15 +302,15 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
                 label: Strings.Registration.Manual.KeyTypes.Device,
               },
             ],
-            label: 'Key type',
+            label: Strings.Registration.Manual.KeyTypes.Label,
             multiline: false,
             readonly,
             value: credentials?.keyType,
           },
           {
             id: 'authKey',
-            label: 'Shared access signature (SAS) key',
-            placeHolder: 'Enter or paste SAS key',
+            label: Strings.Registration.Manual.SASKey.Label,
+            placeHolder: Strings.Registration.Manual.SASKey.PlaceHolder,
             multiline: true,
             readonly,
             value: credentials?.authKey,
@@ -333,7 +339,7 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
           style={style.scroll}
           keyboardShouldPersistTaps="handled">
           <View style={style.header}>
-            <Detail>
+            <Text>
               {Strings.Registration.Manual.Header}
               <Link
                 onPress={() => {
@@ -341,7 +347,7 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
                 }}>
                 {Strings.Registration.Manual.StartHere.Title}
               </Link>
-            </Detail>
+            </Text>
           </View>
           <View style={style.body}>
             <Name>
@@ -350,35 +356,14 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
                 : Strings.Registration.Manual.Body.ConnectionType.Title}
             </Name>
             <View style={{ flex: 1 }}>
-              <CheckBox
-                containerStyle={{
-                  marginStart: 0,
-                  backgroundColor: undefined,
-                  borderWidth: 0,
-                }}
-                disabled={readonly}
-                checkedIcon="dot-circle-o"
-                uncheckedIcon="circle-o"
-                checkedColor={readonly ? 'gray' : undefined}
-                uncheckedColor={readonly ? 'gray' : undefined}
-                checked={checked === 'dps'}
-                title={Strings.Registration.Manual.Body.ConnectionType.Dps}
-                onPress={() => setChecked('dps')}
-              />
-              <CheckBox
-                containerStyle={{
-                  marginStart: 0,
-                  backgroundColor: undefined,
-                  borderWidth: 0,
-                }}
-                disabled={readonly}
-                checkedIcon="dot-circle-o"
-                uncheckedIcon="circle-o"
-                checkedColor={readonly ? 'gray' : undefined}
-                uncheckedColor={readonly ? 'gray' : undefined}
-                checked={checked === 'cstring'}
-                title={Strings.Registration.Manual.Body.ConnectionType.CString}
-                onPress={() => setChecked('cstring')}
+              <ButtonGroup
+                readonly={readonly}
+                items={connectionTypes}
+                containerStyle={{ marginVertical: 10 }}
+                onCheckedChange={choiceId =>
+                  setChecked(choiceId as any)
+                }
+                defaultCheckedId='dps'
               />
             </View>
             <View style={{ flex: 2 }}>
@@ -397,7 +382,6 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
             <>
               <Button
                 key="register-new-device"
-                type={Platform.select({ ios: 'clear', android: 'solid' })}
                 title={Strings.Registration.Manual.RegisterNew.Title}
                 onPress={() => {
                   Alert.alert(
@@ -427,7 +411,6 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
               />
               <Button
                 key="clear-device-credentials"
-                type="clear"
                 title={Strings.Registration.Clear}
                 titleStyle={{ color: 'red' }}
               />
@@ -435,7 +418,6 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
           ) : (
             <Button
               key="connect-device-btn"
-              type={Platform.select({ ios: 'clear', android: 'solid' })}
               title={Strings.Registration.Manual.Footer.Connect}
               onPress={setStartSubmit.True}
             />
@@ -456,9 +438,8 @@ const EmptyClient = React.memo<{
 }>(({ navigation }) => {
   return (
     <View style={style.container}>
-      <Text style={style.header}>{Strings.Registration.Header}</Text>
+      <Text style={style.header}><Name>{Strings.Registration.Header.Welcome}</Name>{Strings.Registration.Header.Text}</Text>
       <Button
-        type="clear"
         title="Scan QR code"
         onPress={() => navigation.navigate(screens.QR)}
       />
@@ -478,7 +459,7 @@ const style = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginHorizontal: 30,
+    marginHorizontal: 20,
   },
   header: {},
   footer: {

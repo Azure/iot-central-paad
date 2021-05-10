@@ -6,8 +6,7 @@ import {
   ColorValue,
   TouchableOpacity,
   TouchableOpacityProps,
-  ViewStyle,
-  Platform,
+  ViewStyle
 } from 'react-native';
 import { Text, Name, Headline, getRandomColor, bytesToSize } from './typography';
 import { DataType } from 'types';
@@ -38,6 +37,7 @@ export function Card(
     unit,
     icon,
     onPress,
+    onLongPress,
     dataType,
     ...otherProps
   } = props;
@@ -76,8 +76,9 @@ export function Card(
         containerStyle,
       ]}
       {...otherProps}
-      disabled={!onPress}
-      onPress={onPress}>
+      disabled={!onPress && !onLongPress}
+      onPress={onPress}
+      onLongPress={onLongPress}>
       <View style={{ flex: 1, position: 'relative' }}>
         {enabled && (
           <View
