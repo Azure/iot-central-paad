@@ -15,14 +15,14 @@ import {
   ScrollView,
   KeyboardAvoidingView,
 } from 'react-native';
-import { useScreenDimensions } from './hooks/layout';
+import {useScreenDimensions} from './hooks/layout';
 import {
   getFocusedRouteNameFromRoute,
   RouteProp,
   useNavigation,
   useTheme,
 } from '@react-navigation/native';
-import { ConnectionOptions, useConnectIoTCentralClient, useSimulation } from './hooks/iotc';
+import {ConnectionOptions, useConnectIoTCentralClient} from './hooks/iotc';
 import {
   NavigationParams,
   NavigationProperty,
@@ -31,12 +31,26 @@ import {
   StyleDefinition,
 } from './types';
 import Strings from 'strings';
-import { createStackNavigator } from '@react-navigation/stack';
-import { Form, FormItem, FormValues, HeaderCloseButton, QRCodeScanner, Event, Loader, Button, Link, Name, Text, ButtonGroup, ButtonGroupItem } from 'components';
-import { useBoolean, usePrevious } from 'hooks/common';
-import { Buffer } from 'buffer';
-import { computeKey } from 'react-native-azure-iotcentral-client';
-import { StorageContext } from 'contexts';
+import {createStackNavigator} from '@react-navigation/stack';
+import {
+  Form,
+  FormItem,
+  FormValues,
+  HeaderCloseButton,
+  QRCodeScanner,
+  Event,
+  Loader,
+  Button,
+  Link,
+  Name,
+  Text,
+  ButtonGroup,
+  ButtonGroupItem,
+} from 'components';
+import {useBoolean, usePrevious} from 'hooks/common';
+import {Buffer} from 'buffer';
+import {computeKey} from 'react-native-azure-iotcentral-client';
+import {StorageContext} from 'contexts';
 
 const Stack = createStackNavigator();
 const screens = {
@@ -48,13 +62,13 @@ const screens = {
 export const Registration = React.memo<{
   route?: RouteProp<Record<string, NavigationParams>, 'Registration'>;
   navigation?: PagesNavigator;
-}>(({ navigation: parentNavigator, route }) => {
-  const { colors } = useTheme();
+}>(({navigation: parentNavigator, route}) => {
+  const {colors} = useTheme();
   const [
     connect,
     cancel,
     ,
-    { client, error, loading },
+    {client, error, loading},
   ] = useConnectIoTCentralClient();
   const previousLoading = usePrevious(loading);
   const qrcodeRef = useRef<QRCodeScanner>(null);
@@ -75,7 +89,7 @@ export const Registration = React.memo<{
   }, [parentNavigator, route]);
 
   useEffect(() => {
-    if ((!loading && previousLoading && client && client.isConnected())) {
+    if (!loading && previousLoading && client && client.isConnected()) {
       parentNavigator?.navigate(Pages.ROOT);
     }
   }, [client, loading, parentNavigator, previousLoading]);
@@ -88,15 +102,15 @@ export const Registration = React.memo<{
         {
           text: 'Retry',
           onPress: () => {
-            cancel({ clear: false });
+            cancel({clear: false});
             qrcodeRef.current?.reactivate();
-          }
+          },
         },
         {
           text: 'Cancel',
           style: 'cancel',
           onPress: () => {
-            cancel({ clear: false });
+            cancel({clear: false});
             parentNavigator?.goBack();
           },
         },
@@ -112,7 +126,8 @@ export const Registration = React.memo<{
       initialRouteName={
         client && client.isConnected() ? screens.MANUAL : screens.EMPTY
       }
-      screenOptions={{ headerBackTitleVisible: false }} headerMode={'float'}>
+      screenOptions={{headerBackTitleVisible: false}}
+      headerMode={'float'}>
       <Stack.Screen
         name={screens.EMPTY}
         options={() => ({
@@ -167,10 +182,10 @@ const QRCodeScreen = React.memo<{
     encryptedCredentials: string,
     options?: ConnectionOptions,
   ) => Promise<void>;
-  scannerRef: React.MutableRefObject<QRCodeScanner | null>
-}>(({ connect, scannerRef }) => {
-  const { screen, orientation } = useScreenDimensions();
-  const { navigate } = useNavigation();
+  scannerRef: React.MutableRefObject<QRCodeScanner | null>;
+}>(({connect, scannerRef}) => {
+  const {screen, orientation} = useScreenDimensions();
+  const {navigate} = useNavigation();
 
   const onRead = useCallback(
     async (e: Event) => {
@@ -197,19 +212,19 @@ const QRCodeScreen = React.memo<{
   );
 });
 
-const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
-  ({ navigation }) => {
-    const { save, credentials } = useContext(StorageContext);
+const ManualConnect = React.memo<{navigation: PagesNavigator}>(
+  ({navigation}) => {
+    const {save, credentials} = useContext(StorageContext);
     const [
       connect,
       ,
       clearClient,
-      { client, loading },
+      {client, loading},
     ] = useConnectIoTCentralClient();
     const [checked, setChecked] = useState<'dps' | 'cstring'>(
       credentials && credentials.connectionString ? 'cstring' : 'dps',
     );
-    const { orientation } = useScreenDimensions();
+    const {orientation} = useScreenDimensions();
     const [startSubmit, setStartSubmit] = useBoolean(false);
     const style = useMemo<StyleDefinition>(
       () => ({
@@ -259,16 +274,19 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
       }
     }, [setChecked, credentials, checked]);
 
-    const connectionTypes = useMemo<ButtonGroupItem[]>(() => ([
-      {
-        id: 'dps',
-        label: Strings.Registration.Manual.Body.ConnectionType.Dps
-      },
-      {
-        id: 'cstring',
-        label: Strings.Registration.Manual.Body.ConnectionType.CString
-      }
-    ]), []);
+    const connectionTypes = useMemo<ButtonGroupItem[]>(
+      () => [
+        {
+          id: 'dps',
+          label: Strings.Registration.Manual.Body.ConnectionType.Dps,
+        },
+        {
+          id: 'cstring',
+          label: Strings.Registration.Manual.Body.ConnectionType.CString,
+        },
+      ],
+      [],
+    );
 
     const formItems = useMemo<FormItem[]>(() => {
       if (checked === 'dps') {
@@ -355,18 +373,16 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
                 ? Strings.Registration.Manual.Registered
                 : Strings.Registration.Manual.Body.ConnectionType.Title}
             </Name>
-            <View style={{ flex: 1 }}>
+            <View style={{flex: 1}}>
               <ButtonGroup
                 readonly={readonly}
                 items={connectionTypes}
-                containerStyle={{ marginVertical: 10 }}
-                onCheckedChange={choiceId =>
-                  setChecked(choiceId as any)
-                }
-                defaultCheckedId='dps'
+                containerStyle={{marginVertical: 10}}
+                onCheckedChange={choiceId => setChecked(choiceId as any)}
+                defaultCheckedId="dps"
               />
             </View>
-            <View style={{ flex: 2 }}>
+            <View style={{flex: 2}}>
               <Form
                 title={Strings.Registration.Manual.Body.ConnectionInfo}
                 items={formItems}
@@ -393,14 +409,14 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
                         onPress: async () => {
                           // IMPORTANT!: clear stored credentials before cleaning client, otherwise device will continue to re-connect
                           await client?.disconnect();
-                          await save({ credentials: null });
+                          await save({credentials: null});
                           clearClient();
                         },
                       },
                       {
                         text: 'Cancel',
                         style: 'cancel',
-                        onPress: () => { },
+                        onPress: () => {},
                       },
                     ],
                     {
@@ -412,7 +428,7 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
               <Button
                 key="clear-device-credentials"
                 title={Strings.Registration.Clear}
-                titleStyle={{ color: 'red' }}
+                titleStyle={{color: 'red'}}
               />
             </>
           ) : (
@@ -435,10 +451,13 @@ const ManualConnect = React.memo<{ navigation: PagesNavigator }>(
 
 const EmptyClient = React.memo<{
   navigation: any;
-}>(({ navigation }) => {
+}>(({navigation}) => {
   return (
     <View style={style.container}>
-      <Text style={style.header}><Name>{Strings.Registration.Header.Welcome}</Name>{Strings.Registration.Header.Text}</Text>
+      <Text style={style.header}>
+        <Name>{Strings.Registration.Header.Welcome}</Name>
+        {Strings.Registration.Header.Text}
+      </Text>
       <Button
         title="Scan QR code"
         onPress={() => navigation.navigate(screens.QR)}

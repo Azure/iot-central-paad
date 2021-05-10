@@ -5,7 +5,7 @@ import React, {
   useCallback,
   useContext,
 } from 'react';
-import { View, Platform, Alert } from 'react-native';
+import {View, Platform, Alert} from 'react-native';
 import Settings from './Settings';
 import {
   NavigationContainer,
@@ -14,7 +14,7 @@ import {
   useTheme,
   RouteProp,
 } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {
   Screens,
   NavigationScreens,
@@ -33,7 +33,7 @@ import {
   NavigationPages,
   // ChartType,
 } from 'types';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {
   LogsProvider,
   StorageProvider,
@@ -43,10 +43,10 @@ import {
 } from 'contexts';
 import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';
 import LogoDark from './assets/IoT-Plug-And-Play_Light.svg';
-import { Icon } from 'react-native-elements';
-import { createStackNavigator } from '@react-navigation/stack';
-import { Text } from './components/typography';
-import { Welcome } from './Welcome';
+import {Icon} from 'react-native-elements';
+import {createStackNavigator} from '@react-navigation/stack';
+import {Text} from './components/typography';
+import {Welcome} from './Welcome';
 import Logs from './Logs';
 import {
   IIcon,
@@ -60,9 +60,9 @@ import {
   useThemeMode,
 } from 'hooks';
 import FileUpload from './FileUpload';
-import { Registration } from './Registration';
+import {Registration} from './Registration';
 import CardView from './CardView';
-import { Loader } from './components/loader';
+import {Loader} from './components/loader';
 import {
   IIoTCCommand,
   IIoTCCommandResponse,
@@ -73,8 +73,8 @@ import {
 // import { AVAILABLE_SENSORS } from 'sensors';
 import Torch from 'react-native-torch';
 import Chart from 'Chart';
-import Strings, { resolveString } from 'strings';
-import { Option } from 'components/options';
+import Strings, {resolveString} from 'strings';
+import {Option} from 'components/options';
 import Options from 'components/options';
 import HeaderCloseButton from 'components/headerCloseButton';
 
@@ -106,15 +106,15 @@ export default function App() {
 }
 
 const Navigation = React.memo(() => {
-  const { mode, type: themeType, setThemeMode } = useThemeMode();
+  const {mode, type: themeType, setThemeMode} = useThemeMode();
   const [simulated] = useSimulation();
-  const { credentials, initialized } = useContext(StorageContext);
+  const {credentials, initialized} = useContext(StorageContext);
   const [deliveryInterval, setDeliveryInterval] = useDeliveryInterval();
-  const [connect, , , { client, loading }] = useConnectIoTCentralClient();
+  const [connect, , , {client, loading}] = useConnectIoTCentralClient();
 
   useEffect(() => {
     if (credentials && initialized && !client) {
-      connect(credentials, { restore: true });
+      connect(credentials, {restore: true});
     }
   }, [connect, client, credentials, initialized]);
 
@@ -122,7 +122,7 @@ const Navigation = React.memo(() => {
     <NavigationContainer theme={mode === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack.Navigator
         initialRouteName={simulated || client ? Pages.ROOT : Pages.REGISTRATION}
-        screenOptions={({ navigation, route }) => {
+        screenOptions={({navigation, route}) => {
           const defaultOptions = {
             gestureEnabled: false,
             headerBackTitleVisible: false,
@@ -145,42 +145,42 @@ const Navigation = React.memo(() => {
         <Stack.Screen
           name={Pages.REGISTRATION}
           component={Registration}
-        // options={({ route, navigation }) => {
-        //   if (!route.params || !(route.params as any).previousScreen) {
-        //     return {
-        //       headerTitle: () => null,
-        //       headerLeft: () => <Logo />,
-        //       headerRight: () => <Profile navigate={navigation.navigate} />,
-        //     };
-        //   }
-        //   return {};
-        // }}
-        // options={({ navigation }: { navigation: NavigationProperty }) => {
-        //   return {
-        //     stackAnimation: 'flip',
-        //     headerTitle: Platform.select({
-        //       ios: undefined,
-        //       android: '',
-        //     }),
-        //     headerLeft: () => (
-        //       <BackButton goBack={navigation.goBack} title="Settings" />
-        //     ),
-        //     headerRight: () => (null)
-        //   }
-        // }}
+          // options={({ route, navigation }) => {
+          //   if (!route.params || !(route.params as any).previousScreen) {
+          //     return {
+          //       headerTitle: () => null,
+          //       headerLeft: () => <Logo />,
+          //       headerRight: () => <Profile navigate={navigation.navigate} />,
+          //     };
+          //   }
+          //   return {};
+          // }}
+          // options={({ navigation }: { navigation: NavigationProperty }) => {
+          //   return {
+          //     stackAnimation: 'flip',
+          //     headerTitle: Platform.select({
+          //       ios: undefined,
+          //       android: '',
+          //     }),
+          //     headerLeft: () => (
+          //       <BackButton goBack={navigation.goBack} title="Settings" />
+          //     ),
+          //     headerRight: () => (null)
+          //   }
+          // }}
         />
         <Stack.Screen
           name={Pages.INSIGHT}
           component={Chart}
-          options={({ route }) => {
+          options={({route}) => {
             let data = {};
             if (route.params) {
               const params = route.params as NavigationParams;
               if (params.title) {
-                data = { ...data, headerTitle: params.title };
+                data = {...data, headerTitle: params.title};
               }
               if (params.backTitle) {
-                data = { ...data, headerBackTitle: params.backTitle };
+                data = {...data, headerBackTitle: params.backTitle};
               }
             }
             return data;
@@ -203,7 +203,7 @@ const Navigation = React.memo(() => {
         />
         <Stack.Screen
           name={Pages.THEME}
-          options={({ navigation }: { navigation: NavigationProperty }) => ({
+          options={({navigation}: {navigation: NavigationProperty}) => ({
             stackAnimation: 'flip',
             headerTitle: Platform.select({
               ios: undefined,
@@ -244,7 +244,7 @@ const Navigation = React.memo(() => {
         </Stack.Screen>
         <Stack.Screen
           name={Pages.INTERVAL}
-          options={({ navigation }: { navigation: NavigationProperty }) => ({
+          options={({navigation}: {navigation: NavigationProperty}) => ({
             stackAnimation: 'flip',
             headerTitle: Platform.select({
               ios: undefined,
@@ -300,11 +300,11 @@ const Navigation = React.memo(() => {
 
 const Root = React.memo<{
   route: RouteProp<
-    Record<string, NavigationParams & { previousScreen?: string }>,
+    Record<string, NavigationParams & {previousScreen?: string}>,
     `Root`
   >;
   navigation: PagesNavigator;
-}>(({ navigation }) => {
+}>(({navigation}) => {
   const [, append] = useLogger();
   const [sensors, addSensorListener, removeSensorListener] = useSensors();
   // const [healths, addHealthListener, removeHealthListener] = useHealth();
@@ -321,7 +321,7 @@ const Root = React.memo<{
       await client.sendProperty({
         [PROPERTY]: {
           __t: 'c',
-          ...properties.reduce((obj, p) => ({ ...obj, [p.id]: p.value }), {}),
+          ...properties.reduce((obj, p) => ({...obj, [p.id]: p.value}), {}),
         },
       });
     },
@@ -329,7 +329,7 @@ const Root = React.memo<{
   );
   const [iotcentralClient] = useIoTCentralClient(onConnectionRefresh);
 
-  const iconsRef = useRef<{ [x in ScreenNames]: IIcon }>({
+  const iconsRef = useRef<{[x in ScreenNames]: IIcon}>({
     [Screens.TELEMETRY_SCREEN]: Platform.select({
       ios: {
         name: 'stats-chart-outline',
@@ -384,8 +384,8 @@ const Root = React.memo<{
     async (componentName: string, id: string, value: any) => {
       if (iotcentralClient && iotcentralClient.isConnected()) {
         await iotcentralClient.sendTelemetry(
-          { [id]: value },
-          { '$.sub': componentName },
+          {[id]: value},
+          {'$.sub': componentName},
         );
       }
     },
@@ -444,7 +444,7 @@ const Root = React.memo<{
 
   const onPropUpdate = useCallback(
     async (prop: IIoTCProperty) => {
-      let { name, value } = prop;
+      let {name, value} = prop;
       if (value.__t === 'c') {
         // inside a component: TODO: change sdk
         name = Object.keys(value).filter(v => v !== '__t')[0];
@@ -498,7 +498,7 @@ const Root = React.memo<{
       if (!simulated) {
         navigation.reset({
           index: 1, // as per issue: https://github.com/react-navigation/react-navigation/issues/7839
-          routes: [{ name: Pages.REGISTRATION }],
+          routes: [{name: Pages.REGISTRATION}],
         });
       }
     }
@@ -523,19 +523,19 @@ const Root = React.memo<{
     // sendHealthHandler,
     sendTelemetryHandler,
     navigation,
-    simulated
+    simulated,
   ]);
 
   return (
     <Tab.Navigator
       key="tab"
       tabBarOptions={Platform.select({
-        android: { safeAreaInsets: { bottom: 0 } },
+        android: {safeAreaInsets: {bottom: 0}},
       })}>
       <Tab.Screen
         name={Screens.TELEMETRY_SCREEN}
         options={{
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({color, size}) => (
             <TabBarIcon icon={icons.Telemetry} color={color} size={size} />
           ),
         }}>
@@ -553,54 +553,54 @@ const Root = React.memo<{
       <Tab.Screen
         name={Screens.PROPERTIES_SCREEN}
         options={{
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({color, size}) => (
             <TabBarIcon icon={icons.Properties} color={color} size={size} />
           ),
         }}>
         {propertiesLoading
           ? () => (
-            <Loader
-              message={Strings.Client.Properties.Loading}
-              visible={true}
-              style={{ flex: 1, justifyContent: 'center' }}
-            />
-          )
+              <Loader
+                message={Strings.Client.Properties.Loading}
+                visible={true}
+                style={{flex: 1, justifyContent: 'center'}}
+              />
+            )
           : () => (
-            <CardView
-              items={properties}
-              componentName="Property"
-              onEdit={async (item, value) => {
-                try {
-                  await iotcentralClient?.sendProperty({
-                    [PROPERTY]: { __t: 'c', [item.id]: value },
-                  });
-                  Alert.alert(
-                    'Property',
-                    resolveString(
-                      Strings.Client.Properties.Delivery.Success,
-                      item.name,
-                    ),
-                    [{ text: 'OK' }],
-                  );
-                } catch (e) {
-                  Alert.alert(
-                    'Property',
-                    resolveString(
-                      Strings.Client.Properties.Delivery.Failure,
-                      item.name,
-                    ),
-                    [{ text: 'OK' }],
-                  );
-                }
-              }}
-            />
-          )}
+              <CardView
+                items={properties}
+                componentName="Property"
+                onEdit={async (item, value) => {
+                  try {
+                    await iotcentralClient?.sendProperty({
+                      [PROPERTY]: {__t: 'c', [item.id]: value},
+                    });
+                    Alert.alert(
+                      'Property',
+                      resolveString(
+                        Strings.Client.Properties.Delivery.Success,
+                        item.name,
+                      ),
+                      [{text: 'OK'}],
+                    );
+                  } catch (e) {
+                    Alert.alert(
+                      'Property',
+                      resolveString(
+                        Strings.Client.Properties.Delivery.Failure,
+                        item.name,
+                      ),
+                      [{text: 'OK'}],
+                    );
+                  }
+                }}
+              />
+            )}
       </Tab.Screen>
       <Tab.Screen
         name={Screens.FILE_UPLOAD_SCREEN}
         component={FileUpload}
         options={{
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({color, size}) => (
             <TabBarIcon
               icon={icons['Image Upload']}
               color={color}
@@ -613,7 +613,7 @@ const Root = React.memo<{
         name={Screens.LOGS_SCREEN}
         component={Logs}
         options={{
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({color, size}) => (
             <TabBarIcon icon={icons.Logs} color={color} size={size} />
           ),
         }}
@@ -630,31 +630,31 @@ const getCardView = (items: ItemProps[], name: string, detail: boolean) => ({
   <CardView
     items={items}
     componentName={name}
-    onItemLongPress={(item) => {
+    onItemLongPress={item => {
       item.enable(!item.enabled);
     }}
-  // TEMP: temporary disabled charts
-  // onItemPress={
-  //   detail
-  //     ? item => {
-  //         navigation.navigate('Insight', {
-  //           chartType:
-  //             item.id === AVAILABLE_SENSORS.GEOLOCATION
-  //               ? ChartType.MAP
-  //               : ChartType.DEFAULT,
-  //           currentValue: item.value,
-  //           telemetryId: item.id,
-  //           title: camelToName(item.id),
-  //           backTitle: 'Telemetry',
-  //         });
-  //       }
-  //     : undefined
-  // }
+    // TEMP: temporary disabled charts
+    // onItemPress={
+    //   detail
+    //     ? item => {
+    //         navigation.navigate('Insight', {
+    //           chartType:
+    //             item.id === AVAILABLE_SENSORS.GEOLOCATION
+    //               ? ChartType.MAP
+    //               : ChartType.DEFAULT,
+    //           currentValue: item.value,
+    //           telemetryId: item.id,
+    //           title: camelToName(item.id),
+    //           backTitle: 'Telemetry',
+    //         });
+    //       }
+    //     : undefined
+    // }
   />
 );
 
 const Logo = React.memo(() => {
-  const { colors, dark } = useTheme();
+  const {colors, dark} = useTheme();
   return (
     <View
       style={{
@@ -682,19 +682,19 @@ const Logo = React.memo(() => {
   );
 });
 
-const Profile = React.memo((props: { navigate: any }) => {
-  const { colors } = useTheme();
+const Profile = React.memo((props: {navigate: any}) => {
+  const {colors} = useTheme();
   return (
-    <View style={{ marginHorizontal: 10 }}>
+    <View style={{marginHorizontal: 10}}>
       <Icon
-        style={{ marginEnd: 20 }}
+        style={{marginEnd: 20}}
         name={
           Platform.select({
             ios: 'settings-outline',
             android: 'settings',
           }) as string
         }
-        type={Platform.select({ ios: 'ionicon', android: 'material' })}
+        type={Platform.select({ios: 'ionicon', android: 'material'})}
         color={colors.text}
         onPress={() => {
           props.navigate('Settings');
@@ -704,8 +704,8 @@ const Profile = React.memo((props: { navigate: any }) => {
   );
 });
 
-const TabBarIcon = React.memo<{ icon: IIcon; color: string; size: number }>(
-  ({ icon, color, size }) => {
+const TabBarIcon = React.memo<{icon: IIcon; color: string; size: number}>(
+  ({icon, color, size}) => {
     return (
       <Icon
         name={icon ? icon.name : 'home'}

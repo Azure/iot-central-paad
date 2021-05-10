@@ -9,5 +9,5 @@ export const defaults: DefaultProps = {
   emulator: false,
   initialized: false,
   dev: false,
-  modelId: 'dtmi:azureiot:PhoneAsADevice;1'
+  modelId: 'dtmi:azureiot:PhoneAsADevice;1',
 };

@@ -11,14 +11,14 @@ const Logs = React.memo(() => {
   const [logs] = useLogger();
 
   return (
-    <View style={{flex: 1, padding: 10}}>
+    <View style={{flex: 1, padding: 20}}>
       <Text>{Strings.LogScreen.Header}</Text>
       <ScrollView
         style={{
-          margin: 5,
+          marginTop: 20,
           borderWidth: 1,
           borderColor: colors.border,
-          paddingHorizontal: 10,
+          padding: 10,
           paddingBottom: 100,
         }}>
         {logs.map((l, i) => (

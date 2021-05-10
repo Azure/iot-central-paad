@@ -1,15 +1,23 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { CardProps, IconProps, Icon, Input, Button } from 'react-native-elements';
-import { useTheme } from '@react-navigation/native';
+import React, {useRef, useState, useEffect} from 'react';
+import {CardProps, IconProps, Icon, Input} from 'react-native-elements';
+import {useTheme} from '@react-navigation/native';
 import {
   View,
   ColorValue,
   TouchableOpacity,
   TouchableOpacityProps,
-  ViewStyle
+  ViewStyle,
 } from 'react-native';
-import { Text, Name, Headline, getRandomColor, bytesToSize } from './typography';
-import { DataType } from 'types';
+import {Button} from 'components';
+import {
+  Text,
+  Name,
+  Headline,
+  getRandomColor,
+  bytesToSize,
+  normalize,
+} from './typography';
+import {DataType} from 'types';
 
 type EditCallback = (value: any) => void | Promise<void>;
 
@@ -41,7 +49,7 @@ export function Card(
     dataType,
     ...otherProps
   } = props;
-  const { dark, colors } = useTheme();
+  const {dark, colors} = useTheme();
 
   const textColor = enabled ? colors.text : '#9490a9';
   const barColor = useRef(getRandomColor() as ColorValue);
@@ -62,15 +70,15 @@ export function Card(
           borderRadius: 20,
           ...(!dark
             ? {
-              shadowColor: "'rgba(0, 0, 0, 0.14)'",
-              shadowOffset: {
-                width: 0,
-                height: 3,
-              },
-              shadowOpacity: 0.8,
-              shadowRadius: 3.84,
-              elevation: 5,
-            }
+                shadowColor: "'rgba(0, 0, 0, 0.14)'",
+                shadowOffset: {
+                  width: 0,
+                  height: 3,
+                },
+                shadowOpacity: 0.8,
+                shadowRadius: 3.84,
+                elevation: 5,
+              }
             : {}),
         },
         containerStyle,
@@ -79,7 +87,7 @@ export function Card(
       disabled={!onPress && !onLongPress}
       onPress={onPress}
       onLongPress={onLongPress}>
-      <View style={{ flex: 1, position: 'relative' }}>
+      <View style={{flex: 1, position: 'relative'}}>
         {enabled && (
           <View
             style={{
@@ -102,12 +110,12 @@ export function Card(
           />
         )} */}
 
-        <View style={{ flex: 2 }}>
-          <Name style={{ color: textColor }}>{otherProps.title}</Name>
+        <View style={{flex: 2}}>
+          <Name style={{color: textColor}}>{otherProps.title}</Name>
           {typeof value === 'function' ? (
             value()
           ) : (
-            <View style={{ flexDirection: 'row', paddingVertical: 10 }}>
+            <View style={{flexDirection: 'row', paddingVertical: 10}}>
               <Value
                 value={value}
                 enabled
@@ -117,7 +125,7 @@ export function Card(
                 textColor={textColor}
               />
               {unit && enabled && (
-                <Headline style={{ color: '#9490a9', alignSelf: 'flex-end' }}>
+                <Headline style={{color: '#9490a9', alignSelf: 'flex-end'}}>
                   {unit}
                 </Headline>
               )}
@@ -144,7 +152,7 @@ const Value = React.memo<{
   onEdit: EditCallback | undefined;
   textColor: string;
   type?: DataType;
-}>(({ value, enabled, editable, onEdit, textColor, type }) => {
+}>(({value, enabled, editable, onEdit, textColor, type}) => {
   const [edited, setEdited] = useState(value);
 
   useEffect(() => {
@@ -191,11 +199,11 @@ const Value = React.memo<{
 
     if (editable && onEdit) {
       return (
-        <View style={{ flex: 1 }}>
+        <View style={{flex: 1, paddingBottom: 5}}>
           <Input
             value={edited.toString()}
             onChangeText={setEdited}
-            inputStyle={{ color: textColor }}
+            inputStyle={{color: textColor}}
             keyboardType={typeof value === 'number' ? 'numeric' : 'default'}
           />
           <Button title="Send" onPress={e => onEdit(edited)} type="clear" />
@@ -203,7 +211,8 @@ const Value = React.memo<{
       );
     } else {
       return (
-        <Headline style={{ fontSize: 24, marginEnd: 5, color: textColor }}>
+        <Headline
+          style={{fontSize: normalize(20), marginEnd: 5, color: textColor}}>
           {/* {strVal.length > 6 ? `${strVal.substring(0, 6)}...` : strVal} */}
           {strVal}
         </Headline>

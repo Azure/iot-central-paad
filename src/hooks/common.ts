@@ -175,7 +175,7 @@ export function useSensors(): [
       },
       {
         id: AVAILABLE_SENSORS.BATTERY,
-        name: 'Battery Level',
+        name: 'Battery level',
         dataType: 'number',
         enabled: true, // TODO: auto-enable based on settings,
         simulated: defaults.emulator,

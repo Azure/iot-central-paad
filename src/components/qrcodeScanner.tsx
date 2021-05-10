@@ -1,9 +1,9 @@
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
-import { Icon } from 'react-native-elements';
+import {Platform, StyleSheet, View} from 'react-native';
+import {Icon} from 'react-native-elements';
 import Scanner from 'react-native-qrcode-scanner';
-import { BarCodeReadEvent } from 'react-native-camera';
-import { Text } from './typography';
+import {BarCodeReadEvent} from 'react-native-camera';
+import {Text} from './typography';
 
 interface QRCodeScannerProps {
   height: number;
@@ -40,7 +40,7 @@ export default class QRCodeScanner
 
   constructor(props: IQRCodeProps) {
     super(props);
-    ({ onRead: this.onRead, onClose: this.onClose } = props);
+    ({onRead: this.onRead, onClose: this.onClose} = props);
     this.qrCodeRef = null;
   }
 
@@ -63,7 +63,7 @@ export default class QRCodeScanner
         ref={sc => (this.qrCodeRef = sc)}
         onRead={this.onRead}
         containerStyle={{
-          marginTop: -80
+          marginTop: -80,
         }}
         topViewStyle={{
           position: 'absolute',
@@ -140,7 +140,7 @@ export default class QRCodeScanner
         customMarker={
           <View>
             <QRCodeMask width={this.props.markerSize} color={'black'} />
-            <Text style={{ ...style.center, textAlign: 'center' }}>
+            <Text style={{...style.center, textAlign: 'center'}}>
               Move closer to scan
             </Text>
           </View>
@@ -152,18 +152,18 @@ export default class QRCodeScanner
           zIndex: 2,
           bottom: 100,
         }}
-        cameraStyle={{ height: this.props.height + 80, width: this.props.width }}
+        cameraStyle={{height: this.props.height + 80, width: this.props.width}}
       />
     );
   }
 }
 
-function QRCodeMask(props: { width: number; color: string }) {
-  const { width: markerWidth, color } = props;
+function QRCodeMask(props: {width: number; color: string}) {
+  const {width: markerWidth, color} = props;
   const sectorWidth = markerWidth / 5;
   return (
     <View
-      style={{ position: 'relative', width: markerWidth, height: markerWidth }}>
+      style={{position: 'relative', width: markerWidth, height: markerWidth}}>
       <View
         key="top-left"
         style={{

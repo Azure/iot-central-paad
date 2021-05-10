@@ -5,7 +5,7 @@ const Strings = {
     Cancel: 'Cancel',
     Loading: 'Loading...',
     DisableSensor: 'Disable sensor',
-    EnableSensor: 'Enable sensor'
+    EnableSensor: 'Enable sensor',
   },
   Settings: {
     Title: 'Settings',
@@ -48,7 +48,8 @@ const Strings = {
   Registration: {
     Header: {
       Welcome: 'Welcome! ',
-      Text: 'Connect your phone to the Azure IoT cloud and experience the simplicity of IoT Plug and Play in just a few steps.'
+      Text:
+        'Connect your phone to the Azure IoT cloud and experience the simplicity of IoT Plug and Play in just a few steps.',
     },
     Footer: 'Need help getting started? ',
     StartHere: {
@@ -63,15 +64,15 @@ const Strings = {
       Header: 'Need help locating this information? ',
       DeviceId: {
         Label: 'Device Id',
-        PlaceHolder: 'Enter a unique ID to identify this device'
+        PlaceHolder: 'Enter a unique ID to identify this device',
       },
       ScopeId: {
         Label: 'ID scope',
-        PlaceHolder: 'Enter your DPS ID scope'
+        PlaceHolder: 'Enter your DPS ID scope',
       },
       SASKey: {
         Label: 'Shared access signature (SAS) key',
-        PlaceHolder: 'Enter or paste your SAS key'
+        PlaceHolder: 'Enter or paste your SAS key',
       },
       Registered: 'Registered using:',
       RegisterNew: {
@@ -118,7 +119,7 @@ const Strings = {
     },
   },
   FileUpload: {
-    Start: 'Select image to be uploaded on Azure Storage',
+    Start: 'Select an image to upload to Azure Storage',
     Footer: "You'll need to configure file upload in your app.",
     LearnMore: {
       Title: 'Learn more',
