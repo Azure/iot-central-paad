@@ -42,7 +42,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>"IoT Plug and Play" needs access to your camera for scanning QR codes</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<true/>
+	<string>"IoT Plug and Play" needs access to your location</string>
+  <key>NSLocationAlwaysUsageDescription</key>
+  <string>"IoT Plug and Play" needs access to your location</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>"IoT Plug and Play" needs access to your location</string>
 	<key>NSPhotoLibraryUsageDescription</key>
