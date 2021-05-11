@@ -60,6 +60,20 @@ jobs:
 
 - job: iOS
   timeoutInMinutes: 90
+  variables:
+    archivePath: 'output/archive'
+    xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
+    exportPath: 'output/package'
+    zipToSign: '$(exportPath)/$(Project_Name).zip'
+    signedZip: '$(exportPath)/$(Project_Name).zip'
+    signedExtractedPath: '$(exportPath)/signed'
+    signedIpa: '$(exportPath)/signed/$(Project_Name).ipa'
+    signedIpaAsZip: '$(exportPath)/signed/$(Project_Name).zip'
+    patchedPath: '$(exportPath)/patched'
+    swiftSupportPath: 'SwiftSupport/iphoneos'
+    artifactsPath: 'output/artifacts'
+    resultIpa: '$(artifactsPath)/$(Project_Name).ipa'
+    resultIpaAsZip: '$(artifactsPath)/$(Project_Name).zip'
   steps:
   - task: NodeTool@0
     inputs:
@@ -100,8 +114,8 @@ jobs:
       scheme: '$(Project_Name)'
       sdk: 'iphoneos14.4'
       packageApp: true
-      exportPath: 'output/package'
-      archivePath: 'output/archive'
+      exportPath: '$(exportPath)'
+      archivePath: '$(archivePath)'
       signingOption: 'manual'
       signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
       provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
@@ -119,21 +133,21 @@ jobs:
     inputs:
       SourceFolder: '$(Agent.TempDirectory)'
       Contents: 'IoT_Plug_and_Play_Distribution.mobileprovision'
-      TargetFolder: 'output/package'
+      TargetFolder: '$(exportPath)'
       flattenFolders: true
 
   - task: ArchiveFiles@2
     displayName: 'Create zip for signing'
     inputs:
-      rootFolderOrFile: 'output/package'
+      rootFolderOrFile: '$(exportPath)'
       includeRootFolder: false
-      archiveFile: 'output/package/IoT_PnP.zip'
+      archiveFile: '$(zipToSign)'
 
   - task: EsrpCodeSigning@1
     displayName: 'Sign build'
     inputs:
       ConnectedServiceName: 'IoT PnP PaaD'
-      FolderPath: 'output/package'
+      FolderPath: '$(exportPath)'
       Pattern: '*.zip'
       signConfigType: 'inlineSignParams'
       inlineOperation: |
@@ -153,12 +167,50 @@ jobs:
   - task: ExtractFiles@1
     displayName: 'Extract signed build'
     inputs:
-      archiveFilePatterns: 'output/package/IoT_PnP.zip'
-      destinationFolder: 'output/package/signed'
+      archiveFilePatterns: '$(signedZip)'
+      destinationFolder: '$(signedExtractedPath)'
+  
+  - task: Bash@3
+    displayName: 'Rename signed ipa to zip'
+    inputs:
+      targetType: 'inline'
+      script: 'mv $(signedIpa) $(ignedIpaAsZip)'
+
+  - task: ExtractFiles@1
+    displayName: 'Extract ipa for patching'
+    inputs:
+      archiveFilePatterns: '$(signedIpaAsZip)'
+      destinationFolder: '$(patchedPath)'
+  
+  - task: Bash@3
+    displayName: 'Create required folders'
+    inputs:
+      targetType: 'inline'
+      script: 'mkdir -p $(artifactsPath) && mkdir -p $(patchedPath)/$(swiftSupportPath)'
+  
+  - task: CopyFiles@2
+    displayName: 'Copy SwiftSupport folder from .xarchive'
+    inputs:
+      SourceFolder: '$(xcarchivePath)/$(swiftSupportPath)'
+      Contents: '*.dylib'
+      TargetFolder: '$(patchedPath)/$(swiftSupportPath)'
+  
+  - task: ArchiveFiles@2
+    displayName: 'Create resulting ipa as zip archive'
+    inputs:
+      rootFolderOrFile: '$(patchedPath)'
+      includeRootFolder: false
+      archiveFile: '$(resultIpaAsZip)'
+
+  - task: Bash@3
+    displayName: 'Rename created zip to ipa'
+    inputs:
+      targetType: 'inline'
+      script: 'mv $(resultIpaAsZip) $(resultIpa)'
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
     inputs:
-      PathtoPublish: 'output/package/signed/$(Project_Name).ipa'
+      PathtoPublish: '$(resultIpa)'
       ArtifactName: 'ios'
       publishLocation: 'Container'
