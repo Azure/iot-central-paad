@@ -59,7 +59,7 @@ jobs:
       publishLocation: 'Container'
 
 - job: iOS
-  timeoutInMinutes: 90
+  timeoutInMinutes: 120
   variables:
     archivePath: 'output/archive'
     xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
