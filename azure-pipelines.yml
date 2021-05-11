@@ -174,7 +174,7 @@ jobs:
     displayName: 'Rename signed ipa to zip'
     inputs:
       targetType: 'inline'
-      script: 'mv $(signedIpa) $(ignedIpaAsZip)'
+      script: 'mv $(signedIpa) $(signedIpaAsZip)'
 
   - task: ExtractFiles@1
     displayName: 'Extract ipa for patching'
