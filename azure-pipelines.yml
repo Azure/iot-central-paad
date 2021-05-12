@@ -61,7 +61,9 @@ jobs:
 - job: iOS
   timeoutInMinutes: 120
   variables:
+    patchScript: 'patchIpa.sh'
     archivePath: 'output/archive'
+    xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
     xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
     exportPath: 'output/package'
     zipToSign: '$(exportPath)/$(Project_Name).zip'
@@ -71,7 +73,7 @@ jobs:
     signedIpaAsZip: '$(exportPath)/signed/$(Project_Name).zip'
     patchedPath: '$(exportPath)/patched'
     swiftSupportPath: 'SwiftSupport/iphoneos'
-    resultSwiftSupportPath: 'Frameworks'
+    sourceSwiftSupportPath: '$(xcodeDeveloperDir)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/iphoneos'
     artifactsPath: 'output/artifacts'
     resultIpa: '$(artifactsPath)/$(Project_Name).ipa'
     resultIpaAsZip: '$(artifactsPath)/$(Project_Name).zip'
@@ -121,7 +123,7 @@ jobs:
       signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
       provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
       xcodeVersion: 'specifyPath'
-      xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
+      xcodeDeveloperDir: '$(xcodeDeveloperDir)'
 
   - task: DownloadSecureFile@1
     displayName: 'Download distribution profile from Azure secure files storage'
@@ -172,42 +174,17 @@ jobs:
       destinationFolder: '$(signedExtractedPath)'
   
   - task: Bash@3
-    displayName: 'Rename signed ipa to zip'
+    displayName: 'Patch ipa'
     inputs:
-      targetType: 'inline'
-      script: 'mv $(signedIpa) $(signedIpaAsZip)'
-
-  - task: ExtractFiles@1
-    displayName: 'Extract ipa for patching'
-    inputs:
-      archiveFilePatterns: '$(signedIpaAsZip)'
-      destinationFolder: '$(patchedPath)'
-  
-  - task: Bash@3
-    displayName: 'Create required folders'
-    inputs:
-      targetType: 'inline'
-      script: 'mkdir -p $(artifactsPath) && mkdir -p $(patchedPath)/$(resultSwiftSupportPath)'
-  
-  - task: CopyFiles@2
-    displayName: 'Copy SwiftSupport folder from .xarchive'
-    inputs:
-      SourceFolder: '$(xcarchivePath)/$(swiftSupportPath)'
-      Contents: '*.dylib'
-      TargetFolder: '$(patchedPath)/$(resultSwiftSupportPath)'
-  
-  - task: ArchiveFiles@2
-    displayName: 'Create resulting ipa as zip archive'
-    inputs:
-      rootFolderOrFile: '$(patchedPath)'
-      includeRootFolder: false
-      archiveFile: '$(resultIpaAsZip)'
+      targetType: 'filePath'
+      script: 'patchIpa.sh'
+      arguments: 'ipa_path="$(signedIpa)" toolchain_path="$(sourceSwiftSupportPath)"'
 
   - task: Bash@3
-    displayName: 'Rename created zip to ipa and also copy archive'
+    displayName: 'Copy archive'
     inputs:
       targetType: 'inline'
-      script: 'mv $(resultIpaAsZip) $(resultIpa) && mv $(xcarchivePath) $(artifactsPath)'
+      script: 'mv $(xcarchivePath) $(artifactsPath)'
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
