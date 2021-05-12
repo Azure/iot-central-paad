@@ -71,6 +71,7 @@ jobs:
     signedIpaAsZip: '$(exportPath)/signed/$(Project_Name).zip'
     patchedPath: '$(exportPath)/patched'
     swiftSupportPath: 'SwiftSupport/iphoneos'
+    resultSwiftSupportPath: 'Frameworks'
     artifactsPath: 'output/artifacts'
     resultIpa: '$(artifactsPath)/$(Project_Name).ipa'
     resultIpaAsZip: '$(artifactsPath)/$(Project_Name).zip'
@@ -186,14 +187,14 @@ jobs:
     displayName: 'Create required folders'
     inputs:
       targetType: 'inline'
-      script: 'mkdir -p $(artifactsPath) && mkdir -p $(patchedPath)/$(swiftSupportPath)'
+      script: 'mkdir -p $(artifactsPath) && mkdir -p $(patchedPath)/$(resultSwiftSupportPath)'
   
   - task: CopyFiles@2
     displayName: 'Copy SwiftSupport folder from .xarchive'
     inputs:
       SourceFolder: '$(xcarchivePath)/$(swiftSupportPath)'
       Contents: '*.dylib'
-      TargetFolder: '$(patchedPath)/$(swiftSupportPath)'
+      TargetFolder: '$(patchedPath)/$(resultSwiftSupportPath)'
   
   - task: ArchiveFiles@2
     displayName: 'Create resulting ipa as zip archive'
