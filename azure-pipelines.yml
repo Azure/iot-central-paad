@@ -177,7 +177,7 @@ jobs:
     displayName: 'Patch ipa'
     inputs:
       targetType: 'filePath'
-      script: 'patchIpa.sh'
+      filePath: 'patchIpa.sh'
       arguments: 'ipa_path="$(signedIpa)" toolchain_path="$(sourceSwiftSupportPath)"'
 
   - task: Bash@3
