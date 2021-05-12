@@ -23,41 +23,69 @@ do
 
 done
 
+echo "ipaPath=$ipaPath"
+echo "archive_path=$archivePath"
+echo "toolchain_path=$toolchainPath"
+
 # Derived Variables
 ipaDirectory=$(dirname "$ipaPath")
+echo "ipaDirectory=$ipaDirectory"
+
 ipaName=$(basename "$ipaPath")
+echo "ipaName=$ipaName"
+
 zipName=${ipaName/.ipa/.zip}
+echo "zipName=$zipName"
+
 appName=${ipaName/.ipa/}
-zipSuffix=-unzipped
-unzippedDirectoryName=${appName}${zipSuffix}
-newIpaSuffix=-with-swift-support
-newIpaName=${appName}${newIpaSuffix}
-swiftSupportPath=SwiftSupport/iphoneos
-ipaSwiftSupportDirectory=${ipaDirectory}/${unzippedDirectoryName}/${swiftSupportPath}
+echo "appName=$appName"
+
+zipSuffix="-unzipped"
+echo "zipSuffix=$zipSuffix"
+
+unzippedDirectoryName="$appName$zipSuffix"
+echo "unzippedDirectoryName=$unzippedDirectoryName"
+
+newIpaSuffix="-with-swift-support"
+echo "newIpaSuffix=$newIpaSuffix"
+
+newIpaName="$appName$newIpaSuffix"
+echo "newIpaName=$newIpaName"
+
+swiftSupportPath="SwiftSupport/iphoneos"
+echo "swiftSupportPath=$swiftSupportPath"
+
+ipaSwiftSupportDirectory="$ipaDirectory/$unzippedDirectoryName/$swiftSupportPath"
+echo "ipaSwiftSupportDirectory=$ipaSwiftSupportDirectory"
 
 # Changes the .ipa file extension to .zip and unzips it
 function unzipIPA {
     mv "${ipaDirectory}/${ipaName}" "${ipaDirectory}/${zipName}"
+    echo "Unzipping $ipaDirectory/$zipName"
     unzip "${ipaDirectory}/${zipName}" -d "${ipaDirectory}/${unzippedDirectoryName}"
 }
 
 # Copies the SwiftSupport folder from the .xcarchive into the .ipa
 function copySwiftSupportFromArchiveIntoIPA {
     mkdir -p "$ipaSwiftSupportDirectory"
+    echo "Created $ipaSwiftSupportDirectory from Archive"
     cd "${archivePath}/${swiftSupportPath}"
     for file in *.dylib; do
-        cp "$file" "$ipaSwiftSupportDirectory"
+        cp "$file" "$ipaSwiftSupportDirectory/$file.orig"
+        lipo "$ipaSwiftSupportDirectory/$file.orig" -remove arm64e -remove armv7s -output "$ipaSwiftSupportDirectory/$file"
+        rm "$ipaSwiftSupportDirectory/$file.orig"
     done
 }
 
 # Creates the SwiftSupport folder from the Xcode toolchain and copies it into the .ipa
 function copySwiftSupportFromToolchainIntoIPA {
+    echo "Created $ipaSwiftSupportDirectory from Toolchain"
     mkdir -p "$ipaSwiftSupportDirectory"
     cd "${ipaDirectory}/${unzippedDirectoryName}/Payload/${appName}.app/Frameworks"
     for file in *.dylib; do
-      cp "${toolchainPath}/${file}" "$ipaSwiftSupportDirectory/${file}.orig"
-      lipo "$ipaSwiftSupportDirectory/${file}.orig" -remove arm64e -remove armv7s -output "$ipaSwiftSupportDirectory/${file}"
-      rm "$ipaSwiftSupportDirectory/${file}.orig"
+      cp "$toolchainPath/$file" "$ipaSwiftSupportDirectory/$file.orig"
+      lipo "$ipaSwiftSupportDirectory/$file.orig" -remove arm64e -remove armv7s -output "$ipaSwiftSupportDirectory/$file"
+      rm "$ipaSwiftSupportDirectory/$file.orig"
     done
 }
 
