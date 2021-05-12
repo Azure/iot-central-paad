@@ -61,11 +61,12 @@ jobs:
 - job: iOS
   timeoutInMinutes: 120
   variables:
-    patchScript: 'patchIpa.sh'
-    archivePath: 'output/archive'
+    rootPath: '$(System.DefaultWorkingDirectory)'
+    patchScript: '$(rootPath)/patchIpa.sh'
+    archivePath: '$(rootPath)/output/archive'
     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
     xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
-    exportPath: 'output/package'
+    exportPath: '$(rootPath)/output/package'
     zipToSign: '$(exportPath)/$(Project_Name).zip'
     signedZip: '$(exportPath)/$(Project_Name).zip'
     signedExtractedPath: '$(exportPath)/signed'
@@ -74,7 +75,7 @@ jobs:
     patchedPath: '$(exportPath)/patched'
     swiftSupportPath: 'SwiftSupport/iphoneos'
     sourceSwiftSupportPath: '$(xcodeDeveloperDir)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/iphoneos'
-    artifactsPath: 'output/artifacts'
+    artifactsPath: '$(rootPath)/output/artifacts'
     resultIpa: '$(artifactsPath)/$(Project_Name).ipa'
     resultIpaAsZip: '$(artifactsPath)/$(Project_Name).zip'
   steps:
@@ -106,14 +107,14 @@ jobs:
 
   - task: ShellScript@2
     inputs:
-      scriptPath: 'bumpVersion.sh'
+      scriptPath: '$(rootPath)/bumpVersion.sh'
 
   - task: Xcode@5
     displayName: "Build Mobile Application"
     inputs:
       actions: 'build'
       configuration: 'Release'
-      xcWorkspacePath: 'ios/$(Project_Name).xcworkspace'
+      xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
       sdk: 'iphoneos14.4'
       packageApp: true
