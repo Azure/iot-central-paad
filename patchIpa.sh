@@ -83,6 +83,7 @@ function copySwiftSupportFromToolchainIntoIPA {
     mkdir -p "$ipaSwiftSupportDirectory"
     cd "${ipaDirectory}/${unzippedDirectoryName}/Payload/${appName}.app/Frameworks"
     for file in *.dylib; do
+      echo "$file"
       cp "$toolchainPath/$file" "$ipaSwiftSupportDirectory/$file.orig"
       lipo "$ipaSwiftSupportDirectory/$file.orig" -remove arm64e -remove armv7s -output "$ipaSwiftSupportDirectory/$file"
       rm "$ipaSwiftSupportDirectory/$file.orig"
