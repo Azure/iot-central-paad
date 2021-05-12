@@ -14,49 +14,49 @@ variables:
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
-# - job: Android
-#   steps:
-#   - task: NodeTool@0
-#     inputs:
-#       versionSpec: '12.18.4'
-#     displayName: 'Install Node'
+- job: Android
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '12.18.4'
+    displayName: 'Install Node'
 
-#   - script: npm install
-#     workingDirectory: .
-#     displayName: 'Install node dependencies'
+  - script: npm install
+    workingDirectory: .
+    displayName: 'Install node dependencies'
 
-#   - task: DownloadSecureFile@1
-#     name: androidKeystore
-#     inputs:
-#       secureFile: iotc-paad.keystore
+  - task: DownloadSecureFile@1
+    name: androidKeystore
+    inputs:
+      secureFile: iotc-paad.keystore
 
-#   - bash: |
-#       PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
-#       echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
-#       echo "Using variable: $GOOGLE_MAPS_API_KEY"
-#       echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
-#       cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
-#       ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
-#     env:
-#       GOOGLE_MAPS_KEY: $(googlemapskey)
+  - bash: |
+      PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
+      echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
+      echo "Using variable: $GOOGLE_MAPS_API_KEY"
+      echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
+      cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
+      ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
+    env:
+      GOOGLE_MAPS_KEY: $(googlemapskey)
 
-#   - bash: env | sort
+  - bash: env | sort
 
-#   - task: Gradle@2
-#     inputs:
-#       workingDirectory: 'android'
-#       gradleWrapperFile: 'android/gradlew'
-#       gradleOptions: '-Xmx3072m'
-#       publishJUnitResults: false
-#       testResultsFiles: '**/TEST-*.xml'
-#       tasks: 'assembleBetaRelease'
+  - task: Gradle@2
+    inputs:
+      workingDirectory: 'android'
+      gradleWrapperFile: 'android/gradlew'
+      gradleOptions: '-Xmx3072m'
+      publishJUnitResults: false
+      testResultsFiles: '**/TEST-*.xml'
+      tasks: 'assembleBetaRelease'
 
-#   - task: PublishBuildArtifacts@1
-#     displayName: "Publish Build Artifact"
-#     inputs:
-#       PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
-#       ArtifactName: 'android'
-#       publishLocation: 'Container'
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifact"
+    inputs:
+      PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
+      ArtifactName: 'android'
+      publishLocation: 'Container'
 
 - job: iOS
   timeoutInMinutes: 120
@@ -64,18 +64,17 @@ jobs:
     archivePath: 'output/archive'
     xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
     exportPath: 'output/package'
-    unsignedIpa: '$(exportPath)/$(Project_Name).ipa'
-    unsignedZip: '$(exportPath)/$(Project_Name).zip'
+    zipToSign: '$(exportPath)/$(Project_Name).zip'
     signedZip: '$(exportPath)/$(Project_Name).zip'
     signedExtractedPath: '$(exportPath)/signed'
     signedIpa: '$(exportPath)/signed/$(Project_Name).ipa'
     signedIpaAsZip: '$(exportPath)/signed/$(Project_Name).zip'
     patchedPath: '$(exportPath)/patched'
     swiftSupportPath: 'SwiftSupport/iphoneos'
+    resultSwiftSupportPath: 'Frameworks'
     artifactsPath: 'output/artifacts'
-    resultIpa: '$(signedExtractedPath)/$(Project_Name).ipa'
+    resultIpa: '$(artifactsPath)/$(Project_Name).ipa'
     resultIpaAsZip: '$(artifactsPath)/$(Project_Name).zip'
-    developerPath: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
   steps:
   - task: NodeTool@0
     inputs:
@@ -122,45 +121,7 @@ jobs:
       signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
       provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
       xcodeVersion: 'specifyPath'
-      xcodeDeveloperDir: '$(developerPath)'
-
-  - task: Bash@3
-    displayName: 'Rename ipa to zip'
-    inputs:
-      targetType: 'inline'
-      script: 'mv $(unsignedIpa) $(unsignedZip)'
-
-  - task: ExtractFiles@1
-    displayName: 'Extract unsigned ipa/zip for patching'
-    inputs:
-      archiveFilePatterns: '$(unsignedZip)'
-      destinationFolder: '$(patchedPath)'
-  
-  - task: Bash@3
-    displayName: 'Remove zip and create required folders'
-    inputs:
-      targetType: 'inline'
-      script: 'rm $(unsignedZip) && mkdir -p $(patchedPath)/$(swiftSupportPath)'
-  
-  - task: CopyFiles@2
-    displayName: 'Copy SwiftSupport folder from .xarchive'
-    inputs:
-      SourceFolder: '$(xcarchivePath)/$(swiftSupportPath)'
-      Contents: '*.dylib'
-      TargetFolder: '$(patchedPath)/$(swiftSupportPath)'
-  
-  - task: ArchiveFiles@2
-    displayName: 'Create patched zip archive'
-    inputs:
-      rootFolderOrFile: '$(patchedPath)'
-      includeRootFolder: false
-      archiveFile: '$(unsignedZip)'
-
-  - task: Bash@3
-    displayName: 'Rename zip to ipa'
-    inputs:
-      targetType: 'inline'
-      script: 'mv $(unsignedZip) $(unsignedIpa)'
+      xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
 
   - task: DownloadSecureFile@1
     displayName: 'Download distribution profile from Azure secure files storage'
@@ -181,7 +142,7 @@ jobs:
     inputs:
       rootFolderOrFile: '$(exportPath)'
       includeRootFolder: false
-      archiveFile: '$(unsignedZip)'
+      archiveFile: '$(zipToSign)'
 
   - task: EsrpCodeSigning@1
     displayName: 'Sign build'
@@ -208,11 +169,49 @@ jobs:
     displayName: 'Extract signed build'
     inputs:
       archiveFilePatterns: '$(signedZip)'
-      destinationFolder: '$(signedExtractedPath)'  
+      destinationFolder: '$(signedExtractedPath)'
+  
+  - task: Bash@3
+    displayName: 'Rename signed ipa to zip'
+    inputs:
+      targetType: 'inline'
+      script: 'mv $(signedIpa) $(signedIpaAsZip)'
+
+  - task: ExtractFiles@1
+    displayName: 'Extract ipa for patching'
+    inputs:
+      archiveFilePatterns: '$(signedIpaAsZip)'
+      destinationFolder: '$(patchedPath)'
+  
+  - task: Bash@3
+    displayName: 'Create required folders'
+    inputs:
+      targetType: 'inline'
+      script: 'mkdir -p $(artifactsPath) && mkdir -p $(patchedPath)/$(resultSwiftSupportPath)'
+  
+  - task: CopyFiles@2
+    displayName: 'Copy SwiftSupport folder from .xarchive'
+    inputs:
+      SourceFolder: '$(xcarchivePath)/$(swiftSupportPath)'
+      Contents: '*.dylib'
+      TargetFolder: '$(patchedPath)/$(resultSwiftSupportPath)'
+  
+  - task: ArchiveFiles@2
+    displayName: 'Create resulting ipa as zip archive'
+    inputs:
+      rootFolderOrFile: '$(patchedPath)'
+      includeRootFolder: false
+      archiveFile: '$(resultIpaAsZip)'
+
+  - task: Bash@3
+    displayName: 'Rename created zip to ipa and also copy archive'
+    inputs:
+      targetType: 'inline'
+      script: 'mv $(resultIpaAsZip) $(resultIpa) && mv $(xcarchivePath) $(artifactsPath)'
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
     inputs:
-      PathtoPublish: '$(resultIpa)'
+      PathtoPublish: '$(artifactsPath)'
       ArtifactName: 'ios'
       publishLocation: 'Container'
