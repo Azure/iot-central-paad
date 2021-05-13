@@ -116,12 +116,8 @@ jobs:
       xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
       sdk: 'iphoneos14.4'
-      packageApp: true
-      exportPath: '$(exportPath)'
+      packageApp: false
       archivePath: '$(archivePath)'
-      signingOption: 'manual'
-      signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
-      provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
       xcodeVersion: 'specifyPath'
       xcodeDeveloperDir: '$(xcodeDeveloperDir)'
 
@@ -136,13 +132,21 @@ jobs:
     inputs:
       SourceFolder: '$(Agent.TempDirectory)'
       Contents: 'IoT_Plug_and_Play_Distribution.mobileprovision'
-      TargetFolder: '$(exportPath)'
+      TargetFolder: '$(archivePath)'
+      flattenFolders: true
+  
+  - task: CopyFiles@2
+    displayName: 'Copy ExportOptions'
+    inputs:
+      SourceFolder: '$(rootPath)'
+      Contents: 'ExportOptions.plist'
+      TargetFolder: '$(archivePath)'
       flattenFolders: true
 
   - task: ArchiveFiles@2
     displayName: 'Create zip for signing'
     inputs:
-      rootFolderOrFile: '$(exportPath)'
+      rootFolderOrFile: '$(archivePath)'
       includeRootFolder: false
       archiveFile: '$(zipToSign)'
 
@@ -173,22 +177,22 @@ jobs:
       archiveFilePatterns: '$(signedZip)'
       destinationFolder: '$(signedExtractedPath)'
   
-  - task: Bash@3
-    displayName: 'Patch ipa'
-    inputs:
-      targetType: 'filePath'
-      filePath: 'patchIpa.sh'
-      arguments: 'ipa_path="$(signedIpa)" toolchain_path="$(sourceSwiftSupportPath)" output_path="$(resultIpa)"'
+  # - task: Bash@3
+  #   displayName: 'Patch ipa'
+  #   inputs:
+  #     targetType: 'filePath'
+  #     filePath: 'patchIpa.sh'
+  #     arguments: 'ipa_path="$(signedIpa)" toolchain_path="$(sourceSwiftSupportPath)" output_path="$(resultIpa)"'
 
-  - task: Bash@3
-    displayName: 'Copy artifacts'
-    inputs:
-      targetType: 'inline'
-      script: 'mv $(xcarchivePath) $(artifactsPath)/$(Project_Name).xcarchive'
+  # - task: Bash@3
+  #   displayName: 'Copy artifacts'
+  #   inputs:
+  #     targetType: 'inline'
+  #     script: 'mv $(xcarchivePath) $(artifactsPath)/$(Project_Name).xcarchive'
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
     inputs:
-      PathtoPublish: '$(artifactsPath)'
+      PathtoPublish: '$(signedExtractedPath)'
       ArtifactName: 'ios'
       publishLocation: 'Container'
