@@ -184,7 +184,7 @@ jobs:
     displayName: 'Copy artifacts'
     inputs:
       targetType: 'inline'
-      script: 'mv  mv $(xcarchivePath) $(artifactsPath)'
+      script: 'mv $(xcarchivePath) $(artifactsPath)'
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
