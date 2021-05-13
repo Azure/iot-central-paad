@@ -116,7 +116,7 @@ jobs:
       xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
       sdk: 'iphoneos14.4'
-      packageApp: false
+      packageApp: true
       archivePath: '$(archivePath)'
       xcodeVersion: 'specifyPath'
       xcodeDeveloperDir: '$(xcodeDeveloperDir)'
