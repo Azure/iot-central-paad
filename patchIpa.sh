@@ -106,8 +106,8 @@ function addSwiftSupportFolder {
 function createAppStoreIPA {
     cd "${ipaDirectory}/${unzippedDirectoryName}"
     zip -r "${ipaDirectory}/${newIpaName}.zip" ./*
-    mkdir -p "${outputPath}"
-    mv "${ipaDirectory}/${newIpaName}.zip" "${outputPath}/${ipaName}.ipa"
+    mkdir -p `dirname $outputPath`
+    mv "${ipaDirectory}/${newIpaName}.zip" "$outputPath"
 }
 
 # Renames original .ipa and deletes the unzipped folder
