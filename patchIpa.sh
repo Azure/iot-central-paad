@@ -18,6 +18,7 @@ do
             ipa_path)          ipaPath=${VALUE} ;; # Format: "Path/to/app.ipa"
             archive_path)      archivePath=${VALUE} ;; # Format: "Path/to/app.xcarchive"
             toolchain_path)    toolchainPath=${VALUE} ;; # Format: "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/iphoneos"
+            output_path)    outputPath=${VALUE} ;; # Format: "Path/to/result/app.ipa"
             *)
     esac
 
@@ -26,6 +27,7 @@ done
 echo "ipaPath=$ipaPath"
 echo "archive_path=$archivePath"
 echo "toolchain_path=$toolchainPath"
+echo "output_path=$outputPath"
 
 # Derived Variables
 ipaDirectory=$(dirname "$ipaPath")
@@ -104,7 +106,7 @@ function addSwiftSupportFolder {
 function createAppStoreIPA {
     cd "${ipaDirectory}/${unzippedDirectoryName}"
     zip -r "${ipaDirectory}/${newIpaName}.zip" ./*
-    mv "${ipaDirectory}/${newIpaName}.zip" "${ipaDirectory}/${newIpaName}.ipa"
+    mv "${ipaDirectory}/${newIpaName}.zip" "${outputPath}/${ipaName}.ipa"
 }
 
 # Renames original .ipa and deletes the unzipped folder

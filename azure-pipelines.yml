@@ -77,7 +77,6 @@ jobs:
     sourceSwiftSupportPath: '$(xcodeDeveloperDir)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/iphoneos'
     artifactsPath: '$(rootPath)/output/artifacts'
     resultIpa: '$(artifactsPath)/$(Project_Name).ipa'
-    resultIpaAsZip: '$(artifactsPath)/$(Project_Name).zip'
   steps:
   - task: NodeTool@0
     inputs:
@@ -179,13 +178,13 @@ jobs:
     inputs:
       targetType: 'filePath'
       filePath: 'patchIpa.sh'
-      arguments: 'ipa_path="$(signedIpa)" toolchain_path="$(sourceSwiftSupportPath)"'
+      arguments: 'ipa_path="$(signedIpa)" toolchain_path="$(sourceSwiftSupportPath)" output_path="$(resultIpa)"'
 
   - task: Bash@3
-    displayName: 'Copy archive'
+    displayName: 'Copy artifacts'
     inputs:
       targetType: 'inline'
-      script: 'mv $(xcarchivePath) $(artifactsPath)'
+      script: 'mv  mv $(xcarchivePath) $(artifactsPath)'
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
