@@ -121,6 +121,13 @@ jobs:
       xcodeVersion: 'specifyPath'
       xcodeDeveloperDir: '$(xcodeDeveloperDir)'
 
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish unsigned ipa"
+    inputs:
+      PathtoPublish: '$(exportPath)'
+      ArtifactName: 'ios-unsigned'
+      publishLocation: 'Container'
+
   - task: DownloadSecureFile@1
     displayName: 'Download distribution profile from Azure secure files storage'
     inputs:
