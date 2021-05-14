@@ -180,19 +180,6 @@ jobs:
     inputs:
       archiveFilePatterns: '$(signedZip)'
       destinationFolder: '$(signedExtractedPath)'
-  
-  # - task: Bash@3
-  #   displayName: 'Patch ipa'
-  #   inputs:
-  #     targetType: 'filePath'
-  #     filePath: 'patchIpa.sh'
-  #     arguments: 'ipa_path="$(signedIpa)" toolchain_path="$(sourceSwiftSupportPath)" output_path="$(resultIpa)"'
-
-  # - task: Bash@3
-  #   displayName: 'Copy artifacts'
-  #   inputs:
-  #     targetType: 'inline'
-  #     script: 'mv $(xcarchivePath) $(artifactsPath)/$(Project_Name).xcarchive'
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
