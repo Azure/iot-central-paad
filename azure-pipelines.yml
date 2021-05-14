@@ -3,60 +3,8 @@ trigger:
 pool:
   vmImage: 'macos-latest'
 
-variables:
-  - group: iotc-paad-android
-  - name: PAAD_BETARELEASE_PROJECT_NAME
-    value: $(Project_Name)
-  - name: PAAD_BETARELEASE_VERSION_CODE
-    value: 0
-  - name: PAAD_BETARELEASE_VERSION_NAME
-    value: 1.0.0
-
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
-- job: Android
-  steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: '12.18.4'
-    displayName: 'Install Node'
-
-  - script: npm install
-    workingDirectory: .
-    displayName: 'Install node dependencies'
-
-  - task: DownloadSecureFile@1
-    name: androidKeystore
-    inputs:
-      secureFile: iotc-paad.keystore
-
-  - bash: |
-      PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
-      echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
-      echo "Using variable: $GOOGLE_MAPS_API_KEY"
-      echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
-      cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
-      ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
-    env:
-      GOOGLE_MAPS_KEY: $(googlemapskey)
-
-  - bash: env | sort
-
-  - task: Gradle@2
-    inputs:
-      workingDirectory: 'android'
-      gradleWrapperFile: 'android/gradlew'
-      gradleOptions: '-Xmx3072m'
-      publishJUnitResults: false
-      testResultsFiles: '**/TEST-*.xml'
-      tasks: 'assembleBetaRelease'
-
-  - task: PublishBuildArtifacts@1
-    displayName: "Publish Build Artifact"
-    inputs:
-      PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
-      ArtifactName: 'android'
-      publishLocation: 'Container'
 
 - job: iOS
   timeoutInMinutes: 120
@@ -78,81 +26,10 @@ jobs:
     artifactsPath: '$(rootPath)/output/artifacts'
     resultIpa: '$(artifactsPath)/$(Project_Name).ipa'
   steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: '12.18.4'
-    displayName: 'Install Node'
-
-  - script: npm install
-    workingDirectory: .
-    displayName: 'Install node dependencies'
-
-  - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
-    workingDirectory: .
-    displayName: 'Increment version in package.json'
-
-
-  - task: InstallAppleCertificate@2
-    displayName: "Install Apple Certificate"
-    inputs:
-      certSecureFile: '$(Development_Certificate_Name)'
-      certPwd: '$(Development_Certificate_Password)'
-
-  - task: InstallAppleProvisioningProfile@1
-    displayName: "Install Apple provisioning profile"
-    inputs:
-      provisioningProfileLocation: 'secureFiles'
-      provProfileSecureFile: '$(Development_Provisioning_Profile)'
-
   - task: ShellScript@2
+    displayName: 'Download zip to sign'
     inputs:
-      scriptPath: '$(rootPath)/bumpVersion.sh'
-
-  - task: Xcode@5
-    displayName: "Build Mobile Application"
-    inputs:
-      actions: 'build'
-      configuration: 'Release'
-      xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
-      scheme: '$(Project_Name)'
-      sdk: 'iphoneos14.4'
-      packageApp: true
-      exportPath: '$(exportPath)'
-      archivePath: '$(archivePath)'
-      signingOption: 'manual'
-      signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
-      provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
-      xcodeVersion: 'specifyPath'
-      xcodeDeveloperDir: '$(xcodeDeveloperDir)'
-
-  - task: DownloadSecureFile@1
-    displayName: 'Download distribution profile from Azure secure files storage'
-    inputs:
-      secureFile: 'IoT_Plug_and_Play_Distribution.mobileprovision'
-      retryCount: 5
-
-  - task: CopyFiles@2
-    displayName: 'Copy distribution provisioning profile'
-    inputs:
-      SourceFolder: '$(Agent.TempDirectory)'
-      Contents: 'IoT_Plug_and_Play_Distribution.mobileprovision'
-      TargetFolder: '$(archivePath)'
-      flattenFolders: true
-  
-  - task: CopyFiles@2
-    displayName: 'Copy ExportOptions'
-    inputs:
-      SourceFolder: '$(rootPath)'
-      Contents: 'ExportOptions.plist'
-      TargetFolder: '$(archivePath)'
-      flattenFolders: true
-
-  - task: ArchiveFiles@2
-    displayName: 'Create zip for signing'
-    inputs:
-      rootFolderOrFile: '$(archivePath)'
-      includeRootFolder: false
-      archiveFile: '$(zipToSign)'
+      scriptPath: 'mkdir -p $(exportPath) && cd $(exportPath) && curl -o $(Project_Name).zip https://testupload.blob.core.windows.net/public/IoT_PnP.zip'
 
   - task: EsrpCodeSigning@1
     displayName: 'Sign build'
