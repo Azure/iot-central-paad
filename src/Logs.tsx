@@ -1,9 +1,8 @@
 import React from 'react';
 import {View} from 'react-native';
-import {useLogger} from './hooks/common';
+import {useLogger, useTheme} from 'hooks';
 import {Text} from './components/typography';
 import {ScrollView} from 'react-native-gesture-handler';
-import {useTheme} from '@react-navigation/native';
 import Strings from 'strings';
 
 const Logs = React.memo(() => {

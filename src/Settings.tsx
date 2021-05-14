@@ -2,13 +2,13 @@ import {useContext, useMemo} from 'react';
 import {ThemeContext} from './contexts/theme';
 import React from 'react';
 import {View, Switch, ScrollView, Platform} from 'react-native';
-import {useTheme, useNavigation} from '@react-navigation/native';
+import {StackActions, useNavigation} from '@react-navigation/native';
 import {Icon, ListItem} from 'react-native-elements';
 import {useDeliveryInterval, useSimulation} from './hooks/iotc';
 import {defaults} from './contexts/defaults';
 import Strings from 'strings';
 import {camelToName, Text} from 'components/typography';
-import {useBoolean} from 'hooks/common';
+import {useBoolean, useTheme} from 'hooks';
 import {Pages, PagesNavigator, ThemeMode} from 'types';
 import {Loader} from 'components/loader';
 
@@ -123,8 +123,27 @@ export default function Settings() {
               icon: dark ? 'sync-outline' : 'sync',
               action: {
                 type: 'switch',
-                fn: async val => {
+                fn: async (val, nav: PagesNavigator) => {
+                  const navState = nav.dangerouslyGetState();
                   await simulate(val);
+                  if (val) {
+                    // if simulation just applied remove registration route
+                    nav.dispatch({
+                      ...StackActions.replace(Pages.ROOT),
+                      source: navState.routes.find(
+                        r => r.name === Pages.REGISTRATION,
+                      )?.key,
+                      target: navState.key,
+                    });
+                  } else {
+                    // if simulation just applied remove registration route
+                    nav.dispatch({
+                      ...StackActions.replace(Pages.REGISTRATION),
+                      source: navState.routes.find(r => r.name === Pages.ROOT)
+                        ?.key,
+                      target: navState.key,
+                    });
+                  }
                 },
               },
               value: centralSimulated,
@@ -152,12 +171,13 @@ const RightElement = React.memo<{
   dark: boolean;
 }>(({item, colors, dark}) => {
   const [enabled, setEnabled] = useBoolean(item.value as boolean);
+  const nav = useNavigation<PagesNavigator>();
   if (item.action && item.action.type === 'switch') {
     return (
       <Switch
         value={enabled}
         onValueChange={val => {
-          item.action?.fn(val);
+          item.action?.fn(val, nav);
           setEnabled.Toggle();
         }}
         {...(Platform.OS === 'android' && {
@@ -177,21 +197,19 @@ const RightElement = React.memo<{
 const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
   ({items, colors, dark}) => {
     const nav = useNavigation<PagesNavigator>();
-    const [simulated] = useSimulation();
 
-    React.useEffect(
-      () =>
-        nav.addListener('beforeRemove', e => {
-          // Prevent default behavior of leaving the screen
-          e.preventDefault();
-          if (simulated) {
-            nav.navigate(Pages.ROOT);
-          } else {
-            nav.dispatch(e.data.action);
-          }
-        }),
-      [nav, simulated],
+    const styles = React.useMemo(
+      () => ({
+        subtitle: {
+          color: colors.secondary,
+        },
+        title: {
+          color: colors.text,
+        },
+      }),
+      [colors],
     );
+
     return (
       <ScrollView style={{flex: 1}}>
         {items.map((item, index) => (
@@ -208,11 +226,11 @@ const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
               <Icon name={item.icon} type="ionicon" color={colors.text} />
             )}
             <ListItem.Content>
-              <ListItem.Title style={{color: colors.text}}>
-                {item.title}
-              </ListItem.Title>
+              <ListItem.Title style={styles.title}>{item.title}</ListItem.Title>
               {item.subtitle && (
-                <ListItem.Subtitle>{item.subtitle}</ListItem.Subtitle>
+                <ListItem.Subtitle style={styles.subtitle}>
+                  {item.subtitle}
+                </ListItem.Subtitle>
               )}
             </ListItem.Content>
             {item.action && (

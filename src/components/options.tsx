@@ -1,4 +1,4 @@
-import {useTheme} from '@react-navigation/native';
+import {useTheme} from 'hooks';
 import React, {useEffect} from 'react';
 import {View} from 'react-native';
 import {CheckBox, ListItem} from 'react-native-elements';

@@ -171,7 +171,6 @@ export function useSensors(): [
           type: 'ionicon',
         },
         simulated: defaults.emulator,
-        unit: '°',
       },
       {
         id: AVAILABLE_SENSORS.BATTERY,

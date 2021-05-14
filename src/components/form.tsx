@@ -1,4 +1,4 @@
-import {useTheme} from '@react-navigation/native';
+import {useTheme} from 'hooks';
 import React from 'react';
 import {Platform, View} from 'react-native';
 import {Input} from 'react-native-elements';

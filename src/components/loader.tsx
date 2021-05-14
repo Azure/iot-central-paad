@@ -1,9 +1,9 @@
 import React from 'react';
 import {View, ActivityIndicator, ViewStyle, ScaledSize} from 'react-native';
 import {Text} from './typography';
-import {Theme, useTheme} from '@react-navigation/native';
+import {Theme} from '@react-navigation/native';
 import {Button, Divider, Overlay} from 'react-native-elements';
-import {useScreenDimensions} from '../hooks/layout';
+import {useScreenDimensions, useTheme} from 'hooks';
 
 type ILoaderButton = {
   text: string;

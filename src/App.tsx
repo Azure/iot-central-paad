@@ -11,7 +11,6 @@ import {
   NavigationContainer,
   DarkTheme,
   DefaultTheme,
-  useTheme,
   RouteProp,
 } from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -57,6 +56,7 @@ import {
   useProperties,
   useSensors,
   useSimulation,
+  useTheme,
   useThemeMode,
 } from 'hooks';
 import FileUpload from './FileUpload';
@@ -186,21 +186,7 @@ const Navigation = React.memo(() => {
             return data;
           }}
         />
-        <Stack.Screen
-          name={Pages.SETTINGS}
-          // options={({ navigation }: { navigation: NavigationProperty }) => ({
-          //   stackAnimation: 'flip',
-          //   headerTitle: Platform.select({
-          //     ios: undefined,
-          //     android: '',
-          //   }),
-          //   headerLeft: () => (
-          //     <BackButton goBack={navigation.goBack} title={Pages.SETTINGS} />
-          //   ),
-          //   headerRight: () => null,
-          // })}
-          component={Settings}
-        />
+        <Stack.Screen name={Pages.SETTINGS} component={Settings} />
         <Stack.Screen
           name={Pages.THEME}
           options={({navigation}: {navigation: NavigationProperty}) => ({
@@ -399,10 +385,8 @@ const Root = React.memo<{
     if (command.name === LIGHT_TOGGLE_COMMAND) {
       const fn = async () => {
         return new Promise<void>(resolve => {
-          console.log(`accendo per ${data.duration}`);
           Torch.switchState(true);
           setTimeout(() => {
-            console.log(`spengo per ${data.duration}`);
             Torch.switchState(false);
             resolve();
           }, data.duration * 1000);
@@ -493,14 +477,6 @@ const Root = React.memo<{
       iotcentralClient.on(IOTC_EVENTS.Commands, onCommandUpdate);
       iotcentralClient.on(IOTC_EVENTS.Properties, onPropUpdate);
       iotcentralClient.fetchTwin();
-    } else {
-      // device has been disconnected. reset to registration
-      if (!simulated) {
-        navigation.reset({
-          index: 1, // as per issue: https://github.com/react-navigation/react-navigation/issues/7839
-          routes: [{name: Pages.REGISTRATION}],
-        });
-      }
     }
 
     return () => {
@@ -697,7 +673,7 @@ const Profile = React.memo((props: {navigate: any}) => {
         type={Platform.select({ios: 'ionicon', android: 'material'})}
         color={colors.text}
         onPress={() => {
-          props.navigate('Settings');
+          props.navigate(Pages.SETTINGS);
         }}
       />
     </View>

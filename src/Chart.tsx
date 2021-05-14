@@ -1,4 +1,4 @@
-import {RouteProp, useTheme} from '@react-navigation/native';
+import {RouteProp} from '@react-navigation/native';
 import React from 'react';
 import {WebView} from 'react-native-webview';
 import {
@@ -19,7 +19,7 @@ import {
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import Map from 'components/map';
 import {Loader} from 'components/loader';
-import {useScreenDimensions} from 'hooks/layout';
+import {useScreenDimensions, useTheme} from 'hooks';
 
 type SeriesData = {
   [date: string]: {

@@ -1,6 +1,5 @@
 import React, {useRef, useState, useEffect} from 'react';
 import {CardProps, IconProps, Icon, Input} from 'react-native-elements';
-import {useTheme} from '@react-navigation/native';
 import {
   View,
   ColorValue,
@@ -18,6 +17,8 @@ import {
   normalize,
 } from './typography';
 import {DataType} from 'types';
+import {useTheme} from 'hooks';
+import Strings from 'strings';
 
 type EditCallback = (value: any) => void | Promise<void>;
 
@@ -57,7 +58,6 @@ export function Card(
     alignSelf: 'flex-end',
     justifyContent: 'flex-end',
   };
-
   return (
     <TouchableOpacity
       style={[
@@ -199,14 +199,19 @@ const Value = React.memo<{
 
     if (editable && onEdit) {
       return (
-        <View style={{flex: 1, paddingBottom: 5}}>
+        <View style={{flex: 1, alignItems: 'center'}}>
           <Input
             value={edited.toString()}
             onChangeText={setEdited}
             inputStyle={{color: textColor}}
+            containerStyle={{maxHeight: 50, marginBottom: 5}}
             keyboardType={typeof value === 'number' ? 'numeric' : 'default'}
           />
-          <Button title="Send" onPress={e => onEdit(edited)} type="clear" />
+          <Button
+            title={Strings.Client.Properties.Send}
+            onPress={e => onEdit(edited)}
+            type="clear"
+          />
         </View>
       );
     } else {

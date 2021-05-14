@@ -1,10 +1,12 @@
-import {useTheme} from '@react-navigation/native';
 import React from 'react';
-import {View, FlatList} from 'react-native';
-import {BottomSheet, ListItem} from 'react-native-elements';
+import {View, FlatList, ViewStyle, TextStyle} from 'react-native';
+import {ListItem} from 'react-native-elements';
 import Strings from 'strings';
-import {ItemProps} from 'types';
+import {ItemProps, Literal} from 'types';
 import {Card} from './components/card';
+import {useTheme} from 'hooks';
+import {normalize} from 'components/typography';
+import BottomPopup from 'components/bottomPopup';
 
 type CardPressCallback = (item: ItemProps) => void | Promise<void>;
 type CardEditCallback = (item: ItemProps, value: any) => void | Promise<void>;
@@ -20,16 +22,19 @@ const CardView = React.memo<{
     undefined,
   );
   const {colors} = useTheme();
-  const styles = React.useMemo(
+  const styles = React.useMemo<Literal<ViewStyle | TextStyle>>(
     () => ({
       listItem: {
         backgroundColor: colors.card,
       },
       listItemText: {
+        fontWeight: 'bold',
+        fontSize: normalize(16),
         color: colors.text,
       },
-      closeItemText: {
-        color: 'gray',
+      detailItemText: {
+        fontSize: normalize(14),
+        color: colors.text,
       },
     }),
     [colors],
@@ -37,7 +42,6 @@ const CardView = React.memo<{
 
   const onCardLongPress = React.useCallback<CardPressCallback>(
     item => {
-      console.log('qua');
       setBottomItem(item);
     },
     [setBottomItem],
@@ -51,14 +55,13 @@ const CardView = React.memo<{
         renderItem={getCard(
           componentName,
           onItemPress,
-          onCardLongPress,
+          onItemLongPress ? onCardLongPress : undefined,
           onEdit,
         )}
       />
-      <BottomSheet
+      <BottomPopup
         isVisible={bottomItem !== undefined}
-        containerStyle={{backgroundColor: 'rgba(0.5, 0.25, 0, 0.7)'}}
-        modalProps={{}}>
+        onDismiss={() => setBottomItem(undefined)}>
         <ListItem containerStyle={styles.listItem}>
           <ListItem.Content>
             <ListItem.Title style={styles.listItemText}>
@@ -74,14 +77,14 @@ const CardView = React.memo<{
           }}
           containerStyle={styles.listItem}>
           <ListItem.Content>
-            <ListItem.Title style={styles.closeItemText}>
+            <ListItem.Title style={styles.detailItemText}>
               {bottomItem?.enabled
                 ? Strings.Core.DisableSensor
                 : Strings.Core.EnableSensor}
             </ListItem.Title>
           </ListItem.Content>
         </ListItem>
-      </BottomSheet>
+      </BottomPopup>
     </View>
   );
 });

@@ -196,6 +196,7 @@ export type GoogleFitStepResult = {
 // Utils types
 export type OnPressCallback = (e: GestureResponderEvent) => void;
 export type CommonCallback = (...args: any) => void | Promise<void>;
+export type Literal<T> = {[x: string]: T};
 
 /**
  * EVENTS

@@ -111,6 +111,7 @@ const Strings = {
   },
   Client: {
     Properties: {
+      Send: 'Send',
       Delivery: {
         Success: 'Property "{{0}}" successfully sent to Azure IoT.',
         Failure: 'Failed to send property "{{0}}" to Azure IoT.',
