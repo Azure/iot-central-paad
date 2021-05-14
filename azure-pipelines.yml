@@ -26,10 +26,11 @@ jobs:
     artifactsPath: '$(rootPath)/output/artifacts'
     resultIpa: '$(artifactsPath)/$(Project_Name).ipa'
   steps:
-  - task: ShellScript@2
+  - task: Bash@3
     displayName: 'Download zip to sign'
     inputs:
-      scriptPath: 'mkdir -p $(exportPath) && cd $(exportPath) && curl -o $(Project_Name).zip https://testupload.blob.core.windows.net/public/IoT_PnP.zip'
+      targetType: 'inline'
+      script: 'mkdir -p $(exportPath) && cd $(exportPath) && curl -o $(Project_Name).zip https://testupload.blob.core.windows.net/public/IoT_PnP.zip'
 
   - task: EsrpCodeSigning@1
     displayName: 'Sign build'
