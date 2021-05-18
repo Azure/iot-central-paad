@@ -1,28 +1,24 @@
-import {useCallback, useContext, useMemo} from 'react';
+import {useContext, useMemo} from 'react';
 import {ThemeContext} from './contexts/theme';
 import React from 'react';
-import {View, Switch, ScrollView, Platform, Alert} from 'react-native';
-import {useTheme, useNavigation} from '@react-navigation/native';
+import {View, Switch, ScrollView, Platform} from 'react-native';
+import {StackActions, useNavigation} from '@react-navigation/native';
 import {Icon, ListItem} from 'react-native-elements';
-import {
-  useDeliveryInterval,
-  useIoTCentralClient,
-  useSimulation,
-} from './hooks/iotc';
+import {useDeliveryInterval, useSimulation} from './hooks/iotc';
 import {defaults} from './contexts/defaults';
-import {StorageContext} from './contexts/storage';
-import {LogsContext} from './contexts/logs';
 import Strings from 'strings';
-import {camelToName} from 'components/typography';
-import {useBoolean} from 'hooks/common';
+import {camelToName, Text} from 'components/typography';
+import {useBoolean, useTheme} from 'hooks';
 import {Pages, PagesNavigator, ThemeMode} from 'types';
 import {Loader} from 'components/loader';
+
+const pkg = require('../package.json');
 
 type ProfileItem = {
   title: string;
   subtitle?: string;
-  icon: string;
-  value?: boolean;
+  icon?: string;
+  value?: boolean | string;
   action?: {
     type: 'switch' | 'expand' | 'select';
     fn: (...args: any) => void;
@@ -30,47 +26,45 @@ type ProfileItem = {
 };
 
 export default function Settings() {
-  const {clear} = useContext(StorageContext);
-  const {clear: clearLogs} = useContext(LogsContext);
-  const [client, , clearClient] = useIoTCentralClient();
   const [centralSimulated, simulate] = useSimulation();
   const {mode} = useContext(ThemeContext);
   const {colors, dark} = useTheme();
   const [deliveryInterval] = useDeliveryInterval();
-  const [loading, setLoading] = useBoolean(false);
+  const [loading] = useBoolean(false);
 
-  const clearStorage = useCallback(() => {
-    Alert.alert(
-      Strings.Settings.Clear.Alert.Title,
-      Strings.Settings.Clear.Alert.Text,
-      [
-        {
-          text: 'Proceed',
-          onPress: async () => {
-            // IMPORTANT!: clear stored credentials before cleaning client, otherwise device will continue to re-connect
-            setLoading.True();
-            await client?.disconnect();
-            await clear();
-            clearLogs();
-            clearClient();
-            Alert.alert(
-              Strings.Settings.Clear.Success.Title,
-              Strings.Settings.Clear.Success.Text,
-            );
-            setLoading.False();
-          },
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: () => {},
-        },
-      ],
-      {
-        cancelable: false,
-      },
-    );
-  }, [setLoading, client, clear, clearLogs, clearClient]);
+  // TEMP: removed Clear from here
+  // const clearStorage = useCallback(() => {
+  //   Alert.alert(
+  //     Strings.Settings.Clear.Alert.Title,
+  //     Strings.Settings.Clear.Alert.Text,
+  //     [
+  //       {
+  //         text: 'Proceed',
+  //         onPress: async () => {
+  //           // IMPORTANT!: clear stored credentials before cleaning client, otherwise device will continue to re-connect
+  //           setLoading.True();
+  //           await client?.disconnect();
+  //           await clear();
+  //           clearLogs();
+  //           clearClient();
+  //           Alert.alert(
+  //             Strings.Settings.Clear.Success.Title,
+  //             Strings.Settings.Clear.Success.Text,
+  //           );
+  //           setLoading.False();
+  //         },
+  //       },
+  //       {
+  //         text: 'Cancel',
+  //         style: 'cancel',
+  //         onPress: () => {},
+  //       },
+  //     ],
+  //     {
+  //       cancelable: false,
+  //     },
+  //   );
+  // }, [setLoading, client, clear, clearLogs, clearClient]);
 
   const items = useMemo<ProfileItem[]>(
     () => [
@@ -88,14 +82,14 @@ export default function Settings() {
           },
         },
       },
-      {
-        title: Strings.Settings.Clear.Title,
-        icon: 'trash-outline',
-        action: {
-          type: 'select',
-          fn: clearStorage,
-        },
-      },
+      // {
+      //   title: Strings.Settings.Clear.Title,
+      //   icon: 'trash-outline',
+      //   action: {
+      //     type: 'select',
+      //     fn: clearStorage,
+      //   },
+      // },
       {
         title: Strings.Settings.Theme.Title,
         icon: 'moon-outline',
@@ -129,16 +123,39 @@ export default function Settings() {
               icon: dark ? 'sync-outline' : 'sync',
               action: {
                 type: 'switch',
-                fn: async val => {
+                fn: async (val, nav: PagesNavigator) => {
+                  const navState = nav.dangerouslyGetState();
                   await simulate(val);
+                  if (val) {
+                    // if simulation just applied remove registration route
+                    nav.dispatch({
+                      ...StackActions.replace(Pages.ROOT),
+                      source: navState.routes.find(
+                        r => r.name === Pages.REGISTRATION,
+                      )?.key,
+                      target: navState.key,
+                    });
+                  } else {
+                    // if simulation just applied remove registration route
+                    nav.dispatch({
+                      ...StackActions.replace(Pages.REGISTRATION),
+                      source: navState.routes.find(r => r.name === Pages.ROOT)
+                        ?.key,
+                      target: navState.key,
+                    });
+                  }
                 },
               },
               value: centralSimulated,
             } as ProfileItem,
           ]
         : []),
+      {
+        title: 'Version',
+        value: pkg.version,
+      },
     ],
-    [deliveryInterval, mode, centralSimulated, dark, simulate, clearStorage],
+    [deliveryInterval, mode, centralSimulated, dark, simulate],
   );
   return (
     <View style={{flex: 1, marginVertical: 10}}>
@@ -154,12 +171,13 @@ const RightElement = React.memo<{
   dark: boolean;
 }>(({item, colors, dark}) => {
   const [enabled, setEnabled] = useBoolean(item.value as boolean);
+  const nav = useNavigation<PagesNavigator>();
   if (item.action && item.action.type === 'switch') {
     return (
       <Switch
         value={enabled}
         onValueChange={val => {
-          item.action?.fn(val);
+          item.action?.fn(val, nav);
           setEnabled.Toggle();
         }}
         {...(Platform.OS === 'android' && {
@@ -179,6 +197,19 @@ const RightElement = React.memo<{
 const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
   ({items, colors, dark}) => {
     const nav = useNavigation<PagesNavigator>();
+
+    const styles = React.useMemo(
+      () => ({
+        subtitle: {
+          color: colors.secondary,
+        },
+        title: {
+          color: colors.text,
+        },
+      }),
+      [colors],
+    );
+
     return (
       <ScrollView style={{flex: 1}}>
         {items.map((item, index) => (
@@ -191,18 +222,25 @@ const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
                 ? item.action.fn.bind(null, nav)
                 : undefined
             }>
-            <Icon name={item.icon} type="ionicon" color={colors.text} />
+            {item.icon && (
+              <Icon name={item.icon} type="ionicon" color={colors.text} />
+            )}
             <ListItem.Content>
-              <ListItem.Title style={{color: colors.text}}>
-                {item.title}
-              </ListItem.Title>
+              <ListItem.Title style={styles.title}>{item.title}</ListItem.Title>
               {item.subtitle && (
-                <ListItem.Subtitle>{item.subtitle}</ListItem.Subtitle>
+                <ListItem.Subtitle style={styles.subtitle}>
+                  {item.subtitle}
+                </ListItem.Subtitle>
               )}
             </ListItem.Content>
-            <RightElement item={item} colors={colors} dark={dark} />
-            {item.action && item.action.type === 'expand' && (
-              <ListItem.Chevron />
+            {item.action && (
+              <>
+                <RightElement item={item} colors={colors} dark={dark} />
+                {item.action.type === 'expand' && <ListItem.Chevron />}
+              </>
+            )}
+            {item.value && typeof item.value === 'string' && (
+              <Text>{item.value}</Text>
             )}
           </ListItem>
         ))}

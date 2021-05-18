@@ -1,7 +1,12 @@
 import React from 'react';
-import {View, FlatList} from 'react-native';
-import {ItemProps} from 'types';
+import {View, FlatList, ViewStyle, TextStyle} from 'react-native';
+import {ListItem} from 'react-native-elements';
+import Strings from 'strings';
+import {ItemProps, Literal} from 'types';
 import {Card} from './components/card';
+import {useTheme} from 'hooks';
+import {normalize} from 'components/typography';
+import BottomPopup from 'components/bottomPopup';
 
 type CardPressCallback = (item: ItemProps) => void | Promise<void>;
 type CardEditCallback = (item: ItemProps, value: any) => void | Promise<void>;
@@ -10,15 +15,76 @@ const CardView = React.memo<{
   items: ItemProps[];
   componentName?: string;
   onItemPress?: CardPressCallback;
+  onItemLongPress?: CardPressCallback;
   onEdit?: CardEditCallback;
-}>(({items, onItemPress, componentName, onEdit}) => {
+}>(({items, onItemPress, onItemLongPress, componentName, onEdit}) => {
+  const [bottomItem, setBottomItem] = React.useState<ItemProps | undefined>(
+    undefined,
+  );
+  const {colors} = useTheme();
+  const styles = React.useMemo<Literal<ViewStyle | TextStyle>>(
+    () => ({
+      listItem: {
+        backgroundColor: colors.card,
+      },
+      listItemText: {
+        fontWeight: 'bold',
+        fontSize: normalize(16),
+        color: colors.text,
+      },
+      detailItemText: {
+        fontSize: normalize(14),
+        color: colors.text,
+      },
+    }),
+    [colors],
+  );
+
+  const onCardLongPress = React.useCallback<CardPressCallback>(
+    item => {
+      setBottomItem(item);
+    },
+    [setBottomItem],
+  );
+
   return (
     <View style={{flex: 1, paddingVertical: 10}}>
       <FlatList
         numColumns={items.length > 4 ? 2 : 1}
         data={items}
-        renderItem={getCard(componentName, onItemPress, onEdit)}
+        renderItem={getCard(
+          componentName,
+          onItemPress,
+          onItemLongPress ? onCardLongPress : undefined,
+          onEdit,
+        )}
       />
+      <BottomPopup
+        isVisible={bottomItem !== undefined}
+        onDismiss={() => setBottomItem(undefined)}>
+        <ListItem containerStyle={styles.listItem}>
+          <ListItem.Content>
+            <ListItem.Title style={styles.listItemText}>
+              {bottomItem?.name}
+            </ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+        <ListItem
+          onPress={async () => {
+            await onItemLongPress?.(bottomItem!);
+            // close sheet
+            setBottomItem(undefined);
+          }}
+          containerStyle={styles.listItem}>
+          <ListItem.Content>
+            <ListItem.Title style={styles.detailItemText}>
+              {bottomItem?.enabled
+                ? Strings.Core.DisableSensor
+                : Strings.Core.EnableSensor}
+            </ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+      </BottomPopup>
     </View>
   );
 });
@@ -26,6 +92,7 @@ const CardView = React.memo<{
 const getCard = (
   componentName?: string,
   onItemPress?: CardPressCallback,
+  onItemLongPress?: CardPressCallback,
   onEdit?: CardEditCallback,
 ) => ({item, index}: {item: ItemProps; index: number}) => (
   <Card
@@ -37,8 +104,8 @@ const getCard = (
     enabled={item.enabled}
     editable={(item as any).editable}
     icon={item.icon}
-    onToggle={() => item.enable(!item.enabled)}
-    onLongPress={e => console.log('longpress')} // edit card
+    // onToggle={() => item.enable(!item.enabled)}
+    onLongPress={onItemLongPress && onItemLongPress.bind(null, item)} // edit card
     onEdit={onEdit?.bind(null, item)}
     onPress={
       item.enabled && onItemPress ? onItemPress.bind(null, item) : undefined

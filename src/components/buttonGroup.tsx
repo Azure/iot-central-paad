@@ -1,5 +1,5 @@
 import React from 'react';
-import {View} from 'react-native';
+import {View, ViewStyle} from 'react-native';
 import {CheckBox} from 'react-native-elements';
 
 export type ButtonGroupItem = {
@@ -10,18 +10,17 @@ export type ButtonGroupItem = {
 const ButtonGroup = React.memo<{
   items: ButtonGroupItem[];
   onCheckedChange: (id: string) => void | Promise<void>;
+  containerStyle?: ViewStyle;
   defaultCheckedId?: string;
   readonly?: boolean;
-}>(({items, onCheckedChange, defaultCheckedId, readonly}) => {
+}>(({items, onCheckedChange, defaultCheckedId, readonly, containerStyle}) => {
   const ids = items.map(i => i.id);
   const [checked, setChecked] = React.useState<typeof ids[number]>(
     defaultCheckedId ?? ids[0],
   );
 
   return (
-    <View
-      style={{flex: 1, marginVertical: 20}}
-      key={`btnGroup-${Math.random()}`}>
+    <View style={[{flex: 1}, containerStyle]} key={`btnGroup-${Math.random()}`}>
       {items.map((item, index) => (
         <CheckBox
           key={`chkb-${index}-${Math.random()}`}

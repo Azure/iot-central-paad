@@ -1,7 +1,7 @@
 import React from 'react';
 import {Text as ELText, TextProps} from 'react-native-elements';
 import {Dimensions, Platform, PixelRatio} from 'react-native';
-import {useTheme} from '@react-navigation/native';
+import {useTheme} from 'hooks';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 

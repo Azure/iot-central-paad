@@ -1,6 +1,5 @@
 import React, {useRef, useState, useEffect} from 'react';
-import {CardProps, IconProps, Icon, Input, Button} from 'react-native-elements';
-import {useTheme} from '@react-navigation/native';
+import {CardProps, IconProps, Icon, Input} from 'react-native-elements';
 import {
   View,
   ColorValue,
@@ -8,8 +7,18 @@ import {
   TouchableOpacityProps,
   ViewStyle,
 } from 'react-native';
-import {Text, Name, Headline, getRandomColor, bytesToSize} from './typography';
+import {Button} from 'components';
+import {
+  Text,
+  Name,
+  Headline,
+  getRandomColor,
+  bytesToSize,
+  normalize,
+} from './typography';
 import {DataType} from 'types';
+import {useTheme} from 'hooks';
+import Strings from 'strings';
 
 type EditCallback = (value: any) => void | Promise<void>;
 
@@ -37,6 +46,7 @@ export function Card(
     unit,
     icon,
     onPress,
+    onLongPress,
     dataType,
     ...otherProps
   } = props;
@@ -48,7 +58,6 @@ export function Card(
     alignSelf: 'flex-end',
     justifyContent: 'flex-end',
   };
-
   return (
     <TouchableOpacity
       style={[
@@ -75,8 +84,9 @@ export function Card(
         containerStyle,
       ]}
       {...otherProps}
-      disabled={!onPress}
-      onPress={onPress}>
+      disabled={!onPress && !onLongPress}
+      onPress={onPress}
+      onLongPress={onLongPress}>
       <View style={{flex: 1, position: 'relative'}}>
         {enabled && (
           <View
@@ -189,19 +199,25 @@ const Value = React.memo<{
 
     if (editable && onEdit) {
       return (
-        <View style={{flex: 1}}>
+        <View style={{flex: 1, alignItems: 'center'}}>
           <Input
             value={edited.toString()}
             onChangeText={setEdited}
             inputStyle={{color: textColor}}
+            containerStyle={{maxHeight: 50, marginBottom: 5}}
             keyboardType={typeof value === 'number' ? 'numeric' : 'default'}
           />
-          <Button title="Send" onPress={e => onEdit(edited)} type="clear" />
+          <Button
+            title={Strings.Client.Properties.Send}
+            onPress={e => onEdit(edited)}
+            type="clear"
+          />
         </View>
       );
     } else {
       return (
-        <Headline style={{fontSize: 24, marginEnd: 5, color: textColor}}>
+        <Headline
+          style={{fontSize: normalize(20), marginEnd: 5, color: textColor}}>
           {/* {strVal.length > 6 ? `${strVal.substring(0, 6)}...` : strVal} */}
           {strVal}
         </Headline>

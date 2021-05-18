@@ -4,6 +4,8 @@ const Strings = {
     Close: 'Close',
     Cancel: 'Cancel',
     Loading: 'Loading...',
+    DisableSensor: 'Disable sensor',
+    EnableSensor: 'Enable sensor',
   },
   Settings: {
     Title: 'Settings',
@@ -44,8 +46,11 @@ const Strings = {
     },
   },
   Registration: {
-    Header:
-      'Welcome! Connect your phone to the Azure IoT cloud and experience the simplicity of IoT Plug and Play in just a few steps.​',
+    Header: {
+      Welcome: 'Welcome! ',
+      Text:
+        'Connect your phone to the Azure IoT cloud and experience the simplicity of IoT Plug and Play in just a few steps.',
+    },
     Footer: 'Need help getting started? ',
     StartHere: {
       Title: 'Start here',
@@ -57,6 +62,18 @@ const Strings = {
     Manual: {
       Title: 'Manually connect',
       Header: 'Need help locating this information? ',
+      DeviceId: {
+        Label: 'Device Id',
+        PlaceHolder: 'Enter a unique ID to identify this device',
+      },
+      ScopeId: {
+        Label: 'ID scope',
+        PlaceHolder: 'Enter your DPS ID scope',
+      },
+      SASKey: {
+        Label: 'Shared access signature (SAS) key',
+        PlaceHolder: 'Enter or paste your SAS key',
+      },
       Registered: 'Registered using:',
       RegisterNew: {
         Title: 'Register as a new device',
@@ -82,17 +99,20 @@ const Strings = {
         ConnectionInfo: 'Connection info',
       },
       KeyTypes: {
-        Group: 'Application key',
+        Label: 'Authentication',
+        Group: 'Group key',
         Device: 'Device key',
       },
     },
     Connection: {
-      Loading: 'Connecting client...',
+      Loading: 'Connecting to Azure IoT...',
+      Cancel: 'Cancel',
     },
     Clear: 'Clear registration',
   },
   Client: {
     Properties: {
+      Send: 'Send',
       Delivery: {
         Success: 'Property "{{0}}" successfully sent to Azure IoT.',
         Failure: 'Failed to send property "{{0}}" to Azure IoT.',
@@ -101,7 +121,7 @@ const Strings = {
     },
   },
   FileUpload: {
-    Start: 'Select image to be uploaded on Azure Storage',
+    Start: 'Select an image to upload to Azure Storage',
     Footer: "You'll need to configure file upload in your app.",
     LearnMore: {
       Title: 'Learn more',

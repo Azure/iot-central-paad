@@ -11,6 +11,7 @@ import {StorageContext, IoTCContext} from 'contexts';
 import {Debug, EventLogger} from 'tools';
 import {CommonCallback, LOG_DATA} from 'types';
 import {useLogger} from './common';
+import {defaults} from '../contexts/defaults';
 
 export function useIoTCentralClient(
   onConnectionRefresh?: (client: IoTCClient) => void | Promise<void>,
@@ -97,9 +98,8 @@ export function useConnectIoTCentralClient(): [
           credentials.deviceKey,
           eventLogger.current,
         );
-        if (credentials.modelId) {
-          iotc.setModelId(credentials.modelId);
-        }
+
+        iotc.setModelId(credentials.modelId ?? defaults.modelId);
       } else {
         Debug(
           `Error connecting IoTC Client. Credentials invalid`,
@@ -146,12 +146,13 @@ export function useConnectIoTCentralClient(): [
             credentialsData,
             options?.encryptionKey,
           );
+          console.log(credentials);
         }
         await _connect_internal(credentials);
         await saveCredentials({credentials});
       } catch (err) {
         setError(err);
-        throw err;
+        setConnecting(false);
       }
     },
     [setConnecting, _connect_internal, saveCredentials],
@@ -168,8 +169,11 @@ export function useConnectIoTCentralClient(): [
       if (connecting) {
         setConnecting(false);
       }
+      if (error) {
+        setError(null);
+      }
     },
-    [connecting, setConnecting, saveCredentials],
+    [connecting, error, setError, setConnecting, saveCredentials],
   );
 
   useEffect(() => {
@@ -200,9 +204,12 @@ export function useConnectIoTCentralClient(): [
 export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
   const {save, simulated} = useContext(StorageContext);
 
-  const setSimulated = async (simulated: boolean) => {
-    save({simulated});
-  };
+  const setSimulated = useCallback(
+    async (simulated: boolean) => {
+      await save({simulated});
+    },
+    [save],
+  );
   return [simulated, setSimulated];
 }
 

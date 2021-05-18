@@ -11,7 +11,6 @@ import {
   NavigationContainer,
   DarkTheme,
   DefaultTheme,
-  useTheme,
   RouteProp,
 } from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -57,6 +56,7 @@ import {
   useProperties,
   useSensors,
   useSimulation,
+  useTheme,
   useThemeMode,
 } from 'hooks';
 import FileUpload from './FileUpload';
@@ -110,7 +110,7 @@ const Navigation = React.memo(() => {
   const [simulated] = useSimulation();
   const {credentials, initialized} = useContext(StorageContext);
   const [deliveryInterval, setDeliveryInterval] = useDeliveryInterval();
-  const [connect, , , {client, loading}] = useConnectIoTCentralClient();
+  const [connect, cancel, , {client, loading}] = useConnectIoTCentralClient();
 
   useEffect(() => {
     if (credentials && initialized && !client) {
@@ -186,21 +186,7 @@ const Navigation = React.memo(() => {
             return data;
           }}
         />
-        <Stack.Screen
-          name={Pages.SETTINGS}
-          // options={({ navigation }: { navigation: NavigationProperty }) => ({
-          //   stackAnimation: 'flip',
-          //   headerTitle: Platform.select({
-          //     ios: undefined,
-          //     android: '',
-          //   }),
-          //   headerLeft: () => (
-          //     <BackButton goBack={navigation.goBack} title={Pages.SETTINGS} />
-          //   ),
-          //   headerRight: () => null,
-          // })}
-          component={Settings}
-        />
+        <Stack.Screen name={Pages.SETTINGS} component={Settings} />
         <Stack.Screen
           name={Pages.THEME}
           options={({navigation}: {navigation: NavigationProperty}) => ({
@@ -293,6 +279,12 @@ const Navigation = React.memo(() => {
         visible={loading}
         modal={true}
         message={Strings.Registration.Connection.Loading}
+        buttons={[
+          {
+            text: Strings.Registration.Connection.Cancel,
+            onPress: cancel,
+          },
+        ]}
       />
     </NavigationContainer>
   );
@@ -313,6 +305,7 @@ const Root = React.memo<{
     properties,
     updateProperty,
   } = useProperties();
+  const [simulated] = useSimulation();
 
   const onConnectionRefresh = useCallback(
     async (client: IoTCClient) => {
@@ -398,10 +391,8 @@ const Root = React.memo<{
     if (command.name === LIGHT_TOGGLE_COMMAND) {
       const fn = async () => {
         return new Promise<void>(resolve => {
-          console.log(`accendo per ${data.duration}`);
           Torch.switchState(true);
           setTimeout(() => {
-            console.log(`spengo per ${data.duration}`);
             Torch.switchState(false);
             resolve();
           }, data.duration * 1000);
@@ -492,12 +483,6 @@ const Root = React.memo<{
       iotcentralClient.on(IOTC_EVENTS.Commands, onCommandUpdate);
       iotcentralClient.on(IOTC_EVENTS.Properties, onPropUpdate);
       iotcentralClient.fetchTwin();
-    } else {
-      // device has been disconnected. reset to registration
-      navigation.reset({
-        index: 1, // as per issue: https://github.com/react-navigation/react-navigation/issues/7839
-        routes: [{name: Pages.REGISTRATION}],
-      });
     }
 
     return () => {
@@ -520,6 +505,7 @@ const Root = React.memo<{
     // sendHealthHandler,
     sendTelemetryHandler,
     navigation,
+    simulated,
   ]);
 
   return (
@@ -626,6 +612,9 @@ const getCardView = (items: ItemProps[], name: string, detail: boolean) => ({
   <CardView
     items={items}
     componentName={name}
+    onItemLongPress={item => {
+      item.enable(!item.enabled);
+    }}
     // TEMP: temporary disabled charts
     // onItemPress={
     //   detail
@@ -690,7 +679,7 @@ const Profile = React.memo((props: {navigate: any}) => {
         type={Platform.select({ios: 'ionicon', android: 'material'})}
         color={colors.text}
         onPress={() => {
-          props.navigate('Settings');
+          props.navigate(Pages.SETTINGS);
         }}
       />
     </View>

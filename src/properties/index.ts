@@ -7,12 +7,12 @@ type PropertyProps = {editable: boolean} & ItemProps;
 export const Properties: PropertyProps[] = [
   {
     id: AVAILABLE_PROPERTIES.WRITEABLE_PROP,
-    name: 'Cloud-Side Property',
+    name: 'Cloud property',
     editable: false,
   },
   {
     id: AVAILABLE_PROPERTIES.READONLY_PROP,
-    name: 'Editable Property',
+    name: 'Editable property',
     value: 'editable',
     editable: true,
   },
@@ -28,12 +28,12 @@ export const Properties: PropertyProps[] = [
   },
   {
     id: AVAILABLE_PROPERTIES.SW_VERSION,
-    name: 'Software Version',
+    name: 'Software version',
     editable: false,
   },
   {
     id: AVAILABLE_PROPERTIES.OS_NAME,
-    name: 'OS Name',
+    name: 'Operating system',
     editable: false,
   },
   // {
@@ -48,12 +48,12 @@ export const Properties: PropertyProps[] = [
   // },
   {
     id: AVAILABLE_PROPERTIES.TOTAL_STORAGE,
-    name: 'Total Storage',
+    name: 'Total storage',
     editable: false,
   },
   {
     id: AVAILABLE_PROPERTIES.TOTAL_MEMORY,
-    name: 'Total Memory',
+    name: 'Total memory',
     editable: false,
   },
 ].map(p => ({

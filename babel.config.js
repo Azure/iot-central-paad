@@ -20,7 +20,8 @@ module.exports = {
         "properties": "./src/properties",
         "contexts": "./src/contexts",
         "sensors": "./src/sensors",
-        "types":"./src/types"
+        "types":"./src/types",
+        "components":"./src/components"
       }
     }]
   ]

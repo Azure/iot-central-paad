@@ -62,6 +62,9 @@ export default class QRCodeScanner
       <Scanner
         ref={sc => (this.qrCodeRef = sc)}
         onRead={this.onRead}
+        containerStyle={{
+          marginTop: -80,
+        }}
         topViewStyle={{
           position: 'absolute',
           zIndex: 2,
@@ -78,7 +81,7 @@ export default class QRCodeScanner
             <View
               key="left"
               style={{
-                height: this.props.height,
+                height: this.props.height + 80,
                 backgroundColor: 'rgba(0,0,0,.5)',
                 width: sideWidth,
                 left: 0,
@@ -88,7 +91,7 @@ export default class QRCodeScanner
             <View
               key="right"
               style={{
-                height: this.props.height,
+                height: this.props.height + 80,
                 backgroundColor: 'rgba(0,0,0,.5)',
                 width: sideWidth,
                 right: 0,
@@ -101,7 +104,7 @@ export default class QRCodeScanner
                 marginHorizontal: sideWidth,
                 width: this.props.markerSize,
                 backgroundColor: 'rgba(0,0,0,.5)',
-                height: verticals + 10,
+                height: verticals + 40,
                 top: 0,
                 position: 'absolute',
               }}></View>
@@ -111,8 +114,8 @@ export default class QRCodeScanner
                 marginHorizontal: sideWidth,
                 width: this.props.markerSize,
                 backgroundColor: 'rgba(0,0,0,.5)',
-                height: verticals,
-                bottom: -10,
+                height: verticals + 40,
+                bottom: -80,
                 position: 'absolute',
               }}></View>
             {this.onClose && (
@@ -149,7 +152,7 @@ export default class QRCodeScanner
           zIndex: 2,
           bottom: 100,
         }}
-        cameraStyle={{height: this.props.height + 20, width: this.props.width}}
+        cameraStyle={{height: this.props.height + 80, width: this.props.width}}
       />
     );
   }

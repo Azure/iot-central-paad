@@ -21,7 +21,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
@@ -42,7 +42,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>"IoT Plug and Play" needs access to your camera for scanning QR codes</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<true/>
+	<string>"IoT Plug and Play" needs access to your location</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>"IoT Plug and Play" needs access to your location</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>"IoT Plug and Play" needs access to your location</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -67,6 +69,8 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>
 </plist>

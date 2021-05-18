@@ -54,6 +54,7 @@ export function Welcome(props: {
       },
       name: {
         color: theme.textColor,
+        fontSize: 20,
       },
       spinner: {
         marginTop: 50,

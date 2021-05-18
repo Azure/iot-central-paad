@@ -15,15 +15,20 @@ import {
 import {View} from 'react-native-animatable';
 import {Card} from './components/card';
 import {useScreenDimensions} from './hooks/layout';
-import {Icon, BottomSheet, ListItem} from 'react-native-elements';
-import {useTheme} from '@react-navigation/native';
-import {Headline, Text} from './components/typography';
-import {useIoTCentralClient, useSimulation} from './hooks/iotc';
+import {Icon, ListItem} from 'react-native-elements';
+import {Headline, Link, Text} from './components';
+import {
+  useIoTCentralClient,
+  useSimulation,
+  ISetBooleanFunctions,
+  useBoolean,
+  useTheme,
+} from 'hooks';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
-import {Platform} from 'react-native';
+import {Platform, Linking} from 'react-native';
 import {LogsContext} from './contexts/logs';
 import Strings from 'strings';
-import {ISetBooleanFunctions, useBoolean} from 'hooks/common';
+import BottomPopup from 'components/bottomPopup';
 
 export default function FileUpload() {
   const {colors} = useTheme();
@@ -145,33 +150,41 @@ export default function FileUpload() {
   }
 
   return (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-      <Card
-        containerStyle={{
-          flex: 0,
-          height: screen.height / 3,
-          width: screen.width - 100,
-        }}
-        enabled={false}
-        title=""
-        onPress={setShowSelector.True}
-        value={
-          uploading
-            ? () => (
-                <UploadProgress
-                  size={fileSize.current}
-                  filename={fileName.current}
-                  uploadStatus={uploadStatus}
-                  setUploading={setUploading}
-                />
-              )
-            : UploadIcon
-        }
-      />
-      <BottomSheet
+    <View style={{flex: 1}}>
+      <View style={{flex: 2, alignItems: 'center', justifyContent: 'center'}}>
+        <Card
+          containerStyle={{
+            flex: 0,
+            height: screen.height / 3,
+            width: screen.width - 100,
+          }}
+          enabled={false}
+          title=""
+          onPress={setShowSelector.True}
+          value={
+            uploading
+              ? () => (
+                  <UploadProgress
+                    size={fileSize.current}
+                    filename={fileName.current}
+                    uploadStatus={uploadStatus}
+                    setUploading={setUploading}
+                  />
+                )
+              : UploadIcon
+          }
+        />
+      </View>
+
+      <View style={{flex: 0, marginBottom: 40, alignItems: 'center'}}>
+        <Text>{Strings.FileUpload.Footer}</Text>
+        <Link onPress={() => Linking.openURL(Strings.FileUpload.LearnMore.Url)}>
+          {Strings.FileUpload.LearnMore.Title}
+        </Link>
+      </View>
+      <BottomPopup
         isVisible={showSelector}
-        containerStyle={{backgroundColor: 'rgba(0.5, 0.25, 0, 0.7)'}}
-        modalProps={{}}>
+        onDismiss={() => setShowSelector.False()}>
         <ListItem
           onPress={() => {
             startUpload(launchImageLibrary);
@@ -194,16 +207,7 @@ export default function FileUpload() {
             </ListItem.Title>
           </ListItem.Content>
         </ListItem>
-        <ListItem
-          onPress={setShowSelector.False}
-          containerStyle={styles.listItem}>
-          <ListItem.Content style={{alignItems: 'center'}}>
-            <ListItem.Title style={styles.closeItemText}>
-              {Strings.Core.Close}
-            </ListItem.Title>
-          </ListItem.Content>
-        </ListItem>
-      </BottomSheet>
+      </BottomPopup>
     </View>
   );
 }

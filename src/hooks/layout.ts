@@ -3,6 +3,7 @@ import {useState, useEffect, useCallback, useContext, useMemo} from 'react';
 import {Appearance, Dimensions, ScaledSize} from 'react-native';
 import {Debug} from 'tools/CustomLogger';
 import {ThemeMode} from 'types';
+import {useTheme as useNavigationTheme} from '@react-navigation/native';
 
 type Orientation = 'portrait' | 'landscape';
 function getOrientation(width: number, height: number): Orientation {
@@ -76,4 +77,13 @@ export function useThemeMode() {
     }
   }, [mode]);
   return {mode: strMode, type: ThemeMode[mode].toString(), setThemeMode};
+}
+
+export function useTheme() {
+  const {colors: navColors, dark} = useNavigationTheme();
+
+  return {
+    colors: {...navColors, secondary: '#969696'},
+    dark,
+  };
 }
