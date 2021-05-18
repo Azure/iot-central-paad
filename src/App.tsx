@@ -110,7 +110,7 @@ const Navigation = React.memo(() => {
   const [simulated] = useSimulation();
   const {credentials, initialized} = useContext(StorageContext);
   const [deliveryInterval, setDeliveryInterval] = useDeliveryInterval();
-  const [connect, , , {client, loading}] = useConnectIoTCentralClient();
+  const [connect, cancel, , {client, loading}] = useConnectIoTCentralClient();
 
   useEffect(() => {
     if (credentials && initialized && !client) {
@@ -279,6 +279,12 @@ const Navigation = React.memo(() => {
         visible={loading}
         modal={true}
         message={Strings.Registration.Connection.Loading}
+        buttons={[
+          {
+            text: Strings.Registration.Connection.Cancel,
+            onPress: cancel,
+          },
+        ]}
       />
     </NavigationContainer>
   );

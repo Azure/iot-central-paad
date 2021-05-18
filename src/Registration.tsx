@@ -229,7 +229,7 @@ const ManualConnect = React.memo<{navigation: PagesNavigator; route: any}>(
     const {save, credentials} = useContext(StorageContext);
     const [
       connect,
-      ,
+      cancel,
       clearClient,
       {client, loading},
     ] = useConnectIoTCentralClient();
@@ -487,6 +487,12 @@ const ManualConnect = React.memo<{navigation: PagesNavigator; route: any}>(
           visible={loading}
           modal={true}
           message={Strings.Registration.Connection.Loading}
+          buttons={[
+            {
+              text: Strings.Registration.Connection.Cancel,
+              onPress: cancel,
+            },
+          ]}
         />
       </KeyboardAvoidingView>
     );

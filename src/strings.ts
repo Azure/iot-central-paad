@@ -106,6 +106,7 @@ const Strings = {
     },
     Connection: {
       Loading: 'Connecting to Azure IoT...',
+      Cancel: 'Cancel',
     },
     Clear: 'Clear registration',
   },
