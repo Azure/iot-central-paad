@@ -67,16 +67,7 @@ jobs:
     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
     xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
     exportPath: '$(rootPath)/output/package'
-    zipToSign: '$(exportPath)/$(Project_Name).zip'
-    signedZip: '$(exportPath)/$(Project_Name).zip'
-    signedExtractedPath: '$(exportPath)/signed'
-    signedIpa: '$(exportPath)/signed/$(Project_Name).ipa'
-    signedIpaAsZip: '$(exportPath)/signed/$(Project_Name).zip'
-    patchedPath: '$(exportPath)/patched'
-    swiftSupportPath: 'SwiftSupport/iphoneos'
-    sourceSwiftSupportPath: '$(xcodeDeveloperDir)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/iphoneos'
-    artifactsPath: '$(rootPath)/output/artifacts'
-    resultIpa: '$(artifactsPath)/$(Project_Name).ipa'
+    resultIpa: '$(exportPath)/$(Project_Name).ipa'
   steps:
   - task: NodeTool@0
     inputs:
@@ -125,65 +116,9 @@ jobs:
       xcodeVersion: 'specifyPath'
       xcodeDeveloperDir: '$(xcodeDeveloperDir)'
 
-  - task: DownloadSecureFile@1
-    displayName: 'Download distribution profile from Azure secure files storage'
-    inputs:
-      secureFile: 'IoT_Plug_and_Play_Distribution.mobileprovision'
-      retryCount: 5
-
-  - task: CopyFiles@2
-    displayName: 'Copy distribution provisioning profile'
-    inputs:
-      SourceFolder: '$(Agent.TempDirectory)'
-      Contents: 'IoT_Plug_and_Play_Distribution.mobileprovision'
-      TargetFolder: '$(archivePath)'
-      flattenFolders: true
-  
-  - task: CopyFiles@2
-    displayName: 'Copy ExportOptions'
-    inputs:
-      SourceFolder: '$(rootPath)'
-      Contents: 'ExportOptions.plist'
-      TargetFolder: '$(archivePath)'
-      flattenFolders: true
-
-  - task: ArchiveFiles@2
-    displayName: 'Create zip for signing'
-    inputs:
-      rootFolderOrFile: '$(archivePath)'
-      includeRootFolder: false
-      archiveFile: '$(zipToSign)'
-
-  - task: EsrpCodeSigning@1
-    displayName: 'Sign build'
-    inputs:
-      ConnectedServiceName: 'IoT PnP PaaD'
-      FolderPath: '$(exportPath)'
-      Pattern: '*.zip'
-      signConfigType: 'inlineSignParams'
-      inlineOperation: |
-        [
-              {
-                  "KeyCode" : "CP-233039-Apple",
-                  "OperationCode" : "iOSAppSign",
-                  "Parameters" : {},
-                  "ToolName" : "sign",
-                  "ToolVersion" : "1.0"
-              }
-        ]
-      SessionTimeout: '60'
-      MaxConcurrency: '50'
-      MaxRetryAttempts: '5'
-
-  - task: ExtractFiles@1
-    displayName: 'Extract signed build'
-    inputs:
-      archiveFilePatterns: '$(signedZip)'
-      destinationFolder: '$(signedExtractedPath)'
-
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
     inputs:
-      PathtoPublish: '$(signedExtractedPath)'
+      PathtoPublish: '$(resultIpa)'
       ArtifactName: 'ios'
       publishLocation: 'Container'
