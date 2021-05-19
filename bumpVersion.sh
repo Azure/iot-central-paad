@@ -38,12 +38,12 @@ then
     echo "Current Marketing Version: ${CUR_VER_NUMB[0]}.${CUR_VER_NUMB[1]}.${CUR_VER_NUMB[2]}"
 
     agvtool new-version -all $BUILD_NAME
-    if [ "$BUILD_SOURCEBRANCHNAME" == "master" ]; then
-        if [ -z "$CUSTOM_MARKETING" ]; then
-            NEW_MINOR=$(( ${CUR_VER_NUMB[2]} + 1 ))
-            agvtool new-marketing-version "${CUR_VER_NUMB[0]}.${CUR_VER_NUMB[1]}.${NEW_MINOR}"
-        else
-            agvtool new-marketing-version "$CUSTOM_MARKETING"
-        fi
-    fi
+    # if [ "$BUILD_SOURCEBRANCHNAME" == "master" ]; then
+    #     if [ -z "$CUSTOM_MARKETING" ]; then
+    #         NEW_MINOR=$(( ${CUR_VER_NUMB[2]} + 1 ))
+    #         agvtool new-marketing-version "${CUR_VER_NUMB[0]}.${CUR_VER_NUMB[1]}.${NEW_MINOR}"
+    #     else
+    #         agvtool new-marketing-version "$CUSTOM_MARKETING"
+    #     fi
+    # fi
 fi
