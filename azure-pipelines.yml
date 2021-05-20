@@ -67,7 +67,10 @@ jobs:
     xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
     xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
     exportPath: '$(rootPath)/output/package'
-    resultIpa: '$(exportPath)/$(Project_Name).ipa'
+    zipToSign: '$(exportPath)/$(Project_Name).zip'
+    signedZip: '$(exportPath)/$(Project_Name).zip'
+    signedExtractedPath: '$(exportPath)/signed'
+
   steps:
   - task: NodeTool@0
     inputs:
@@ -86,14 +89,14 @@ jobs:
   - task: InstallAppleCertificate@2
     displayName: "Install Apple Certificate"
     inputs:
-      certSecureFile: '$(AppCenter_Dogfood_Certificate_Name)'
-      certPwd: '$(AppCenter_Dogfood_Certificate_Password)'
+      certSecureFile: '$(Development_Certificate_Name)'
+      certPwd: '$(Development_Certificate_Password)'
 
   - task: InstallAppleProvisioningProfile@1
     displayName: "Install Apple provisioning profile"
     inputs:
       provisioningProfileLocation: 'secureFiles'
-      provProfileSecureFile: '$(AppCenter_Dogfood_Provisioning_Profile)'
+      provProfileSecureFile: '$(Development_Provisioning_Profile)'
 
   - task: ShellScript@2
     inputs:
@@ -116,9 +119,65 @@ jobs:
       xcodeVersion: 'specifyPath'
       xcodeDeveloperDir: '$(xcodeDeveloperDir)'
 
+  - task: DownloadSecureFile@1
+    displayName: 'Download distribution profile from Azure secure files storage'
+    inputs:
+      secureFile: 'IoT_Plug_and_Play_Distribution.mobileprovision'
+      retryCount: 5
+
+  - task: CopyFiles@2
+    displayName: 'Copy distribution provisioning profile'
+    inputs:
+      SourceFolder: '$(Agent.TempDirectory)'
+      Contents: 'IoT_Plug_and_Play_Distribution.mobileprovision'
+      TargetFolder: '$(archivePath)'
+      flattenFolders: true
+  
+  - task: CopyFiles@2
+    displayName: 'Copy ExportOptions'
+    inputs:
+      SourceFolder: '$(rootPath)'
+      Contents: 'ExportOptions.plist'
+      TargetFolder: '$(archivePath)'
+      flattenFolders: true
+
+  - task: ArchiveFiles@2
+    displayName: 'Create zip for signing'
+    inputs:
+      rootFolderOrFile: '$(archivePath)'
+      includeRootFolder: false
+      archiveFile: '$(zipToSign)'
+
+  - task: EsrpCodeSigning@1
+    displayName: 'Sign build'
+    inputs:
+      ConnectedServiceName: 'IoT PnP PaaD'
+      FolderPath: '$(exportPath)'
+      Pattern: '*.zip'
+      signConfigType: 'inlineSignParams'
+      inlineOperation: |
+        [
+              {
+                  "KeyCode" : "CP-233039-Apple",
+                  "OperationCode" : "iOSAppSign",
+                  "Parameters" : {},
+                  "ToolName" : "sign",
+                  "ToolVersion" : "1.0"
+              }
+        ]
+      SessionTimeout: '60'
+      MaxConcurrency: '50'
+      MaxRetryAttempts: '5'
+
+  - task: ExtractFiles@1
+    displayName: 'Extract signed build'
+    inputs:
+      archiveFilePatterns: '$(signedZip)'
+      destinationFolder: '$(signedExtractedPath)'
+
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
     inputs:
-      PathtoPublish: '$(resultIpa)'
+      PathtoPublish: '$(signedExtractedPath)'
       ArtifactName: 'ios'
       publishLocation: 'Container'
