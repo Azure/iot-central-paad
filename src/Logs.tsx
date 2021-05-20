@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {View} from 'react-native';
 import {useLogger, useTheme} from 'hooks';
 import {Text} from './components/typography';
@@ -9,30 +9,37 @@ const Logs = React.memo(() => {
   const {colors} = useTheme();
   const [logs] = useLogger();
 
+  const styles = useMemo(
+    () => ({
+      scroll: {marginTop: 10},
+      body: {
+        borderWidth: 1,
+        borderColor: colors.border,
+        padding: 10,
+      },
+    }),
+    [colors],
+  );
+
   return (
     <View style={{flex: 1, padding: 20}}>
       <Text>{Strings.LogScreen.Header}</Text>
-      <ScrollView
-        style={{
-          marginTop: 20,
-          borderWidth: 1,
-          borderColor: colors.border,
-          padding: 10,
-          paddingBottom: 100,
-        }}>
-        {logs.map((l, i) => (
-          <React.Fragment key={`logf-${i}`}>
-            <Text key={`log-${i}`}>
-              {l.timestamp}:
-              <Text key={`logdata-${i}`} style={{color: 'green'}}>
-                {l.logItem.eventName}
+      <ScrollView style={styles.scroll}>
+        <View style={styles.body}>
+          {logs.map((l, i) => (
+            <React.Fragment key={`logf-${i}`}>
+              <Text key={`log-${i}`}>
+                {l.timestamp}:
+                <Text key={`logdata-${i}`} style={{color: 'green'}}>
+                  {l.logItem.eventName}
+                </Text>
               </Text>
-            </Text>
-            <Text style={{marginBottom: 5}} key={`logpayload-${i}`}>
-              {l.logItem.eventData}
-            </Text>
-          </React.Fragment>
-        ))}
+              <Text style={{marginBottom: 5}} key={`logpayload-${i}`}>
+                {l.logItem.eventData}
+              </Text>
+            </React.Fragment>
+          ))}
+        </View>
       </ScrollView>
     </View>
   );

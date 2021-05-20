@@ -271,8 +271,8 @@ PODS:
     - React-Core
   - react-native-image-picker (3.3.2):
     - React-Core
-  - react-native-maps (0.27.1):
-    - React
+  - react-native-maps (0.28.0):
+    - React-Core
   - react-native-safe-area-context (3.2.0):
     - React-Core
   - react-native-torch (1.2.0):
@@ -618,7 +618,7 @@ SPEC CHECKSUMS:
   react-native-geolocation: cbd9d6bd06bac411eed2671810f454d4908484a8
   react-native-get-random-values: f0fc24a5887a3341589515a86282a574407b59e4
   react-native-image-picker: 5b2f1ea1f9230b131abbfb8a4aa1eb209aba9ed9
-  react-native-maps: f4b89da81626ad7f151a8bfcb79733295d31ce5c
+  react-native-maps: 2d405b4e8cee0282e4c02bac434d81450dfea877
   react-native-safe-area-context: e471852c5ed67eea4b10c5d9d43c1cebae3b231d
   react-native-torch: 86f052de32cc110922292770cdb389f00b5d7320
   react-native-webview: aea3233f26253f5c360164ee87d01ef9f7b9a27f

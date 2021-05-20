@@ -257,7 +257,8 @@ const ManualConnect = React.memo<{navigation: PagesNavigator; route: any}>(
         },
         footer: {
           alignItems: 'center',
-          marginBottom: Platform.select({ios: bottom, android: 40}),
+          marginBottom: Platform.select({ios: bottom, android: 20}),
+          marginTop: Platform.select({ios: bottom, android: 20}),
         },
       }),
       [orientation, bottom],
@@ -379,15 +380,17 @@ const ManualConnect = React.memo<{navigation: PagesNavigator; route: any}>(
           style={style.scroll}
           keyboardShouldPersistTaps="handled">
           <View style={style.header}>
-            <Text>
-              {Strings.Registration.Manual.Header}
-              <Link
-                onPress={() => {
-                  Linking.openURL(Strings.Registration.Manual.StartHere.Url);
-                }}>
-                {Strings.Registration.Manual.StartHere.Title}
-              </Link>
-            </Text>
+            {!readonly && (
+              <Text>
+                {Strings.Registration.Manual.Header}
+                <Link
+                  onPress={() => {
+                    Linking.openURL(Strings.Registration.Manual.StartHere.Url);
+                  }}>
+                  {Strings.Registration.Manual.StartHere.Title}
+                </Link>
+              </Text>
+            )}
           </View>
           <View style={style.body}>
             <Name>
@@ -460,18 +463,38 @@ const ManualConnect = React.memo<{navigation: PagesNavigator; route: any}>(
                 key="clear-device-credentials"
                 title={Strings.Registration.Clear}
                 titleStyle={{color: 'red'}}
-                onPress={async () => {
-                  await client?.disconnect();
-                  await save({credentials: null});
-                  clearClient();
-                  // HACK: remove root screen from state and replace with registration
-                  navigation.dispatch({
-                    ...StackActions.replace(Pages.REGISTRATION),
-                    source: parentRoutes.find((r: any) => r.name === Pages.ROOT)
-                      ?.key,
-                    target: parentNavigatorKey.key,
-                  });
-                  setNewReg.True();
+                onPress={() => {
+                  Alert.alert(
+                    Strings.Registration.Manual.RegisterNew.Alert.Title,
+                    Strings.Registration.Manual.RegisterNew.Alert.Text,
+                    [
+                      {
+                        text: 'Proceed',
+                        onPress: async () => {
+                          await client?.disconnect();
+                          await save({credentials: null});
+                          clearClient();
+                          // HACK: remove root screen from state and replace with registration
+                          navigation.dispatch({
+                            ...StackActions.replace(Pages.REGISTRATION),
+                            source: parentRoutes.find(
+                              (r: any) => r.name === Pages.ROOT,
+                            )?.key,
+                            target: parentNavigatorKey.key,
+                          });
+                          setNewReg.True();
+                        },
+                      },
+                      {
+                        text: 'Cancel',
+                        style: 'cancel',
+                        onPress: () => {},
+                      },
+                    ],
+                    {
+                      cancelable: false,
+                    },
+                  );
                 }}
               />
             </>

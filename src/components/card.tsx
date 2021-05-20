@@ -177,7 +177,7 @@ const Value = React.memo<{
             });
           }
           return (
-            <Text key={`data-${i}`}>
+            <Text key={`data-${i}`} style={{color: textColor}}>
               {v}: {strVal}
             </Text>
           );

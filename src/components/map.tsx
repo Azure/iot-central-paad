@@ -2,8 +2,7 @@ import React, {useState} from 'react';
 import {StyleProp, ViewStyle} from 'react-native';
 import {
   Marker,
-  // @ts-ignore
-  Animated,
+  Animated as AnimatedMap,
   PROVIDER_DEFAULT,
   AnimatedRegion,
 } from 'react-native-maps';
@@ -22,7 +21,8 @@ const Map = React.memo<{
     }),
   );
   return (
-    <Animated
+    //@ts-ignore
+    <AnimatedMap
       provider={PROVIDER_DEFAULT}
       style={style ? style : {width: '100%', height: '100%'}}
       scrollEnabled={true}
@@ -37,7 +37,7 @@ const Map = React.memo<{
           .toString()
           .substring(0, 6)}... - ${location.lon.toString().substring(0, 6)}...`}
       />
-    </Animated>
+    </AnimatedMap>
   );
 });
 

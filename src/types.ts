@@ -209,8 +209,8 @@ export const LOG_DATA = 'LOG_DATA';
 /**
  * COMMANDS
  */
-export const ENABLE_DISABLE_COMMAND = 'enableSensors';
-export const SET_FREQUENCY_COMMAND = 'changeInterval';
+export const ENABLE_DISABLE_COMMAND = 'sensors*enableSensors';
+export const SET_FREQUENCY_COMMAND = 'sensors*changeInterval';
 export const LIGHT_TOGGLE_COMMAND = 'lightOn';
 
 /**

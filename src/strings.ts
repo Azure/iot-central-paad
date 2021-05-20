@@ -63,7 +63,7 @@ const Strings = {
       Title: 'Manually connect',
       Header: 'Need help locating this information? ',
       DeviceId: {
-        Label: 'Device Id',
+        Label: 'Device ID',
         PlaceHolder: 'Enter a unique ID to identify this device',
       },
       ScopeId: {

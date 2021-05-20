@@ -76,7 +76,7 @@ import Chart from 'Chart';
 import Strings, {resolveString} from 'strings';
 import {Option} from 'components/options';
 import Options from 'components/options';
-import HeaderCloseButton from 'components/headerCloseButton';
+import {DEFAULT_DELIVERY_INTERVAL} from './sensors';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 const Stack = createStackNavigator<NavigationPages>();
@@ -193,14 +193,8 @@ const Navigation = React.memo(() => {
             stackAnimation: 'flip',
             headerTitle: Platform.select({
               ios: undefined,
-              android: '',
+              android: Pages.THEME,
             }),
-            headerLeft: () => (
-              <HeaderCloseButton
-                goBack={navigation.goBack}
-                title={Pages.SETTINGS}
-              />
-            ),
           })}>
           {() => (
             <Options
@@ -234,24 +228,18 @@ const Navigation = React.memo(() => {
             stackAnimation: 'flip',
             headerTitle: Platform.select({
               ios: undefined,
-              android: '',
+              android: Pages.INTERVAL,
             }),
-            headerLeft: () => (
-              <HeaderCloseButton
-                goBack={navigation.goBack}
-                title={Pages.SETTINGS}
-              />
-            ),
           })}>
           {() => (
             <Options
               items={[
                 {
-                  id: '2',
+                  id: '20',
                   name: Strings.Settings.DeliveryInterval[2],
                 },
                 {
-                  id: '5',
+                  id: '50',
                   name: Strings.Settings.DeliveryInterval[5],
                 },
                 {
@@ -299,6 +287,7 @@ const Root = React.memo<{
 }>(({navigation}) => {
   const [, append] = useLogger();
   const [sensors, addSensorListener, removeSensorListener] = useSensors();
+  const [deliveryInterval] = useDeliveryInterval();
   // const [healths, addHealthListener, removeHealthListener] = useHealth();
   const {
     loading: propertiesLoading,
@@ -420,10 +409,12 @@ const Root = React.memo<{
       if (sensor) {
         switch (command.name) {
           case ENABLE_DISABLE_COMMAND:
+            console.log(`Command ${command.name}`);
             sensor.enable(data.enable ? data.enable : false);
             await command.reply(IIoTCCommandResponse.SUCCESS, 'Enable');
             break;
           case SET_FREQUENCY_COMMAND:
+            console.log(`Command ${command.name}`);
             sensor.sendInterval(data.interval ? data.interval * 1000 : 5000);
             await command.reply(IIoTCCommandResponse.SUCCESS, 'Frequency');
             break;
@@ -508,6 +499,16 @@ const Root = React.memo<{
     simulated,
   ]);
 
+  // react to sendinterval change
+  useEffect(() => {
+    console.log(`Changed interval to ${deliveryInterval}`);
+    if (deliveryInterval !== DEFAULT_DELIVERY_INTERVAL) {
+      sensorRef.current.forEach(sensor =>
+        sensor.sendInterval(deliveryInterval * 1000),
+      );
+    }
+  }, [deliveryInterval]);
+
   return (
     <Tab.Navigator
       key="tab"
@@ -554,7 +555,7 @@ const Root = React.memo<{
                 onEdit={async (item, value) => {
                   try {
                     await iotcentralClient?.sendProperty({
-                      [PROPERTY]: {__t: 'c', [item.id]: value},
+                      [item.id]: value,
                     });
                     Alert.alert(
                       'Property',
