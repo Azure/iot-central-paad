@@ -122,3 +122,16 @@ jobs:
       PathtoPublish: '$(resultIpa)'
       ArtifactName: 'ios'
       publishLocation: 'Container'
+
+- job: Release file
+  steps:
+  - task: ShellScript@2
+    inputs:
+      scriptPath: '$(rootPath)/createReleaseFile.sh'
+    
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifact"
+    inputs:
+      PathtoPublish: '$(rootPath)/CHANGELOG.md'
+      ArtifactName: 'changelog'
+      publishLocation: 'Container'
