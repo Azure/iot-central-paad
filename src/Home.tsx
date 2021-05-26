@@ -179,12 +179,12 @@ const Root = React.memo<{
           case ENABLE_DISABLE_COMMAND:
             console.log(`Command ${command.name}`);
             sensor.enable(data.enable ? data.enable : false);
-            await command.reply(IIoTCCommandResponse.SUCCESS, 'Enable');
+            await command.reply(IIoTCCommandResponse.SUCCESS, `${data.sensor} ${data.enable ? `Enabled` : `Disabled`}`);
             break;
           case SET_FREQUENCY_COMMAND:
             console.log(`Command ${command.name}`);
             sensor.sendInterval(data.interval ? data.interval * 1000 : 5000);
-            await command.reply(IIoTCCommandResponse.SUCCESS, 'Frequency');
+            await command.reply(IIoTCCommandResponse.SUCCESS, `${data.sensor} delivery interval changed to ${data.interval}`);
             break;
         }
       }
