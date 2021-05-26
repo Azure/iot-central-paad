@@ -124,14 +124,17 @@ jobs:
       publishLocation: 'Container'
 
 - job: ReleaseFile
+  dependsOn:
+  - Android
+  - iOS
   steps:
   - task: ShellScript@2
     inputs:
-      scriptPath: '$(rootPath)/createReleaseFile.sh'
+      scriptPath: '$(System.DefaultWorkingDirectory)/createReleaseFile.sh'
     
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
     inputs:
-      PathtoPublish: '$(rootPath)/CHANGELOG.md'
+      PathtoPublish: '$(System.DefaultWorkingDirectory)/CHANGELOG.md'
       ArtifactName: 'changelog'
       publishLocation: 'Container'
