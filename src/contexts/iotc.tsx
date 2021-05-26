@@ -1,16 +1,16 @@
 import React, {useCallback, useReducer} from 'react';
-import {IoTCClient} from 'react-native-azure-iotcentral-client';
+import {IIoTCClient} from 'react-native-azure-iotcentral-client';
 
 type ICentralState = {
-  client: IoTCClient | null;
+  client: IIoTCClient | null;
   connecting: boolean;
 };
 type ICentralAction =
-  | {type: 'UPDATE_CLIENT'; value: IoTCClient | null}
+  | {type: 'UPDATE_CLIENT'; value: IIoTCClient | null}
   | {type: 'SET_CONNECTING'; value: boolean};
 
 export type IIoTCContext = ICentralState & {
-  setClient: (client: IoTCClient | null) => void;
+  setClient: (client: IIoTCClient | null) => void;
   setConnecting: (connecting: boolean) => void;
 };
 
@@ -32,7 +32,7 @@ const IoTCProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
     {client: null, connecting: false},
   );
 
-  const setClient = useCallback((client: IoTCClient | null) => {
+  const setClient = useCallback((client: IIoTCClient | null) => {
     dispatch({type: 'UPDATE_CLIENT', value: client});
   }, []);
   const setConnecting = useCallback((value: boolean) => {

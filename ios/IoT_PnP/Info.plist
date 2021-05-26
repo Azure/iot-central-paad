@@ -42,15 +42,15 @@
 		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>"IoT Plug and Play" needs access to your camera for scanning QR codes</string>
+	<string>"IoT Plug and Play" needs access to your camera for scanning QR codes and connect devices</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>"IoT Plug and Play" needs access to your location</string>
+	<string>Your location will be sent to your Azure IoT application, to be shown on a map. Microsoft does not collect or has access to your location. </string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>"IoT Plug and Play" needs access to your location</string>
+	<string>Your location will be sent to your Azure IoT application, to be shown on a map. Microsoft does not collect or has access to your location. </string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>"IoT Plug and Play" needs access to your location</string>
+	<string>Your location will be sent to your Azure IoT application, to be shown on a map. Microsoft does not collect or has access to your location. </string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>"IoT Plug and Play" wants to access your gallery to upload pictures</string>
+	<string>"IoT Plug and Play" wants to access your gallery to upload pictures to Azure IoT</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>FontAwesome.ttf</string>

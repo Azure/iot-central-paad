@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="120" height="120" viewBox="0 0 120 120" version="1.1" id="svg38" sodipodi:docname="IoT-Plug-And-Play_Dark_square.svg" inkscape:version="0.92.4 (5da689c313, 2019-01-14)">
+   <metadata id="metadata44">
+      <rdf:RDF>
+         <cc:Work rdf:about="">
+            <dc:format>image/svg+xml</dc:format>
+            <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+            <dc:title></dc:title>
+         </cc:Work>
+      </rdf:RDF>
+   </metadata>
+   <defs id="defs42" />
+   <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="1440" inkscape:window-height="837" id="namedview40" showgrid="false" inkscape:zoom="2.7833333" inkscape:cx="24.938077" inkscape:cy="59.071195" inkscape:window-x="-8" inkscape:window-y="-8" inkscape:window-maximized="1" inkscape:current-layer="svg38" />
+   <path d="M 68.263473,121.51313 C 126.50394,121.24348 126.56795,153.55768 128.26347,61.512826 130.05901,-35.961494 146.30959,1.0712663 60,0.0756836 -25.948757,-0.91573679 -10.559675,-13.516964 -10.05988,59.716419 -9.4740089,145.56236 -44.021234,122.03299 68.263473,121.51313 Z" id="path28" inkscape:connector-curvature="0" style="fill:#003067" sodipodi:nodetypes="sssss" />
+   <path d="M105 61.0239C104.676 51.0579 97.2185 42.8065 87.2755 41.5206C86.6271 27.5897 74.8468 16.6592 60.6888 17.0879C49.4489 16.8735 39.2898 23.7319 35.399 34.1265C23.5107 35.6267 14.4323 45.5927 14 57.4876C14.5404 70.9899 25.9964 81.4917 39.614 81.063C40.3705 81.063 41.1271 81.063 41.8836 80.9559H83.3848C83.709 80.9559 84.1413 80.8487 84.4656 80.7415C95.5974 80.7415 104.676 72.0615 105 61.0239Z" fill="#0078D4" id="path30" />
+   <path d="M63.7356 84.2826L60.6551 87.363L43.7126 70.4205L46.7931 67.34L63.7356 84.2826Z" fill="#50E6FF" id="path32" />
+   <path d="M52.954 91.9837C49.6554 95.2823 44.5909 95.7384 40.8039 93.3522L36.0115 98.1446L32.1609 94.294L37.1759 89.279C35.4355 85.6355 36.0741 81.1395 39.0919 78.1217L45.2528 71.9607L59.1149 85.8228L52.954 91.9837Z" fill="#50E6FF" id="path34" />
+   <path d="M72.2068 75.8114L75.2873 72.7309L73.7471 71.1907L79.908 65.0298C83.2065 61.7313 83.6627 56.6668 81.2765 52.8798L86.069 48.0873L82.2184 44.2367L77.2033 49.2518C73.5598 47.5113 69.0638 48.1499 66.0459 51.1677L59.885 57.3287L58.3447 55.7884L55.2643 58.8688L59.885 63.4895L55.2012 68.1733C54.8107 68.5638 54.8107 69.197 55.2012 69.5875L56.0973 70.4836C56.4879 70.8741 57.121 70.8741 57.5116 70.4836L62.1953 65.7999L65.2758 68.8804L60.5921 73.5641C60.2016 73.9546 60.2016 74.5878 60.5921 74.9783L61.4882 75.8744C61.8787 76.2649 62.5119 76.2649 62.9024 75.8744L67.5862 71.1907L72.2068 75.8114Z" fill="#50E6FF" id="path36" />
+</svg>

@@ -2,7 +2,7 @@ import React from 'react';
 import {View, ActivityIndicator, ViewStyle, ScaledSize} from 'react-native';
 import {Text} from './typography';
 import {Theme} from '@react-navigation/native';
-import {Button, Divider, Overlay} from 'react-native-elements';
+import {Button, Overlay} from 'react-native-elements';
 import {useScreenDimensions, useTheme} from 'hooks';
 
 type ILoaderButton = {
@@ -60,7 +60,6 @@ function getLoader(props: ILoaderProps & Theme & ScaledSize) {
       </View>
       {buttons && buttons.length > 0 && (
         <View style={{flex: 1, justifyContent: 'flex-end', margin: 0}}>
-          <Divider />
           {buttons.map(b => (
             <Button
               key={b.text}

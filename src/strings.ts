@@ -80,8 +80,16 @@ const Strings = {
         Alert: {
           Title: 'Register as new device?',
           Text:
-            "Once you register as a new device, your old connection will be cleared and you'll be able to connect as a new device. Data previously sent will remain in the cloud until you delete it.",
+            "Once you register as a new device, your old connection will be disconnected and you'll be able to connect as a new device. Current device credentials will not be cleared until the new device actually connects. Data previously sent will remain in the cloud until you delete it.",
         },
+      },
+      Clear: {
+        Title: 'Clear registration',
+        Alert: {
+          Title: 'Clear device registration info?',
+          Text:
+            "Are you sure to clear registration info? If proceed, device will disconnect and credentials will be wiped out. This means you need to register as a new device next time.",
+        }
       },
       Footer: {
         Connect: 'Connect',
@@ -93,8 +101,8 @@ const Strings = {
       Body: {
         ConnectionType: {
           Title: 'How would you like to connect?',
-          Dps: 'Enter enrollment group information',
-          CString: 'Enter IoT Hub device connection string',
+          Dps: 'Enrollment group information',
+          CString: 'IoT Hub device connection string',
         },
         ConnectionInfo: 'Connection info',
       },
@@ -107,8 +115,7 @@ const Strings = {
     Connection: {
       Loading: 'Connecting to Azure IoT...',
       Cancel: 'Cancel',
-    },
-    Clear: 'Clear registration',
+    }
   },
   Client: {
     Properties: {
@@ -119,10 +126,17 @@ const Strings = {
       },
       Loading: 'Waiting for properties...',
     },
+    Commands: {
+      Alert: {
+        Title: 'Command received',
+        Message: 'The device received command "{{0}}" from Azure IoT. Starting executing now.'
+      }
+    }
   },
   FileUpload: {
     Start: 'Select an image to upload to Azure Storage',
-    Footer: "You'll need to configure file upload in your app.",
+    Footer:
+      "You'll need to configure file upload in your IoT solution before using this feature.",
     LearnMore: {
       Title: 'Learn more',
       Url: 'https://aka.ms/iot-paad-fileupload',

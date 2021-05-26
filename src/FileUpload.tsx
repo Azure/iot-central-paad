@@ -176,11 +176,20 @@ export default function FileUpload() {
         />
       </View>
 
-      <View style={{flex: 0, marginBottom: 40, alignItems: 'center'}}>
-        <Text>{Strings.FileUpload.Footer}</Text>
-        <Link onPress={() => Linking.openURL(Strings.FileUpload.LearnMore.Url)}>
-          {Strings.FileUpload.LearnMore.Title}
-        </Link>
+      <View
+        style={{
+          flex: 0,
+          marginBottom: 40,
+          alignItems: 'center',
+          marginHorizontal: 40,
+        }}>
+        <Text>
+          {Strings.FileUpload.Footer}
+          <Link
+            onPress={() => Linking.openURL(Strings.FileUpload.LearnMore.Url)}>
+            {Strings.FileUpload.LearnMore.Title}
+          </Link>
+        </Text>
       </View>
       <BottomPopup
         isVisible={showSelector}
@@ -323,7 +332,7 @@ function UploadProgress(props: {
   return (
     <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
       <AnimatedCircularProgress
-        size={screen.height / 5}
+        size={Math.floor(screen.height / 5)}
         width={5}
         fill={fill}
         tintColor={colors.tint}

@@ -11,8 +11,9 @@ const Logs = React.memo(() => {
 
   const styles = useMemo(
     () => ({
-      scroll: {marginTop: 10},
+      scroll: {marginTop: 10, flex: 1},
       body: {
+        flex: 1,
         borderWidth: 1,
         borderColor: colors.border,
         padding: 10,
@@ -24,7 +25,7 @@ const Logs = React.memo(() => {
   return (
     <View style={{flex: 1, padding: 20}}>
       <Text>{Strings.LogScreen.Header}</Text>
-      <ScrollView style={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.body}>
           {logs.map((l, i) => (
             <React.Fragment key={`logf-${i}`}>
