@@ -123,7 +123,7 @@ jobs:
       ArtifactName: 'ios'
       publishLocation: 'Container'
 
-- job: Release file
+- job: ReleaseFile
   steps:
   - task: ShellScript@2
     inputs:
