@@ -197,11 +197,11 @@ const Navigation = React.memo(() => {
             <Options
               items={[
                 {
-                  id: '20',
+                  id: '2',
                   name: Strings.Settings.DeliveryInterval[2],
                 },
                 {
-                  id: '50',
+                  id: '5',
                   name: Strings.Settings.DeliveryInterval[5],
                 },
                 {

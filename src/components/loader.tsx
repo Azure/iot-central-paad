@@ -1,9 +1,16 @@
-import React from 'react';
-import {View, ActivityIndicator, ViewStyle, ScaledSize} from 'react-native';
+import React, {useMemo} from 'react';
+import {
+  View,
+  ActivityIndicator,
+  ViewStyle,
+  ScaledSize,
+  TextStyle,
+} from 'react-native';
 import {Text} from './typography';
 import {Theme} from '@react-navigation/native';
 import {Button, Overlay} from 'react-native-elements';
 import {useScreenDimensions, useTheme} from 'hooks';
+import {Literal} from 'types';
 
 type ILoaderButton = {
   text: string;
@@ -43,34 +50,45 @@ export function Loader(props: ILoaderProps) {
         isVisible={visible}
         overlayStyle={overlayStyle}
         backdropStyle={backdropStyle}>
-        {getLoader({...props, ...screen, colors, dark})}
+        <InnerLoader colors={colors} dark={dark} {...props} {...screen} />
       </Overlay>
     );
   }
-  return getLoader({...props, colors, ...screen, dark});
+  return <InnerLoader colors={colors} dark={dark} {...props} {...screen} />;
 }
 
-function getLoader(props: ILoaderProps & Theme & ScaledSize) {
-  const {message, buttons, colors, style, height} = props;
-  return (
-    <View style={[...[style], {height: height / 4, padding: 0}]}>
-      <View style={{flex: 2, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator animating={true} size={40} color={colors.text} />
-        <Text>{message}</Text>
-      </View>
-      {buttons && buttons.length > 0 && (
-        <View style={{flex: 1, justifyContent: 'flex-end', margin: 0}}>
-          {buttons.map(b => (
-            <Button
-              key={b.text}
-              type="clear"
-              title={b.text}
-              onPress={b.onPress}
-              style={{paddingVertical: 10}}
-            />
-          ))}
+const InnerLoader = React.memo<ILoaderProps & Theme & ScaledSize>(
+  ({message, buttons, height, colors, style}) => {
+    const styles = useMemo<Literal<ViewStyle | TextStyle>>(
+      () => ({
+        body: {height: height / 4, padding: 0},
+        box: {flex: 2, justifyContent: 'center', alignItems: 'center'},
+        message: {marginTop: 20},
+        buttonsBox: {flex: 1, justifyContent: 'flex-end', margin: 0},
+      }),
+      [height],
+    );
+
+    return (
+      <View style={[...[style], styles.body]}>
+        <View style={styles.box}>
+          <ActivityIndicator animating={true} size={40} color={colors.text} />
+          <Text style={styles.message}>{message}</Text>
         </View>
-      )}
-    </View>
-  );
-}
+        {buttons && buttons.length > 0 && (
+          <View style={styles.buttonsBox}>
+            {buttons.map(b => (
+              <Button
+                key={b.text}
+                type="clear"
+                title={b.text}
+                onPress={b.onPress}
+                style={{paddingVertical: 10}}
+              />
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  },
+);
