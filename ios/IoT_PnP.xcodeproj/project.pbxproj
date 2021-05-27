@@ -544,9 +544,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.iotcentral-paad-df";
+				PRODUCT_BUNDLE_IDENTIFIER = com.microsoft.iotpnp;
 				PRODUCT_NAME = IoT_PnP;
-				PROVISIONING_PROFILE_SPECIFIER = "Iotcentral Paad Dogfood Distribution";
+				PROVISIONING_PROFILE_SPECIFIER = "IoT Plug and Play Development";
 				SWIFT_OBJC_BRIDGING_HEADER = "IoT_PnP-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
