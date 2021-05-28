@@ -47,6 +47,9 @@ export default class QRCodeScanner
   public reactivate() {
     this.qrCodeRef?.reactivate();
   }
+  componentWillUnmount() {
+    this.qrCodeRef = null;
+  }
 
   render() {
     const sideWidth = this.calculateSideWidth(
@@ -62,6 +65,10 @@ export default class QRCodeScanner
       <Scanner
         ref={sc => (this.qrCodeRef = sc)}
         onRead={this.onRead}
+        // //@ts-ignore
+        // flashMode={
+        //   RNCamera.Constants.FlashMode.off
+        // }
         containerStyle={{
           marginTop: -80,
         }}

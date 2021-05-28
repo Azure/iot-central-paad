@@ -101,7 +101,14 @@ export const Registration = React.memo<{
 
   useEffect(() => {
     if (!loading && previousLoading && client && client.isConnected()) {
-      parentNavigator?.navigate(Pages.ROOT);
+      // go back to root page. reset navigator in case we're not coming from root page.
+      // registration screen must unmount in order to release camera.
+      parentNavigator?.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [{name: Pages.ROOT}],
+        }),
+      );
     }
   }, [client, loading, parentNavigator, previousLoading]);
 
@@ -178,7 +185,7 @@ export const Registration = React.memo<{
         name={screens.MANUAL}
         options={() => ({
           headerTitle: Strings.Registration.Manual.Title,
-          headerShown: !client || !client?.isConnected(),
+          headerShown: !client || !client.isConnected(), // hide header when connecting and when clearing registration
         })}
         initialParams={{parentNavigatorKey, parentRoutes}}
         component={ManualConnect}
@@ -186,7 +193,6 @@ export const Registration = React.memo<{
     </Stack.Navigator>
   );
 });
-
 const QRCodeScreen = React.memo<{
   connect: (
     encryptedCredentials: string,
@@ -200,6 +206,7 @@ const QRCodeScreen = React.memo<{
   const onRead = useCallback(
     async (e: Event) => {
       await connect(e.data);
+      // scannerRef.current?.reactivate(); // reactivate camera in order to make it available for other use (e.g. torch)
     },
     [connect],
   );
@@ -471,6 +478,7 @@ const ManualConnect = React.memo<{navigation: any; route: any}>(
                       {
                         text: 'Proceed',
                         onPress: async () => {
+                          setNewReg.True();
                           await client?.disconnect();
                           await save({credentials: null});
                           clearClient();
@@ -482,7 +490,6 @@ const ManualConnect = React.memo<{navigation: any; route: any}>(
                             )?.key,
                             target: parentNavigatorKey.key,
                           });
-                          setNewReg.True();
                         },
                       },
                       {

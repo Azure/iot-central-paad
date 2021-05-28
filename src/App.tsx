@@ -104,33 +104,7 @@ const Navigation = React.memo(() => {
         }}>
         {/* @ts-ignore */}
         <Stack.Screen name={Pages.ROOT} component={Home} />
-        <Stack.Screen
-          name={Pages.REGISTRATION}
-          component={Registration}
-          // options={({ route, navigation }) => {
-          //   if (!route.params || !(route.params as any).previousScreen) {
-          //     return {
-          //       headerTitle: () => null,
-          //       headerLeft: () => <Logo />,
-          //       headerRight: () => <Profile navigate={navigation.navigate} />,
-          //     };
-          //   }
-          //   return {};
-          // }}
-          // options={({ navigation }: { navigation: NavigationProperty }) => {
-          //   return {
-          //     stackAnimation: 'flip',
-          //     headerTitle: Platform.select({
-          //       ios: undefined,
-          //       android: '',
-          //     }),
-          //     headerLeft: () => (
-          //       <BackButton goBack={navigation.goBack} title="Settings" />
-          //     ),
-          //     headerRight: () => (null)
-          //   }
-          // }}
-        />
+        <Stack.Screen name={Pages.REGISTRATION} component={Registration} />
         <Stack.Screen
           name={Pages.INSIGHT}
           component={Chart}
