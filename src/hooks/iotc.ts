@@ -1,4 +1,4 @@
-import { useContext, useState, useRef, useEffect, useCallback } from 'react';
+import {useContext, useState, useRef, useEffect, useCallback} from 'react';
 import {
   DecryptCredentials,
   CancellationToken,
@@ -8,19 +8,18 @@ import {
   IoTCCredentials,
   IoTCClient,
 } from 'react-native-azure-iotcentral-client';
-import { StorageContext, IoTCContext } from 'contexts';
-import { Debug, EventLogger } from 'tools';
-import { CommonCallback, LOG_DATA } from 'types';
-import { useLogger } from './common';
-import { defaults } from '../contexts/defaults';
-import { IoTCMock } from 'mocks/iotcMock';
-
+import {StorageContext, IoTCContext} from 'contexts';
+import {Debug, EventLogger} from 'tools';
+import {CommonCallback, LOG_DATA} from 'types';
+import {useLogger} from './common';
+import {defaults} from '../contexts/defaults';
+import {IoTCMock} from 'mocks/iotcMock';
 
 export function useIoTCentralClient(
   onConnectionRefresh?: (client: IIoTCClient) => void | Promise<void>,
 ): [IIoTCClient | null, any, () => void] {
-  const { client, setClient } = useContext(IoTCContext);
-  const { credentials } = useContext(StorageContext);
+  const {client, setClient} = useContext(IoTCContext);
+  const {credentials} = useContext(StorageContext);
   const previousConnectionStatus = useRef(false);
 
   const clear = useCallback(() => {
@@ -67,14 +66,14 @@ export type ConnectionOptions = {
  */
 export function useConnectIoTCentralClient(): [
   (credentialsData: any, options?: ConnectionOptions) => Promise<void>,
-  (options?: { clear: boolean }) => Promise<void>,
+  (options?: {clear: boolean}) => Promise<void>,
   () => void,
-  { loading: boolean; client: IIoTCClient | null; error: any },
+  {loading: boolean; client: IIoTCClient | null; error: any},
 ] {
-  const { client, connecting, setConnecting, setClient } = useContext(
+  const {client, connecting, setConnecting, setClient} = useContext(
     IoTCContext,
   );
-  const { save: saveCredentials, simulated } = useContext(StorageContext);
+  const {save: saveCredentials, simulated} = useContext(StorageContext);
   const [error, setError] = useState<any>(null);
   const connectRequest = useRef(new CancellationToken());
   const eventLogger = useRef(new EventLogger(LOG_DATA));
@@ -90,7 +89,10 @@ export function useConnectIoTCentralClient(): [
     async (credentials: IoTCCredentials) => {
       let iotc: IIoTCClient;
       if (credentials.connectionString) {
-        iotc = IoTCentralClient.getFromConnectionString(credentials.connectionString, eventLogger.current);
+        iotc = IoTCentralClient.getFromConnectionString(
+          credentials.connectionString,
+          eventLogger.current,
+        );
       } else if (
         credentials.deviceId &&
         credentials.scopeId &&
@@ -117,7 +119,7 @@ export function useConnectIoTCentralClient(): [
       }
       // iotc.setLogging(IOTC_LOGGING.ALL);
       try {
-        iotc.on(IOTC_EVENTS.Properties, () => { });
+        iotc.on(IOTC_EVENTS.Properties, () => {});
         await iotc.connect({
           cleanSession: false,
           timeout: 30,
@@ -136,7 +138,7 @@ export function useConnectIoTCentralClient(): [
         throw err;
       }
     },
-    [setClient, setConnecting, setError],
+    [setClient, setConnecting, setError, IoTCentralClient],
   );
 
   const connect = useCallback(
@@ -154,7 +156,7 @@ export function useConnectIoTCentralClient(): [
           console.log(`Decripted: ${JSON.stringify(credentials)}`);
         }
         await _connect_internal(credentials);
-        await saveCredentials({ credentials });
+        await saveCredentials({credentials});
       } catch (err) {
         setError(err);
         setConnecting(false);
@@ -164,12 +166,12 @@ export function useConnectIoTCentralClient(): [
   );
 
   const cancel = useCallback(
-    async (options?: { clear: boolean }) => {
+    async (options?: {clear: boolean}) => {
       connectRequest.current?.cancel();
       // cleanup any credentials
       if (options?.clear) {
         //clear current credentials. connection will start over
-        await saveCredentials({ credentials: null }, options.clear);
+        await saveCredentials({credentials: null}, options.clear);
       }
       if (connecting) {
         setConnecting(false);
@@ -207,11 +209,11 @@ export function useConnectIoTCentralClient(): [
 }
 
 export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
-  const { save, simulated } = useContext(StorageContext);
+  const {save, simulated} = useContext(StorageContext);
 
   const setSimulated = useCallback(
     async (simulated: boolean) => {
-      await save({ simulated });
+      await save({simulated});
     },
     [save],
   );
@@ -222,10 +224,10 @@ export function useDeliveryInterval(): [
   number,
   (interv: number) => Promise<void>,
 ] {
-  const { deliveryInterval, save } = useContext(StorageContext);
+  const {deliveryInterval, save} = useContext(StorageContext);
   const setDeliveryInterval = useCallback(
     async (delInterval: number) => {
-      await save({ deliveryInterval: delInterval });
+      await save({deliveryInterval: delInterval});
     },
     [save],
   );

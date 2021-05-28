@@ -104,11 +104,10 @@ export default function Settings() {
       {
         title: Strings.Settings.DeliveryInterval.Title,
         icon: 'timer-outline',
-        subtitle: camelToName(
+        subtitle:
           Strings.Settings.DeliveryInterval[
             `${deliveryInterval}` as keyof typeof Strings.Settings.DeliveryInterval
           ],
-        ),
         action: {
           type: 'expand',
           fn: navigation => {

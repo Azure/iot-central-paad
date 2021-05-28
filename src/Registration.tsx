@@ -33,13 +33,12 @@ import {
 } from 'hooks';
 import {
   NavigationParams,
-  NavigationProperty,
   Pages,
   PagesNavigator,
   StyleDefinition,
 } from './types';
 import Strings from 'strings';
-import { createStackNavigator } from '@react-navigation/stack';
+import {createStackNavigator} from '@react-navigation/stack';
 import {
   Form,
   FormItem,
@@ -55,10 +54,10 @@ import {
   ButtonGroup,
   ButtonGroupItem,
 } from 'components';
-import { Buffer } from 'buffer';
-import { computeKey } from 'react-native-azure-iotcentral-client';
-import { StorageContext } from 'contexts';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {Buffer} from 'buffer';
+import {computeKey} from 'react-native-azure-iotcentral-client';
+import {StorageContext} from 'contexts';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const Stack = createStackNavigator();
 const screens = {
@@ -70,17 +69,17 @@ const screens = {
 export const Registration = React.memo<{
   route?: RouteProp<Record<string, NavigationParams>, 'Registration'>;
   navigation?: PagesNavigator;
-}>(({ navigation: parentNavigator, route }) => {
-  const { colors } = useTheme();
+}>(({navigation: parentNavigator, route}) => {
+  const {colors} = useTheme();
   const [
     connect,
     cancel,
     ,
-    { client, error, loading },
+    {client, error, loading},
   ] = useConnectIoTCentralClient();
   const previousLoading = usePrevious(loading);
   const qrcodeRef = useRef<QRCodeScanner>(null);
-  const { parentNavigatorKey, parentRoutes } = useNavigationState(state => ({
+  const {parentNavigatorKey, parentRoutes} = useNavigationState(state => ({
     parentNavigatorKey: state.key,
     parentRoutes: state.routes,
   }));
@@ -102,7 +101,14 @@ export const Registration = React.memo<{
 
   useEffect(() => {
     if (!loading && previousLoading && client && client.isConnected()) {
-      parentNavigator?.navigate(Pages.ROOT);
+      // go back to root page. reset navigator in case we're not coming from root page.
+      // registration screen must unmount in order to release camera.
+      parentNavigator?.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [{name: Pages.ROOT}],
+        }),
+      );
     }
   }, [client, loading, parentNavigator, previousLoading]);
 
@@ -114,7 +120,7 @@ export const Registration = React.memo<{
         {
           text: 'Retry',
           onPress: async () => {
-            await cancel({ clear: false });
+            await cancel({clear: false});
             qrcodeRef.current?.reactivate();
           },
         },
@@ -122,10 +128,12 @@ export const Registration = React.memo<{
           text: 'Cancel',
           style: 'cancel',
           onPress: async () => {
-            await cancel({ clear: false });
-            parentNavigator?.dispatch(CommonActions.navigate({
-              name: screens.EMPTY
-            }));
+            await cancel({clear: false});
+            parentNavigator?.dispatch(
+              CommonActions.navigate({
+                name: screens.EMPTY,
+              }),
+            );
           },
         },
       ],
@@ -140,7 +148,7 @@ export const Registration = React.memo<{
       initialRouteName={
         client && client.isConnected() ? screens.MANUAL : screens.EMPTY
       }
-      screenOptions={{ headerBackTitleVisible: false }}
+      screenOptions={{headerBackTitleVisible: false}}
       headerMode={'float'}>
       <Stack.Screen
         name={screens.EMPTY}
@@ -177,28 +185,28 @@ export const Registration = React.memo<{
         name={screens.MANUAL}
         options={() => ({
           headerTitle: Strings.Registration.Manual.Title,
-          headerShown: !client || !client?.isConnected(),
+          headerShown: !client || !client.isConnected(), // hide header when connecting and when clearing registration
         })}
-        initialParams={{ parentNavigatorKey, parentRoutes }}
+        initialParams={{parentNavigatorKey, parentRoutes}}
         component={ManualConnect}
       />
     </Stack.Navigator>
   );
 });
-
 const QRCodeScreen = React.memo<{
   connect: (
     encryptedCredentials: string,
     options?: ConnectionOptions,
   ) => Promise<void>;
   scannerRef: React.MutableRefObject<QRCodeScanner | null>;
-}>(({ connect, scannerRef }) => {
-  const { screen, orientation } = useScreenDimensions();
-  const { navigate } = useNavigation();
+}>(({connect, scannerRef}) => {
+  const {screen, orientation} = useScreenDimensions();
+  const {navigate} = useNavigation();
 
   const onRead = useCallback(
     async (e: Event) => {
       await connect(e.data);
+      // scannerRef.current?.reactivate(); // reactivate camera in order to make it available for other use (e.g. torch)
     },
     [connect],
   );
@@ -221,24 +229,24 @@ const QRCodeScreen = React.memo<{
   );
 });
 
-const ManualConnect = React.memo<{ navigation: any; route: any }>(
-  ({ navigation, route }) => {
-    const { save, credentials } = useContext(StorageContext);
+const ManualConnect = React.memo<{navigation: any; route: any}>(
+  ({navigation, route}) => {
+    const {save, credentials} = useContext(StorageContext);
     const [
       connect,
       cancel,
       clearClient,
-      { client, loading },
+      {client, loading},
     ] = useConnectIoTCentralClient();
     const [newReg, setNewReg] = useBoolean(false);
 
     const [checked, setChecked] = useState<'dps' | 'cstring'>(
       credentials && credentials.connectionString ? 'cstring' : 'dps',
     );
-    const { orientation } = useScreenDimensions();
+    const {orientation} = useScreenDimensions();
     const [startSubmit, setStartSubmit] = useBoolean(false);
-    const { bottom } = useSafeAreaInsets();
-    const { parentNavigatorKey, parentRoutes } = route.params;
+    const {bottom} = useSafeAreaInsets();
+    const {parentNavigatorKey, parentRoutes} = route.params;
     const style = useMemo<StyleDefinition>(
       () => ({
         container: {
@@ -254,8 +262,8 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
         },
         footer: {
           alignItems: 'center',
-          marginBottom: Platform.select({ ios: bottom, android: 20 }),
-          marginTop: Platform.select({ ios: bottom, android: 20 }),
+          marginBottom: Platform.select({ios: bottom, android: 20}),
+          marginTop: Platform.select({ios: bottom, android: 20}),
         },
       }),
       [orientation, bottom],
@@ -290,7 +298,7 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
 
     useEffect(() => {
       if (newReg) {
-        navigation.setOptions({ headerShown: false });
+        navigation.setOptions({headerShown: false});
       }
     }, [newReg, navigation]);
 
@@ -343,7 +351,9 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
             label: Strings.Registration.Manual.KeyTypes.Label,
             multiline: false,
             readonly,
-            value: credentials?.keyType || (credentials?.deviceKey ? 'device' : 'group'),
+            value:
+              credentials?.keyType ||
+              (credentials?.deviceKey ? 'device' : 'group'),
           },
           {
             id: 'authKey',
@@ -395,16 +405,16 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
                 ? Strings.Registration.Manual.Registered
                 : Strings.Registration.Manual.Body.ConnectionType.Title}
             </Name>
-            <View style={{ flex: 1 }}>
+            <View style={{flex: 1}}>
               <ButtonGroup
                 readonly={readonly}
                 items={connectionTypes}
-                containerStyle={{ marginVertical: 10 }}
+                containerStyle={{marginVertical: 10}}
                 onCheckedChange={choiceId => setChecked(choiceId as any)}
                 defaultCheckedId="dps"
               />
             </View>
-            <View style={{ flex: 2 }}>
+            <View style={{flex: 2}}>
               <Form
                 title={Strings.Registration.Manual.Body.ConnectionInfo}
                 items={formItems}
@@ -421,7 +431,7 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
               <Button
                 key="register-new-device"
                 title={Strings.Registration.Manual.RegisterNew.Title}
-                containerStyle={{ marginBottom: 5 }}
+                containerStyle={{marginBottom: 5}}
                 onPress={() => {
                   Alert.alert(
                     Strings.Registration.Manual.RegisterNew.Alert.Title,
@@ -447,7 +457,7 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
                       {
                         text: 'Cancel',
                         style: 'cancel',
-                        onPress: () => { },
+                        onPress: () => {},
                       },
                     ],
                     {
@@ -459,7 +469,7 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
               <Button
                 key="clear-device-credentials"
                 title={Strings.Registration.Manual.Clear.Title}
-                titleStyle={{ color: 'red' }}
+                titleStyle={{color: 'red'}}
                 onPress={() => {
                   Alert.alert(
                     Strings.Registration.Manual.Clear.Alert.Title,
@@ -468,8 +478,9 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
                       {
                         text: 'Proceed',
                         onPress: async () => {
+                          setNewReg.True();
                           await client?.disconnect();
-                          await save({ credentials: null });
+                          await save({credentials: null});
                           clearClient();
                           // HACK: remove root screen from state and replace with registration
                           navigation.dispatch({
@@ -479,13 +490,12 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
                             )?.key,
                             target: parentNavigatorKey.key,
                           });
-                          setNewReg.True();
                         },
                       },
                       {
                         text: 'Cancel',
                         style: 'cancel',
-                        onPress: () => { },
+                        onPress: () => {},
                       },
                     ],
                     {
@@ -521,7 +531,7 @@ const ManualConnect = React.memo<{ navigation: any; route: any }>(
 
 const EmptyClient = React.memo<{
   navigation: any;
-}>(({ navigation }) => {
+}>(({navigation}) => {
   return (
     <View style={style.container}>
       <Text style={style.header}>

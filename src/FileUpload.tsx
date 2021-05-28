@@ -24,11 +24,11 @@ import {
   useBoolean,
   useTheme,
 } from 'hooks';
-import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {Platform, Linking} from 'react-native';
 import {LogsContext} from './contexts/logs';
 import Strings from 'strings';
 import BottomPopup from 'components/bottomPopup';
+import CircularProgress from 'components/circularProgress';
 
 export default function FileUpload() {
   const {colors} = useTheme();
@@ -247,7 +247,6 @@ function UploadProgress(props: {
   const {size, uploadStatus, filename, setUploading} = props;
   const {screen} = useScreenDimensions();
   const [showResult, setShowResult] = useState(false);
-  const [rotationStyle] = useState({});
   const [colors, setColors] = useState({
     tint: themeColors.text,
     background: themeColors.card,
@@ -274,7 +273,6 @@ function UploadProgress(props: {
 
   useEffect(() => {
     if (fill === 0) {
-      // setRotationStyle({ transform: [{ scaleX: -1 }] });
       setColors(cur => ({
         tint:
           cur.tint === themeColors.text ? themeColors.card : themeColors.text,
@@ -331,16 +329,15 @@ function UploadProgress(props: {
 
   return (
     <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-      <AnimatedCircularProgress
+      <CircularProgress
         size={Math.floor(screen.height / 5)}
         width={5}
         fill={fill}
         tintColor={colors.tint}
         backgroundColor={colors.background}
-        rotation={360}
-        style={rotationStyle}>
-        {() => <Text style={rotationStyle}>{size}</Text>}
-      </AnimatedCircularProgress>
+        rotation={360}>
+        {() => <Text>{size}</Text>}
+      </CircularProgress>
       <Text
         style={{color: 'red', paddingVertical: 10}}
         onPress={setUploading.False}>

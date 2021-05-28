@@ -88,8 +88,8 @@ const Strings = {
         Alert: {
           Title: 'Clear device registration info?',
           Text:
-            "Are you sure to clear registration info? If proceed, device will disconnect and credentials will be wiped out. This means you need to register as a new device next time.",
-        }
+            'Are you sure to clear registration info? If proceed, device will disconnect and credentials will be wiped out. This means you need to register as a new device next time.',
+        },
       },
       Footer: {
         Connect: 'Connect',
@@ -115,7 +115,7 @@ const Strings = {
     Connection: {
       Loading: 'Connecting to Azure IoT...',
       Cancel: 'Cancel',
-    }
+    },
   },
   Client: {
     Properties: {
@@ -129,9 +129,10 @@ const Strings = {
     Commands: {
       Alert: {
         Title: 'Command received',
-        Message: 'The device received command "{{0}}" from Azure IoT. Starting executing now.'
-      }
-    }
+        Message:
+          'The device received command "{{0}}" from Azure IoT. Starting executing now.',
+      },
+    },
   },
   FileUpload: {
     Start: 'Select an image to upload to Azure Storage',
