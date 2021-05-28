@@ -22,7 +22,7 @@ import {
   IOTC_EVENTS,
   IIoTCClient,
 } from 'react-native-azure-iotcentral-client';
-import Torch from 'react-native-torch';
+
 import Strings, {resolveString} from 'strings';
 import {
   NavigationParams,
@@ -40,7 +40,7 @@ import {
 } from 'types';
 import {DEFAULT_DELIVERY_INTERVAL} from './sensors';
 import {Icon} from 'react-native-elements';
-import {TimeOut} from './tools';
+import {playTorch} from 'tools/Torch';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 
@@ -149,30 +149,16 @@ const Root = React.memo<{
 
     if (command.name === LIGHT_TOGGLE_COMMAND) {
       await command.reply(IIoTCCommandResponse.SUCCESS, 'Executed');
-      const fn = async () => {
-        return new Promise<void>(resolve => {
-          Torch.switchState(true);
-          setTimeout(() => {
-            Torch.switchState(false);
-            resolve();
-          }, data.duration * 1000);
-        });
+      const torchParams = data as {
+        pulses: number;
+        duration: number;
+        delay?: number;
       };
-      if (data.pulses && data.pulses > 1) {
-        let count = 1;
-        await fn(); // first run
-        await TimeOut(data.delay);
-        const intv: number = setInterval(async () => {
-          if (count === data.pulses) {
-            clearInterval(intv);
-            return;
-          }
-          await fn();
-          count++;
-        }, data.duration * 1000 + data.delay); // repeat light on with 1s delay from each other
-      } else {
-        await fn();
-      }
+      await playTorch(
+        torchParams.pulses,
+        torchParams.duration,
+        torchParams.delay || 1,
+      );
       return;
     }
     if (data.sensor) {
