@@ -33,7 +33,7 @@ jobs:
   - task: DownloadSecureFile@1
     name: androidKeystore
     inputs:
-      secureFile: iotc-paad.keystore
+      secureFile: paad-release.keystore
 
   - bash: |
       PAAD_RELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
