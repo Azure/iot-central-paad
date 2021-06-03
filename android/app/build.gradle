@@ -177,6 +177,12 @@ android {
                 keyAlias PAAD_RELEASE_KEY_ALIAS
                 keyPassword PAAD_RELEASE_KEY_PASSWORD
             }
+            else if (System.env.PAAD_RELEASE_STORE_FILE){
+                storeFile file(System.env.PAAD_RELEASE_STORE_FILE)
+                storePassword System.env.PAAD_RELEASE_STORE_PASSWORD
+                keyAlias System.env.PAAD_RELEASE_KEY_ALIAS
+                keyPassword System.env.PAAD_RELEASE_KEY_PASSWORD
+            }
         }
     }
     buildTypes {
