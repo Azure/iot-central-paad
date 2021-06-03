@@ -56,19 +56,12 @@ jobs:
       testResultsFiles: '**/TEST-*.xml'
       tasks: 'assembleRelease'
 
-  - task: ArchiveFiles@2
-    displayName: 'Create zip for signing'
-    inputs:
-      rootFolderOrFile: '$(releaseApk)'
-      includeRootFolder: false
-      archiveFile: '$(releaseZip)'
-
   - task: EsrpCodeSigning@1
     displayName: 'Sign build'
     inputs:
       ConnectedServiceName: 'IoT PnP PaaD'
       FolderPath: '$(apkPath)/release'
-      Pattern: '*.zip'
+      Pattern: '*.apk'
       signConfigType: 'inlineSignParams'
       inlineOperation: |
         [
@@ -84,11 +77,11 @@ jobs:
       MaxConcurrency: '50'
       MaxRetryAttempts: '5'
 
-  - task: ExtractFiles@1
-    displayName: 'Extract signed build'
+  - task: AndroidSigning@3
+    displayName: 'Zip aligning APK'
     inputs:
-      archiveFilePatterns: '$(releaseZip)'
-      destinationFolder: '$(signedExtractedPath)'
+      apksign: false
+      zipalignFile: '/usr/local/lib/android/sdk/build-tools/28.0.3/zipalign'
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
