@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React from 'react';
 import {Text as ELText, TextProps} from 'react-native-elements';
 import {Dimensions, Platform, PixelRatio} from 'react-native';

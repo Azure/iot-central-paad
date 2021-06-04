@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {RouteProp} from '@react-navigation/native';
 import React from 'react';
 import {WebView} from 'react-native-webview';

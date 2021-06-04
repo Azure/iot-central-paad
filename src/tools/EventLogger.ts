@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {EventEmitter} from 'events';
 import {IIoTCLogger, IOTC_LOGGING} from 'react-native-azure-iotcentral-client';
 
@@ -15,9 +18,8 @@ export default class EventLogger extends EventEmitter implements IIoTCLogger {
         IOTC_LOGGING[logLevel.toUpperCase() as keyof typeof IOTC_LOGGING];
       if (!this.logLevel) {
         console.error(
-          `LoggingLevel ${logLevel} is unsupported.\nSupported levels: ${Object.keys(
-            IOTC_LOGGING,
-          ).join(',')}`,
+          `LoggingLevel ${logLevel} is unsupported.
+Supported levels: ${Object.keys(IOTC_LOGGING).join(',')}`,
         );
         throw new Error();
       }

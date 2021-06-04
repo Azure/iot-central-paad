@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {useTheme} from 'hooks';
 import React, {useEffect} from 'react';
 import {View} from 'react-native';

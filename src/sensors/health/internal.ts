@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import HealthKit, {HealthKitPermissions} from 'rn-apple-healthkit';
 
 const PERMS = HealthKit.Constants.Permissions;

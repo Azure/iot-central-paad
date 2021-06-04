@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React, {useState, useEffect, useContext} from 'react';
 import {View, Platform} from 'react-native';
 import Settings from './Settings';

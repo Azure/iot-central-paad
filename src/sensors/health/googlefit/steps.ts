@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {EventEmitter} from 'events';
 import GoogleFit from 'react-native-google-fit';
 import {ISensor, DATA_AVAILABLE_EVENT, LOG_DATA} from 'sensors/internal';

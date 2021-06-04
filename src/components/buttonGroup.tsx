@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React from 'react';
 import {View, ViewStyle} from 'react-native';
 import {CheckBox} from 'react-native-elements';

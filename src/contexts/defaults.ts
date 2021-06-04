@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 export type DefaultProps = {
   emulator: boolean;
   initialized: boolean;

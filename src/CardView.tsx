@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React from 'react';
 import {View, FlatList, ViewStyle, TextStyle} from 'react-native';
 import {ListItem} from 'react-native-elements';

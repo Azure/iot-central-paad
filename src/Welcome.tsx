@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React, {useEffect, useCallback, useContext, useMemo} from 'react';
 import {View} from 'react-native';
 import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';

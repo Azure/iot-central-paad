@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import HealthKit, {SampleResult} from 'rn-apple-healthkit';
 import {EventEmitter} from 'events';
 import {requestPermissions} from '../internal';
@@ -82,7 +85,8 @@ export default class HealthKitClimb extends EventEmitter implements ISensor {
             if (err) {
               this.emit(
                 LOG_DATA,
-                `Error from Apple HealthKit - Climbs:\n${(err as any).message}`,
+                `Error from Apple HealthKit - Climbs:
+${(err as any).message}`,
               );
               return;
             }

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {useNavigation} from '@react-navigation/native';
 import {defaults} from 'contexts/defaults';
 import {

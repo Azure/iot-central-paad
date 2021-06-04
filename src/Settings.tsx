@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {useContext, useMemo} from 'react';
 import {ThemeContext} from './contexts/theme';
 import React from 'react';

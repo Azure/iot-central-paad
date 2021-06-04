@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {useTheme} from 'hooks';
 import {HeaderTitle} from '@react-navigation/stack';
 import React from 'react';

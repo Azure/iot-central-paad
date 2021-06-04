@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import Accelerometer from './accelerometer';
 import Barometer from './barometer';
 import Battery from './battery';

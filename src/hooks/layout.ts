@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {StorageContext, ThemeContext} from 'contexts';
 import {useState, useEffect, useCallback, useContext, useMemo} from 'react';
 import {Appearance, Dimensions, ScaledSize} from 'react-native';

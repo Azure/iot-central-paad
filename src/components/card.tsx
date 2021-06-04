@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React, {useRef, useState, useEffect} from 'react';
 import {CardProps, IconProps, Icon, Input} from 'react-native-elements';
 import {

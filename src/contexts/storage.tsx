@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React, {useCallback, useState} from 'react';
 import {IoTCCredentials} from 'react-native-azure-iotcentral-client';
 import * as Keychain from 'react-native-keychain';

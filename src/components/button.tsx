@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React from 'react';
 import {Platform} from 'react-native';
 import {Button as ElButton, ButtonProps} from 'react-native-elements';

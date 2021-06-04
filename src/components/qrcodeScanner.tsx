@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React from 'react';
 import {Platform, StyleSheet, View} from 'react-native';
 import {Icon} from 'react-native-elements';

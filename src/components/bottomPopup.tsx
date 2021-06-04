@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {useBoolean} from 'hooks/common';
 import {useScreenDimensions} from 'hooks/layout';
 import React, {useCallback, useMemo} from 'react';

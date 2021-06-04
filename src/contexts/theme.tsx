@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React, {useCallback, useState} from 'react';
 import {Appearance} from 'react-native';
 import {ThemeMode} from 'types';

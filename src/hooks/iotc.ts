@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {useContext, useState, useRef, useEffect, useCallback} from 'react';
 import {
   DecryptCredentials,

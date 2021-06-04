@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {ItemProps} from 'types';
 import {AVAILABLE_PROPERTIES} from './internal';
 

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import DeviceInfo from 'react-native-device-info';
 import {DataType} from 'types';
 

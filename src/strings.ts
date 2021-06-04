@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 const Strings = {
   Title: 'IoT Plug and Play',
   Core: {

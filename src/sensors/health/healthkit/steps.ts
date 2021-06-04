@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import HealthKit from 'rn-apple-healthkit';
 import {EventEmitter} from 'events';
 import {NativeAppEventEmitter} from 'react-native';
@@ -87,9 +90,8 @@ export default class HealthKitSteps extends EventEmitter implements ISensor {
               if (err) {
                 this.emit(
                   LOG_DATA,
-                  `Error from Apple HealthKit - Steps:\n${
-                    (err as any).message
-                  }`,
+                  `Error from Apple HealthKit - Steps:
+${(err as any).message}`,
                 );
                 return;
               }

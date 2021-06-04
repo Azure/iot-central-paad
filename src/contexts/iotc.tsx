@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import React, {useCallback, useReducer} from 'react';
 import {IIoTCClient} from 'react-native-azure-iotcentral-client';
 

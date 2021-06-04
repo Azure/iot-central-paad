@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 import {Platform} from 'react-native';
 import Torch from 'react-native-torch';
 import {TimeOut} from '.';
