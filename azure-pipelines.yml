@@ -55,11 +55,11 @@ jobs:
       testResultsFiles: '**/TEST-*.xml'
       tasks: 'assembleRelease'
 
-  - task: AndroidSigning@3
-    displayName: 'Zip aligning APK'
-    inputs:
-      apksign: false
-      zipalign: true
+  # - task: AndroidSigning@3
+  #   displayName: 'Zip aligning APK'
+  #   inputs:
+  #     apksign: false
+  #     zipalign: true
 
   - task: EsrpCodeSigning@1
     displayName: 'Sign build'
