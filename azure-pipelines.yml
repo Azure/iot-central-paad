@@ -55,6 +55,12 @@ jobs:
       testResultsFiles: '**/TEST-*.xml'
       tasks: 'assembleRelease'
 
+  - task: AndroidSigning@3
+    displayName: 'Zip aligning APK'
+    inputs:
+      apksign: false
+      zipalign: true
+
   - task: EsrpCodeSigning@1
     displayName: 'Sign build'
     inputs:
@@ -76,11 +82,6 @@ jobs:
       MaxConcurrency: '50'
       MaxRetryAttempts: '5'
 
-  - task: AndroidSigning@3
-    displayName: 'Zip aligning APK'
-    inputs:
-      apksign: false
-      zipalign: true
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
