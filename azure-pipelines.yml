@@ -81,7 +81,7 @@ jobs:
     displayName: 'Zip aligning APK'
     inputs:
       apksign: false
-      zipalignFile: '/usr/local/lib/android/sdk/build-tools/28.0.3/zipalign'
+      zipalign: true
 
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
