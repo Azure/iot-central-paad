@@ -17,7 +17,7 @@ jobs:
 - job: Android
   variables:
     apkPath: android/app/build/outputs/apk
-    releaseApk: $(apkPath)/release/$(Project_Name)-release.apk
+    releaseApk: $(apkPath)/release/$(Project_Name)-release-unsigned.apk
     releaseZip: $(apkPath)/release/$(Project_Name)-release.zip
   steps:
   - task: NodeTool@0
