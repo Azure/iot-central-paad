@@ -17,8 +17,8 @@ jobs:
 - job: Android
   variables:
     apkPath: android/app/build/outputs/apk
-    releaseApk: $(apkPath)/release/$(Project_Name)-release-unsigned.apk
-    releaseZip: $(apkPath)/release/$(Project_Name)-release.zip
+    unsignedApk: $(apkPath)/release/$(Project_Name)-release-unsigned.apk
+    releaseApk: $(apkPath)/release/$(Project_Name)-release.zip
   steps:
   - task: NodeTool@0
     inputs:
@@ -55,12 +55,6 @@ jobs:
       testResultsFiles: '**/TEST-*.xml'
       tasks: 'assembleRelease'
 
-  # - task: AndroidSigning@3
-  #   displayName: 'Zip aligning APK'
-  #   inputs:
-  #     apksign: false
-  #     zipalign: true
-
   - task: EsrpCodeSigning@1
     displayName: 'Sign build'
     inputs:
@@ -86,9 +80,29 @@ jobs:
   - task: PublishBuildArtifacts@1
     displayName: "Publish Build Artifact"
     inputs:
+      PathtoPublish: '$(unsignedApk)'
+      ArtifactName: 'android'
+      publishLocation: 'Container'
+    
+  - task: AndroidSigning@3
+    displayName: 'Zip aligning APK'
+    inputs:
+      apksign: false
+      zipalign: true
+  
+  - task: Bash@3
+    displayName: "Rename Signed APK"
+    inputs:
+      targetType: 'inline'
+      script: 'mv $(unsignedApk) $(releaseApk)'
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifact"
+    inputs:
       PathtoPublish: '$(releaseApk)'
       ArtifactName: 'android'
       publishLocation: 'Container'
+
 
 # - job: iOS
 #   timeoutInMinutes: 120
