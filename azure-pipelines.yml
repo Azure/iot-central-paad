@@ -353,8 +353,8 @@ jobs:
 
 - job: ReleaseFile
   dependsOn:
-  - Android Release
-  - iOS Release
+  - Android_Release
+  - iOS_Release
   steps:
   - task: ShellScript@2
     inputs:
