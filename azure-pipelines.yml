@@ -23,7 +23,7 @@ variables:
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
-- job: Android Beta
+- job: Android_Beta
   condition: and(succeeded(), eq(variables.isMaster, false))
   steps:
   - task: NodeTool@0
@@ -68,7 +68,7 @@ jobs:
       ArtifactName: 'android'
       publishLocation: 'Container'
 
-- job: Android Release
+- job: Android_Release
   condition: and(succeeded(), eq(variables.isMaster, true))
   steps:
   - task: NodeTool@0
@@ -153,7 +153,7 @@ jobs:
       ArtifactName: 'android'
       publishLocation: 'Container'
 
-- job: iOS Beta
+- job: iOS_Beta
   timeoutInMinutes: 120
   condition: and(succeeded(), eq(variables.isMaster, false))
   variables:
@@ -219,7 +219,7 @@ jobs:
       ArtifactName: 'ios'
       publishLocation: 'Container'
 
-- job: iOS Release
+- job: iOS_Release
   timeoutInMinutes: 120
   condition: and(succeeded(), eq(variables.isMaster, true))
   variables:
