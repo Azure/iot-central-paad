@@ -1,9 +1,12 @@
 trigger:
+  - master
   - develop
 pool:
   vmImage: 'macos-latest'
 
 variables:
+  - name: isMaster
+    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
   - group: iotc-paad-android
   - name: PAAD_BETARELEASE_PROJECT_NAME
     value: $(Project_Name)
@@ -11,10 +14,17 @@ variables:
     value: 0
   - name: PAAD_BETARELEASE_VERSION_NAME
     value: 1.0.2
+  - name: PAAD_RELEASE_PROJECT_NAME
+    value: $(Project_Name)
+  - name: PAAD_RELEASE_VERSION_CODE
+    value: 0
+  - name: PAAD_RELEASE_VERSION_NAME
+    value: 1.0.2
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
-- job: Android
+- job: Android Beta
+  condition: and(succeeded(), eq(variables.isMaster, false))
   steps:
   - task: NodeTool@0
     inputs:
@@ -58,8 +68,94 @@ jobs:
       ArtifactName: 'android'
       publishLocation: 'Container'
 
-- job: iOS
+- job: Android Release
+  condition: and(succeeded(), eq(variables.isMaster, true))
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '12.18.4'
+    displayName: 'Install Node'
+
+  - script: npm install
+    workingDirectory: .
+    displayName: 'Install node dependencies'
+
+  - task: DownloadSecureFile@1
+    name: androidKeystore
+    inputs:
+      secureFile: paad-release.keystore
+
+  - bash: |
+      PAAD_RELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
+      echo "##vso[task.setvariable variable=PAAD_RELEASE_VERSION_CODE]$PAAD_RELEASE_VERSION_CODE"
+      echo "Using variable: $GOOGLE_MAPS_API_KEY"
+      echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
+      cp $(androidKeystore.secureFilePath) android/app/$PAAD_RELEASE_STORE_FILE
+      ls -l android/app/$PAAD_RELEASE_STORE_FILE
+    env:
+      GOOGLE_MAPS_KEY: $(googlemapskey)
+  - bash: env | sort
+
+  - task: Gradle@2
+    inputs:
+      workingDirectory: 'android'
+      gradleWrapperFile: 'android/gradlew'
+      gradleOptions: '-Xmx3072m'
+      publishJUnitResults: false
+      testResultsFiles: '**/TEST-*.xml'
+      tasks: 'assembleRelease'
+
+  - task: EsrpCodeSigning@1
+    displayName: 'Sign build'
+    inputs:
+      ConnectedServiceName: 'IoT PnP PaaD'
+      FolderPath: '$(apkPath)/release'
+      Pattern: '*.apk'
+      signConfigType: 'inlineSignParams'
+      inlineOperation: |
+        [
+              {
+                  "KeyCode" : "CP-464774-Java",
+                  "OperationCode" : "AndroidSign",
+                  "Parameters" : {},
+                  "ToolName" : "sign",
+                  "ToolVersion" : "1.0"
+              }
+        ]
+      SessionTimeout: '60'
+      MaxConcurrency: '50'
+      MaxRetryAttempts: '5'
+
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifact"
+    inputs:
+      PathtoPublish: '$(unsignedApk)'
+      ArtifactName: 'android'
+      publishLocation: 'Container'
+    
+  - task: AndroidSigning@3
+    displayName: 'Zip aligning APK'
+    inputs:
+      apksign: false
+      zipalign: true
+  
+  - task: Bash@3
+    displayName: "Rename Signed APK"
+    inputs:
+      targetType: 'inline'
+      script: 'mv $(unsignedApk) $(releaseApk)'
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifact"
+    inputs:
+      PathtoPublish: '$(releaseApk)'
+      ArtifactName: 'android'
+      publishLocation: 'Container'
+
+- job: iOS Beta
   timeoutInMinutes: 120
+  condition: and(succeeded(), eq(variables.isMaster, false))
   variables:
     rootPath: '$(System.DefaultWorkingDirectory)'
     patchScript: '$(rootPath)/patchIpa.sh'
@@ -123,10 +219,142 @@ jobs:
       ArtifactName: 'ios'
       publishLocation: 'Container'
 
+- job: iOS Release
+  timeoutInMinutes: 120
+  condition: and(succeeded(), eq(variables.isMaster, true))
+  variables:
+    rootPath: '$(System.DefaultWorkingDirectory)'
+    patchScript: '$(rootPath)/patchIpa.sh'
+    archivePath: '$(rootPath)/output/archive'
+    xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
+    xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
+    exportPath: '$(rootPath)/output/package'
+    zipToSign: '$(archivePath)/$(Project_Name).zip'
+    signedZip: '$(archivePath)/$(Project_Name).zip'
+    signedExtractedPath: '$(exportPath)/signed'
+
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '12.18.4'
+    displayName: 'Install Node'
+
+  - script: npm install
+    workingDirectory: .
+    displayName: 'Install node dependencies'
+
+  - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
+    workingDirectory: .
+    displayName: 'Increment version in package.json'
+
+
+  - task: InstallAppleCertificate@2
+    displayName: "Install Apple Certificate"
+    inputs:
+      certSecureFile: '$(Development_Certificate_Name)'
+      certPwd: '$(Development_Certificate_Password)'
+
+  - task: InstallAppleProvisioningProfile@1
+    displayName: "Install Apple provisioning profile"
+    inputs:
+      provisioningProfileLocation: 'secureFiles'
+      provProfileSecureFile: '$(Development_Provisioning_Profile)'
+
+  - task: ShellScript@2
+    inputs:
+      scriptPath: '$(rootPath)/bumpVersion.sh'
+
+  - task: Xcode@5
+    displayName: "Build Mobile Application"
+    inputs:
+      actions: 'build'
+      configuration: 'Release'
+      xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
+      scheme: '$(Project_Name)'
+      sdk: 'iphoneos14.4'
+      packageApp: true
+      exportPath: '$(exportPath)'
+      archivePath: '$(archivePath)'
+      signingOption: 'manual'
+      signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+      provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+      xcodeVersion: 'specifyPath'
+      xcodeDeveloperDir: '$(xcodeDeveloperDir)'
+
+  - task: DownloadSecureFile@1
+    displayName: 'Download distribution profile from Azure secure files storage'
+    inputs:
+      secureFile: 'IoT_Plug_and_Play_Distribution.mobileprovision'
+      retryCount: 5
+
+  - task: CopyFiles@2
+    displayName: 'Copy distribution provisioning profile'
+    inputs:
+      SourceFolder: '$(Agent.TempDirectory)'
+      Contents: 'IoT_Plug_and_Play_Distribution.mobileprovision'
+      TargetFolder: '$(archivePath)'
+      flattenFolders: true
+  
+  - task: CopyFiles@2
+    displayName: 'Copy ExportOptions'
+    inputs:
+      SourceFolder: '$(rootPath)'
+      Contents: 'ExportOptions.plist'
+      TargetFolder: '$(archivePath)'
+      flattenFolders: true
+
+  - task: ArchiveFiles@2
+    displayName: 'Create zip for signing'
+    inputs:
+      rootFolderOrFile: '$(archivePath)'
+      includeRootFolder: false
+      archiveFile: '$(zipToSign)'
+
+  - task: EsrpCodeSigning@1
+    displayName: 'Sign build'
+    inputs:
+      ConnectedServiceName: 'IoT PnP PaaD'
+      FolderPath: '$(archivePath)'
+      Pattern: '*.zip'
+      signConfigType: 'inlineSignParams'
+      inlineOperation: |
+        [
+              {
+                  "KeyCode" : "CP-233039-Apple",
+                  "OperationCode" : "iOSAppSign",
+                  "Parameters" : {},
+                  "ToolName" : "sign",
+                  "ToolVersion" : "1.0"
+              }
+        ]
+      SessionTimeout: '60'
+      MaxConcurrency: '50'
+      MaxRetryAttempts: '5'
+
+  - task: ExtractFiles@1
+    displayName: 'Extract signed build'
+    inputs:
+      archiveFilePatterns: '$(signedZip)'
+      destinationFolder: '$(signedExtractedPath)'
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Signed Ipa"
+    inputs:
+      PathtoPublish: '$(signedExtractedPath)'
+      ArtifactName: 'ios_signed'
+      publishLocation: 'Container'
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Dogfood Ipa"
+    inputs:
+      PathtoPublish: '$(exportPath)/$(Project_Name).ipa'
+      ArtifactName: 'ios_appcenter'
+      publishLocation: 'Container'
+
 - job: ReleaseFile
   dependsOn:
-  - Android
-  - iOS
+  - Android Release
+  - iOS Release
   steps:
   - task: ShellScript@2
     inputs:
