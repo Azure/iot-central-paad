@@ -290,14 +290,14 @@ const ManualConnect = React.memo<{navigation: any; route: any}>(
     );
     // update checkbox when credentials changes
     useEffect(() => {
-      if (credentials) {
+      if (credentials && client && client.isConnected()) {
         if (checked === 'dps' && credentials.connectionString) {
           setChecked('cstring');
         } else if (checked === 'cstring' && credentials.scopeId) {
           setChecked('dps');
         }
       }
-    }, [setChecked, credentials, checked]);
+    }, [setChecked, credentials, checked, client]);
 
     useEffect(() => {
       if (newReg) {
@@ -320,6 +320,7 @@ const ManualConnect = React.memo<{navigation: any; route: any}>(
     );
 
     const formItems = useMemo<FormItem[]>(() => {
+      // console.log(`Checked: ${checked}, credentials: ${JSON.stringify(credentials)}, readonly: ${readonly}`);
       if (checked === 'dps') {
         return [
           {
@@ -385,10 +386,7 @@ const ManualConnect = React.memo<{navigation: any; route: any}>(
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={style.container}>
-        <ScrollView
-          bounces={false}
-          style={style.scroll}
-          keyboardShouldPersistTaps="handled">
+        <ScrollView bounces={false} style={style.scroll}>
           <View style={style.header}>
             {!readonly && (
               <Text>
@@ -413,7 +411,10 @@ const ManualConnect = React.memo<{navigation: any; route: any}>(
                 readonly={readonly}
                 items={connectionTypes}
                 containerStyle={{marginVertical: 10}}
-                onCheckedChange={choiceId => setChecked(choiceId as any)}
+                onCheckedChange={choiceId => {
+                  console.log(choiceId);
+                  setChecked(choiceId as any);
+                }}
                 defaultCheckedId="dps"
               />
             </View>

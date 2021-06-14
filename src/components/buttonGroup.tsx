@@ -21,7 +21,6 @@ const ButtonGroup = React.memo<{
   const [checked, setChecked] = React.useState<typeof ids[number]>(
     defaultCheckedId ?? ids[0],
   );
-
   return (
     <View style={[{flex: 1}, containerStyle]} key={`btnGroup-${Math.random()}`}>
       {items.map((item, index) => (
