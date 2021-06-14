@@ -69,7 +69,10 @@ jobs:
       publishLocation: 'Container'
 
 - job: Android_Release
-  condition: and(succeeded(), eq(variables.isMaster, true))
+  variables:
+    apkPath: android/app/build/outputs/apk
+    unsignedApk: $(apkPath)/release/$(Project_Name)-release-unsigned.apk
+    releaseApk: $(apkPath)/release/$(Project_Name)-release.zip
   steps:
   - task: NodeTool@0
     inputs:
@@ -94,6 +97,7 @@ jobs:
       ls -l android/app/$PAAD_RELEASE_STORE_FILE
     env:
       GOOGLE_MAPS_KEY: $(googlemapskey)
+
   - bash: env | sort
 
   - task: Gradle@2
