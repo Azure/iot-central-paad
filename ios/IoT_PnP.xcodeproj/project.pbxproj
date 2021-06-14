@@ -12,6 +12,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		4A45C58125FFD5B0005A8543 /* Charts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A45C58025FFD5B0005A8543 /* Charts.swift */; };
+		4ACC20B82677A38500B4CEF5 /* AppCenter-Config.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4ACC20B72677A38500B4CEF5 /* AppCenter-Config.plist */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8AAA04A01BAED4450C5F4B5C /* libPods-IoT_PnP.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5CEF606470749A051B1799F /* libPods-IoT_PnP.a */; };
 		8D7A0543032608C4D2B43BB1 /* libPods-IoT_PnP-IoT_PnPTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A6EA2ED576E43B69923733 /* libPods-IoT_PnP-IoT_PnPTests.a */; };
@@ -41,6 +42,7 @@
 		34A6EA2ED576E43B69923733 /* libPods-IoT_PnP-IoT_PnPTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-IoT_PnP-IoT_PnPTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A45C58025FFD5B0005A8543 /* Charts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Charts.swift; sourceTree = "<group>"; };
 		4A45C58425FFD5C6005A8543 /* IoT_PnP-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "IoT_PnP-Bridging-Header.h"; sourceTree = "<group>"; };
+		4ACC20B72677A38500B4CEF5 /* AppCenter-Config.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "AppCenter-Config.plist"; sourceTree = "<group>"; };
 		7190CFFA99BDCF08BD0B7BBD /* Pods-IoT_PnP.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP.release.xcconfig"; path = "Target Support Files/Pods-IoT_PnP/Pods-IoT_PnP.release.xcconfig"; sourceTree = "<group>"; };
 		8166B076FEEE5FA0B4046143 /* Pods-IoT_PnP.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoT_PnP.debug.xcconfig"; path = "Target Support Files/Pods-IoT_PnP/Pods-IoT_PnP.debug.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = IoT_PnP/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				4ACC20B72677A38500B4CEF5 /* AppCenter-Config.plist */,
 				4A45C58425FFD5C6005A8543 /* IoT_PnP-Bridging-Header.h */,
 				4A45C58025FFD5B0005A8543 /* Charts.swift */,
 				13B07FAE1A68108700A75B9A /* IoT_PnP */,
@@ -249,6 +252,7 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				4ACC20B82677A38500B4CEF5 /* AppCenter-Config.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
