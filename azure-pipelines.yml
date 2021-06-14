@@ -1,10 +1,19 @@
 trigger:
   - master
+  - develop
 pool:
   vmImage: 'macos-latest'
 
 variables:
+  - name: isMaster
+    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
   - group: iotc-paad-android
+  - name: PAAD_BETARELEASE_PROJECT_NAME
+    value: $(Project_Name)
+  - name: PAAD_BETARELEASE_VERSION_CODE
+    value: 0
+  - name: PAAD_BETARELEASE_VERSION_NAME
+    value: 1.0.2
   - name: PAAD_RELEASE_PROJECT_NAME
     value: $(Project_Name)
   - name: PAAD_RELEASE_VERSION_CODE
@@ -14,7 +23,53 @@ variables:
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
-- job: Android
+- job: Android Beta
+  condition: and(succeeded(), eq(variables.isMaster, false))
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '12.18.4'
+    displayName: 'Install Node'
+
+  - script: npm install
+    workingDirectory: .
+    displayName: 'Install node dependencies'
+
+  - task: DownloadSecureFile@1
+    name: androidKeystore
+    inputs:
+      secureFile: iotc-paad.keystore
+
+  - bash: |
+      PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
+      echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
+      echo "Using variable: $GOOGLE_MAPS_API_KEY"
+      echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
+      cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
+      ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
+    env:
+      GOOGLE_MAPS_KEY: $(googlemapskey)
+
+  - bash: env | sort
+
+  - task: Gradle@2
+    inputs:
+      workingDirectory: 'android'
+      gradleWrapperFile: 'android/gradlew'
+      gradleOptions: '-Xmx3072m'
+      publishJUnitResults: false
+      testResultsFiles: '**/TEST-*.xml'
+      tasks: 'assembleBetaRelease'
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifact"
+    inputs:
+      PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
+      ArtifactName: 'android'
+      publishLocation: 'Container'
+
+- job: Android Release
+  condition: and(succeeded(), eq(variables.isMaster, true))
   steps:
   - task: NodeTool@0
     inputs:
@@ -39,7 +94,6 @@ jobs:
       ls -l android/app/$PAAD_RELEASE_STORE_FILE
     env:
       GOOGLE_MAPS_KEY: $(googlemapskey)
-
   - bash: env | sort
 
   - task: Gradle@2
@@ -99,9 +153,75 @@ jobs:
       ArtifactName: 'android'
       publishLocation: 'Container'
 
-
-- job: iOS
+- job: iOS Beta
   timeoutInMinutes: 120
+  condition: and(succeeded(), eq(variables.isMaster, false))
+  variables:
+    rootPath: '$(System.DefaultWorkingDirectory)'
+    patchScript: '$(rootPath)/patchIpa.sh'
+    archivePath: '$(rootPath)/output/archive'
+    xcodeDeveloperDir: '/Applications/Xcode_$(Xcode_Version).app/Contents/Developer'
+    xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
+    exportPath: '$(rootPath)/output/package'
+    resultIpa: '$(exportPath)/$(Project_Name).ipa'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '12.18.4'
+    displayName: 'Install Node'
+
+  - script: npm install
+    workingDirectory: .
+    displayName: 'Install node dependencies'
+
+  - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
+    workingDirectory: .
+    displayName: 'Increment version in package.json'
+
+
+  - task: InstallAppleCertificate@2
+    displayName: "Install Apple Certificate"
+    inputs:
+      certSecureFile: '$(AppCenter_Dogfood_Certificate_Name)'
+      certPwd: '$(AppCenter_Dogfood_Certificate_Password)'
+
+  - task: InstallAppleProvisioningProfile@1
+    displayName: "Install Apple provisioning profile"
+    inputs:
+      provisioningProfileLocation: 'secureFiles'
+      provProfileSecureFile: '$(AppCenter_Dogfood_Provisioning_Profile)'
+
+  - task: ShellScript@2
+    inputs:
+      scriptPath: '$(rootPath)/bumpVersion.sh'
+
+  - task: Xcode@5
+    displayName: "Build Mobile Application"
+    inputs:
+      actions: 'build'
+      configuration: 'Release'
+      xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
+      scheme: '$(Project_Name)'
+      sdk: 'iphoneos14.4'
+      packageApp: true
+      exportPath: '$(exportPath)'
+      archivePath: '$(archivePath)'
+      signingOption: 'manual'
+      signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+      provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+      xcodeVersion: 'specifyPath'
+      xcodeDeveloperDir: '$(xcodeDeveloperDir)'
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Publish Build Artifact"
+    inputs:
+      PathtoPublish: '$(resultIpa)'
+      ArtifactName: 'ios'
+      publishLocation: 'Container'
+
+- job: iOS Release
+  timeoutInMinutes: 120
+  condition: and(succeeded(), eq(variables.isMaster, true))
   variables:
     rootPath: '$(System.DefaultWorkingDirectory)'
     patchScript: '$(rootPath)/patchIpa.sh'
@@ -233,8 +353,8 @@ jobs:
 
 - job: ReleaseFile
   dependsOn:
-  - Android
-  - iOS
+  - Android Release
+  - iOS Release
   steps:
   - task: ShellScript@2
     inputs:
