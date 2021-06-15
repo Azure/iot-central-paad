@@ -151,7 +151,10 @@ const Root = React.memo<{
     );
 
     if (command.name === LIGHT_TOGGLE_COMMAND) {
-      await command.reply(IIoTCCommandResponse.SUCCESS, '{"execution":"started"}');
+      await command.reply(
+        IIoTCCommandResponse.SUCCESS,
+        '{"execution":"started"}',
+      );
       const torchParams = data as {
         pulses: number;
         duration: number;
@@ -237,7 +240,7 @@ const Root = React.memo<{
         eventName: 'INFO',
         eventData: 'Properties initialized.',
       });
-      
+
       iotcentralClient.on(IOTC_EVENTS.Commands, onCommandUpdate);
       iotcentralClient.on(IOTC_EVENTS.Properties, onPropUpdate);
       iotcentralClient.fetchTwin();

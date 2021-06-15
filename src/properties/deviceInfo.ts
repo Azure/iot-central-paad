@@ -15,6 +15,8 @@ export type DeviceInfo = {
   osName: DeviceInfoValue;
   totalStorage: DeviceInfoValue;
   totalMemory: DeviceInfoValue;
+  processorManufacturer: DeviceInfoValue;
+  processorArchitecture: DeviceInfoValue;
 };
 
 export type DeviceInfoName = keyof DeviceInfo;
@@ -33,5 +35,10 @@ export async function getDeviceInfo(): Promise<DeviceInfo> {
       dataType: 'bytes',
     },
     totalMemory: {value: await DeviceInfo.getTotalMemory(), dataType: 'bytes'},
+    processorArchitecture: {
+      value: (await DeviceInfo.supportedAbis())[0],
+      dataType: 'string',
+    },
+    processorManufacturer: {value: 'unknown', dataType: 'string'},
   };
 }

@@ -39,16 +39,16 @@ export const Properties: PropertyProps[] = [
     name: 'Operating system',
     editable: false,
   },
-  // {
-  //   id: AVAILABLE_PROPERTIES.PROCESSOR_ARCHITECTURE,
-  //   name: 'Processor Architecture',
-  //   editable: false,
-  // },
-  // {
-  //   id: AVAILABLE_PROPERTIES.PROCESSOR_MANUFACTURER,
-  //   name: 'Processor Manufacturer',
-  //   editable: false,
-  // },
+  {
+    id: AVAILABLE_PROPERTIES.PROCESSOR_ARCHITECTURE,
+    name: 'Processor Architecture',
+    editable: false,
+  },
+  {
+    id: AVAILABLE_PROPERTIES.PROCESSOR_MANUFACTURER,
+    name: 'Processor Manufacturer',
+    editable: false,
+  },
   {
     id: AVAILABLE_PROPERTIES.TOTAL_STORAGE,
     name: 'Total storage',

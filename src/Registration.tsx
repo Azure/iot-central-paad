@@ -300,10 +300,10 @@ const ManualConnect = React.memo<{navigation: any; route: any}>(
     }, [setChecked, credentials, checked, client]);
 
     useEffect(() => {
-      if (newReg) {
+      if (newReg && client?.isConnected()) {
         navigation.setOptions({headerShown: false});
       }
-    }, [newReg, navigation]);
+    }, [newReg, navigation, client]);
 
     const connectionTypes = useMemo<ButtonGroupItem[]>(
       () => [
