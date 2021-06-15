@@ -72,7 +72,7 @@ jobs:
   variables:
     apkPath: android/app/build/outputs/apk
     unsignedApk: $(apkPath)/release/$(Project_Name)-release-unsigned.apk
-    releaseApk: $(apkPath)/release/$(Project_Name)-release.zip
+    releaseApk: $(apkPath)/release/$(Project_Name)-release.apk
   steps:
   - task: NodeTool@0
     inputs:
