@@ -151,7 +151,7 @@ const Root = React.memo<{
     );
 
     if (command.name === LIGHT_TOGGLE_COMMAND) {
-      await command.reply(IIoTCCommandResponse.SUCCESS, 'Executed');
+      await command.reply(IIoTCCommandResponse.SUCCESS, '{"execution":"started"}');
       const torchParams = data as {
         pulses: number;
         duration: number;
@@ -173,7 +173,7 @@ const Root = React.memo<{
             sensor.enable(data.enable ? data.enable : false);
             await command.reply(
               IIoTCCommandResponse.SUCCESS,
-              `${data.sensor} ${data.enable ? `Enabled` : `Disabled`}`,
+              `{"enabled":${data.enable}}`,
             );
             break;
           case SET_FREQUENCY_COMMAND:
@@ -181,7 +181,7 @@ const Root = React.memo<{
             sensor.sendInterval(data.interval ? data.interval * 1000 : 5000);
             await command.reply(
               IIoTCCommandResponse.SUCCESS,
-              `${data.sensor} delivery interval changed to ${data.interval}`,
+              `{"interval":${data.interval}}`,
             );
             break;
         }
@@ -237,6 +237,7 @@ const Root = React.memo<{
         eventName: 'INFO',
         eventData: 'Properties initialized.',
       });
+      
       iotcentralClient.on(IOTC_EVENTS.Commands, onCommandUpdate);
       iotcentralClient.on(IOTC_EVENTS.Properties, onPropUpdate);
       iotcentralClient.fetchTwin();
