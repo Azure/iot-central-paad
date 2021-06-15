@@ -108,8 +108,6 @@ export function useConnectIoTCentralClient(): [
           credentials.deviceKey,
           eventLogger.current,
         );
-        console.log(`Credentials: ${JSON.stringify(credentials)}`);
-        iotc.setModelId(credentials.modelId ?? defaults.modelId);
       } else {
         Debug(
           `Error connecting IoTC Client. Credentials invalid`,
@@ -122,6 +120,7 @@ export function useConnectIoTCentralClient(): [
       }
       // iotc.setLogging(IOTC_LOGGING.ALL);
       try {
+        iotc.setModelId(credentials.modelId ?? defaults.modelId);
         iotc.on(IOTC_EVENTS.Properties, () => {});
         await iotc.connect({
           cleanSession: false,
