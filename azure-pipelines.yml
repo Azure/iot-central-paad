@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/azure-pipelines-vscode/main/service-schema.json
+
 trigger:
   - master
   - develop
@@ -23,7 +25,7 @@ variables:
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
-- job: Android Beta
+- job: Android_Beta
   condition: and(succeeded(), eq(variables.isMaster, false))
   steps:
   - task: NodeTool@0
@@ -68,7 +70,7 @@ jobs:
       ArtifactName: 'android'
       publishLocation: 'Container'
 
-- job: Android Release
+- job: Android_Release
   condition: and(succeeded(), eq(variables.isMaster, true))
   steps:
   - task: NodeTool@0
@@ -153,7 +155,7 @@ jobs:
       ArtifactName: 'android'
       publishLocation: 'Container'
 
-- job: iOS Beta
+- job: iOS_Beta
   timeoutInMinutes: 120
   condition: and(succeeded(), eq(variables.isMaster, false))
   variables:
@@ -199,7 +201,7 @@ jobs:
     displayName: "Build Mobile Application"
     inputs:
       actions: 'build'
-      configuration: 'Release'
+      configuration: 'AppCenterRelease'
       xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
       sdk: 'iphoneos14.4'
@@ -219,7 +221,7 @@ jobs:
       ArtifactName: 'ios'
       publishLocation: 'Container'
 
-- job: iOS Release
+- job: iOS_Release
   timeoutInMinutes: 120
   condition: and(succeeded(), eq(variables.isMaster, true))
   variables:
@@ -268,7 +270,7 @@ jobs:
     displayName: "Build Mobile Application"
     inputs:
       actions: 'build'
-      configuration: 'Release'
+      configuration: 'AppStoreRelease'
       xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
       sdk: 'iphoneos14.4'
@@ -353,8 +355,8 @@ jobs:
 
 - job: ReleaseFile
   dependsOn:
-  - Android Release
-  - iOS Release
+  - Android_Release
+  - iOS_Release
   steps:
   - task: ShellScript@2
     inputs:
