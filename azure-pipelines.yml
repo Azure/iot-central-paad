@@ -11,13 +11,13 @@ variables:
   - name: PAAD_BETARELEASE_PROJECT_NAME
     value: $(Project_Name)
   - name: PAAD_BETARELEASE_VERSION_CODE
-    value: 0
+    value: 1
   - name: PAAD_BETARELEASE_VERSION_NAME
     value: 1.0.3
   - name: PAAD_RELEASE_PROJECT_NAME
     value: $(Project_Name)
   - name: PAAD_RELEASE_VERSION_CODE
-    value: 0
+    value: 1
   - name: PAAD_RELEASE_VERSION_NAME
     value: 1.0.3
 
@@ -203,7 +203,7 @@ jobs:
     displayName: "Build Mobile Application"
     inputs:
       actions: 'build'
-      configuration: 'Release'
+      configuration: 'AppCenterRelease'
       xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
       sdk: 'iphoneos14.4'
@@ -358,7 +358,9 @@ jobs:
 - job: ReleaseFile
   dependsOn:
   - Android_Release
+  - Android_Beta
   - iOS_Release
+  - iOS_Beta
   steps:
   - task: ShellScript@2
     inputs:
