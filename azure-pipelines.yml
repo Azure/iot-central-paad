@@ -13,13 +13,13 @@ variables:
   - name: PAAD_BETARELEASE_PROJECT_NAME
     value: $(Project_Name)
   - name: PAAD_BETARELEASE_VERSION_CODE
-    value: 0
+    value: 1
   - name: PAAD_BETARELEASE_VERSION_NAME
     value: 1.0.2
   - name: PAAD_RELEASE_PROJECT_NAME
     value: $(Project_Name)
   - name: PAAD_RELEASE_VERSION_CODE
-    value: 0
+    value: 1
   - name: PAAD_RELEASE_VERSION_NAME
     value: 1.0.2
 
@@ -356,6 +356,8 @@ jobs:
 - job: ReleaseFile
   dependsOn:
   - Android_Release
+  - Android_Beta
+  - iOS_Beta
   - iOS_Release
   steps:
   - task: ShellScript@2
