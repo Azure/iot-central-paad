@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/azure-pipelines-vscode/main/service-schema.json
+
 trigger:
   - master
   - develop
@@ -73,6 +75,7 @@ jobs:
     apkPath: android/app/build/outputs/apk
     unsignedApk: $(apkPath)/release/$(Project_Name)-release-unsigned.apk
     releaseApk: $(apkPath)/release/$(Project_Name)-release.apk
+  condition: and(succeeded(), eq(variables.isMaster, true))
   steps:
   - task: NodeTool@0
     inputs:
@@ -272,7 +275,7 @@ jobs:
     displayName: "Build Mobile Application"
     inputs:
       actions: 'build'
-      configuration: 'Release'
+      configuration: 'AppStoreRelease'
       xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
       sdk: 'iphoneos14.4'
