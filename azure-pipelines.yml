@@ -275,7 +275,7 @@ jobs:
     displayName: "Build Mobile Application"
     inputs:
       actions: 'build'
-      configuration: 'AppStoreRelease'
+      configuration: 'Release'
       xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
       scheme: '$(Project_Name)'
       sdk: 'iphoneos14.4'
