@@ -44,7 +44,7 @@ const Strings = {
       },
       Success: {
         Title: 'Success',
-        Text: 'Successfully cleared data!',
+        Text: 'Successfully wiped data. Please restart the app!',
       },
     },
   },
