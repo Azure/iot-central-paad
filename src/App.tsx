@@ -78,7 +78,6 @@ const Navigation = React.memo(() => {
 
   useEffect(() => {
     if (credentials && initialized && !client) {
-      console.log('Trying to connect');
       connect(credentials, {restore: true});
     }
   }, [connect, client, credentials, initialized]);
