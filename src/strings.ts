@@ -160,6 +160,20 @@ const Strings = {
     Disable:
       'Disable simulation mode and connect to Azure IoT to work with file uploads.',
   },
+  Update: {
+    Mandatory: {
+      Title: 'Update Required',
+      Text: 'An update to {{0}} is required to continue',
+      Confirm: 'Update'
+    },
+    Optional: {
+      Title: 'Update Available',
+      Text: 'An update to {{0}} is available. Would you like to update?',
+      Confirm: 'Update',
+      Cancel: 'Not now',
+      Skip: 'Skip this version'
+    }
+  }
 };
 
 export function resolveString(data: string, ...values: string[]) {

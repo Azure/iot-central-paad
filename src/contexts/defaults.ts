@@ -6,6 +6,8 @@ export type DefaultProps = {
   initialized: boolean;
   dev: boolean;
   modelId: string;
+  packageNameIOS: string;
+  packageNameAndroid: string;
 };
 
 export const defaults: DefaultProps = {
@@ -13,4 +15,6 @@ export const defaults: DefaultProps = {
   initialized: false,
   dev: false,
   modelId: 'dtmi:azureiot:PhoneAsADevice;2',
+  packageNameIOS: 'com.microsoft.iotpnp',
+  packageNameAndroid: 'com.iot_pnp'
 };

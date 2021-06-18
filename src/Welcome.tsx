@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, {useEffect, useCallback, useContext, useMemo} from 'react';
-import {View} from 'react-native';
+import React, { useEffect, useCallback, useContext, useMemo } from 'react';
+import { Alert, Linking, Platform, View } from 'react-native';
 import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';
 import LogoDark from './assets/IoT-Plug-And-Play_Light.svg';
 import * as Animatable from 'react-native-animatable';
-import {defaults} from './contexts/defaults';
+import { defaults } from './contexts/defaults';
 import DeviceInfo from 'react-native-device-info';
-import {StateUpdater, StyleDefinition, ThemeMode} from './types';
+import { StateUpdater, StyleDefinition, ThemeMode } from './types';
 import ProgressCircleSnail from 'react-native-progress/CircleSnail';
-import {useScreenDimensions} from './hooks/layout';
-import {StorageContext, ThemeContext} from 'contexts';
-import {Name} from 'components/typography';
+import { useScreenDimensions } from './hooks/layout';
+import { StorageContext, ThemeContext } from 'contexts';
+import { Name } from 'components/typography';
+import VersionCheck from 'react-native-version-check';
+import Strings, { resolveString } from 'strings';
 
 const animations = {
   slideOutLogo: {
@@ -39,10 +41,10 @@ export function Welcome(props: {
   title: string;
   setInitialized: StateUpdater<boolean>;
 }) {
-  const {setInitialized, title} = props;
-  const {read, initialized} = useContext(StorageContext);
-  const {screen} = useScreenDimensions();
-  const {mode, theme} = useContext(ThemeContext);
+  const { setInitialized, title } = props;
+  const { read, save, initialized, skipVersion } = useContext(StorageContext);
+  const { screen } = useScreenDimensions();
+  const { mode, theme } = useContext(ThemeContext);
 
   const style = useMemo<StyleDefinition>(
     () => ({
@@ -69,9 +71,26 @@ export function Welcome(props: {
   const initDefaults = useCallback(async () => {
     defaults.emulator = await DeviceInfo.isEmulator();
     defaults.dev = __DEV__;
-
     await new Promise(r => setTimeout(r, 2000));
-    await read();
+    const storage = await read();
+    try {
+      const minorOrPatchUpdateDetails = await VersionCheck.needUpdate({
+        packageName: Platform.select({ ios: defaults.packageNameIOS, android: defaults.packageNameAndroid })
+      });
+      if (minorOrPatchUpdateDetails.isNeeded) {
+        await handleUpdate(false, storage.skipVersion, minorOrPatchUpdateDetails.latestVersion, minorOrPatchUpdateDetails.storeUrl, save);
+      }
+      const breakingUpdateDetails = await VersionCheck.needUpdate({
+        depth: 1,
+        packageName: Platform.select({ ios: defaults.packageNameIOS, android: defaults.packageNameAndroid })
+      });
+      if (breakingUpdateDetails.isNeeded) {
+        await handleUpdate(true, storage.skipVersion, breakingUpdateDetails.latestVersion, breakingUpdateDetails.storeUrl, save);
+      }
+    }
+    catch (e) {
+
+    }
   }, [read]);
 
   useEffect(() => {
@@ -101,4 +120,46 @@ export function Welcome(props: {
       />
     </View>
   );
+}
+
+
+function handleUpdate(mandatory: boolean, skipVersion: string | null, availableVersion: string, url: string, save: any) {
+  return new Promise<boolean>((resolve) => {
+    if (skipVersion && (skipVersion === availableVersion)) {
+      return resolve(true);
+    }
+    if (mandatory) {
+      Alert.alert(Strings.Update.Mandatory.Title, resolveString(Strings.Update.Mandatory.Text, Strings.Title),
+        [{
+          text: Strings.Update.Mandatory.Confirm,
+          onPress: async () => {
+            await Linking.openURL(url);
+          }
+        }], { cancelable: false });
+    }
+    else {
+      Alert.alert(Strings.Update.Optional.Title, resolveString(Strings.Update.Optional.Text, Strings.Title),
+        [
+          {
+            text: Strings.Update.Optional.Skip,
+            onPress: async () => {
+              await save({ skipVersion: availableVersion });
+              resolve(true);
+            }
+          },
+          {
+            text: Strings.Update.Optional.Cancel,
+            onPress: () => resolve(false)
+          },
+          {
+            text: Strings.Update.Optional.Confirm,
+            onPress: async () => {
+              await Linking.openURL(url);
+              resolve(true);
+            }
+          }
+        ], { cancelable: false });
+    }
+  });
+
 }
