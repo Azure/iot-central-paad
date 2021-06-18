@@ -295,6 +295,8 @@ PODS:
     - React-Core
   - react-native-torch (1.2.0):
     - React
+  - react-native-version-check (3.4.2):
+    - React
   - react-native-webview (11.3.2):
     - React-Core
   - React-perflogger (0.64.2)
@@ -465,6 +467,7 @@ DEPENDENCIES:
   - react-native-maps (from `../node_modules/react-native-maps`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-torch (from `../node_modules/react-native-torch`)
+  - react-native-version-check (from `../node_modules/react-native-version-check`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
@@ -563,6 +566,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-torch:
     :path: "../node_modules/react-native-torch"
+  react-native-version-check:
+    :path: "../node_modules/react-native-version-check"
   react-native-webview:
     :path: "../node_modules/react-native-webview"
   React-perflogger:
@@ -655,6 +660,7 @@ SPEC CHECKSUMS:
   react-native-maps: 2d405b4e8cee0282e4c02bac434d81450dfea877
   react-native-safe-area-context: e471852c5ed67eea4b10c5d9d43c1cebae3b231d
   react-native-torch: 86f052de32cc110922292770cdb389f00b5d7320
+  react-native-version-check: 9f9332ff4552fb00e0bd15b097a8d302b2b8413b
   react-native-webview: aea3233f26253f5c360164ee87d01ef9f7b9a27f
   React-perflogger: 25373e382fed75ce768a443822f07098a15ab737
   React-RCTActionSheet: af7796ba49ffe4ca92e7277a5d992d37203f7da5
