@@ -172,7 +172,6 @@ const Root = React.memo<{
       if (sensor) {
         switch (command.name) {
           case ENABLE_DISABLE_COMMAND:
-            console.log(`Command ${command.name}`);
             sensor.enable(data.enable ? data.enable : false);
             await command.reply(
               IIoTCCommandResponse.SUCCESS,
@@ -180,7 +179,6 @@ const Root = React.memo<{
             );
             break;
           case SET_FREQUENCY_COMMAND:
-            console.log(`Command ${command.name}`);
             sensor.sendInterval(data.interval ? data.interval * 1000 : 5000);
             await command.reply(
               IIoTCCommandResponse.SUCCESS,
@@ -219,7 +217,6 @@ const Root = React.memo<{
     const currentSensorRef = sensorRef.current;
     // const currentHealthRef = healthRef.current;
     if (iotcentralClient) {
-      console.log('Device just connected');
       currentSensorRef.forEach(s =>
         addSensorListener(s.id, DATA_AVAILABLE_EVENT, sendTelemetryHandler),
       );
@@ -270,7 +267,6 @@ const Root = React.memo<{
 
   // react to sendinterval change
   useEffect(() => {
-    console.log(`Changed interval to ${deliveryInterval}`);
     if (deliveryInterval !== DEFAULT_DELIVERY_INTERVAL) {
       sensorRef.current.forEach(sensor =>
         sensor.sendInterval(deliveryInterval * 1000),
