@@ -196,9 +196,6 @@ export function useConnectIoTCentralClient(): [
       'iotc.ts:137',
     );
     currentEventLog.addListener(LOG_DATA, append);
-    return () => {
-      currentEventLog.removeListener(LOG_DATA, append);
-    };
   }, [append]);
 
   return [
