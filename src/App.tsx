@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, { useState, useEffect, useContext } from 'react';
-import { View, Platform } from 'react-native';
+import React, {useState, useEffect, useContext} from 'react';
+import {View, Platform} from 'react-native';
 import Settings from './Settings';
 import {
   NavigationContainer,
@@ -16,7 +16,7 @@ import {
   NavigationPages,
   // ChartType,
 } from 'types';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {
   LogsProvider,
   StorageProvider,
@@ -26,10 +26,10 @@ import {
 } from 'contexts';
 import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';
 import LogoDark from './assets/IoT-Plug-And-Play_Light.svg';
-import { Icon } from 'react-native-elements';
-import { createStackNavigator } from '@react-navigation/stack';
-import { Text } from './components/typography';
-import { Welcome } from './Welcome';
+import {Icon} from 'react-native-elements';
+import {createStackNavigator} from '@react-navigation/stack';
+import {Text} from './components/typography';
+import {Welcome} from './Welcome';
 import Home from './Home';
 import {
   useConnectIoTCentralClient,
@@ -38,11 +38,11 @@ import {
   useTheme,
   useThemeMode,
 } from 'hooks';
-import { Registration } from './Registration';
-import { Loader } from './components/loader';
+import {Registration} from './Registration';
+import {Loader} from './components/loader';
 import Chart from 'Chart';
 import Strings from 'strings';
-import { Option } from 'components/options';
+import {Option} from 'components/options';
 import Options from 'components/options';
 
 const Stack = createStackNavigator<NavigationPages>();
@@ -72,15 +72,15 @@ export default function App() {
 }
 
 const Navigation = React.memo(() => {
-  const { mode, type: themeType, setThemeMode } = useThemeMode();
-  const { credentials, initialized } = useContext(StorageContext);
+  const {mode, type: themeType, setThemeMode} = useThemeMode();
+  const {credentials, initialized} = useContext(StorageContext);
   const [deliveryInterval, setDeliveryInterval] = useDeliveryInterval();
-  const [connect, cancel, , { client, loading }] = useConnectIoTCentralClient();
+  const [connect, cancel, , {client, loading}] = useConnectIoTCentralClient();
   const [simulated] = useSimulation();
 
   useEffect(() => {
     if (credentials && initialized && !client) {
-      connect(credentials, { restore: true });
+      connect(credentials, {restore: true});
     }
   }, [connect, client, credentials, initialized]);
 
@@ -88,7 +88,7 @@ const Navigation = React.memo(() => {
     <NavigationContainer theme={mode === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack.Navigator
         initialRouteName={simulated ? Pages.ROOT : Pages.REGISTRATION}
-        screenOptions={({ navigation, route }) => {
+        screenOptions={({navigation, route}) => {
           const defaultOptions = {
             gestureEnabled: false,
             headerBackTitleVisible: false,
@@ -112,15 +112,15 @@ const Navigation = React.memo(() => {
         <Stack.Screen
           name={Pages.INSIGHT}
           component={Chart}
-          options={({ route }) => {
+          options={({route}) => {
             let data = {};
             if (route.params) {
               const params = route.params as NavigationParams;
               if (params.title) {
-                data = { ...data, headerTitle: params.title };
+                data = {...data, headerTitle: params.title};
               }
               if (params.backTitle) {
-                data = { ...data, headerBackTitle: params.backTitle };
+                data = {...data, headerBackTitle: params.backTitle};
               }
             }
             return data;
@@ -129,7 +129,7 @@ const Navigation = React.memo(() => {
         <Stack.Screen name={Pages.SETTINGS} component={Settings} />
         <Stack.Screen
           name={Pages.THEME}
-          options={({ navigation }: { navigation: NavigationProperty }) => ({
+          options={({navigation}: {navigation: NavigationProperty}) => ({
             stackAnimation: 'flip',
             headerTitle: Platform.select({
               ios: undefined,
@@ -164,7 +164,7 @@ const Navigation = React.memo(() => {
         </Stack.Screen>
         <Stack.Screen
           name={Pages.INTERVAL}
-          options={({ navigation }: { navigation: NavigationProperty }) => ({
+          options={({navigation}: {navigation: NavigationProperty}) => ({
             stackAnimation: 'flip',
             headerTitle: Platform.select({
               ios: undefined,
@@ -214,12 +214,12 @@ const Navigation = React.memo(() => {
           },
         ]}
       />
-    </NavigationContainer >
+    </NavigationContainer>
   );
 });
 
 const Logo = React.memo(() => {
-  const { colors, dark } = useTheme();
+  const {colors, dark} = useTheme();
   return (
     <View
       style={{
@@ -247,19 +247,19 @@ const Logo = React.memo(() => {
   );
 });
 
-const Profile = React.memo((props: { navigate: any }) => {
-  const { colors } = useTheme();
+const Profile = React.memo((props: {navigate: any}) => {
+  const {colors} = useTheme();
   return (
-    <View style={{ marginHorizontal: 10 }}>
+    <View style={{marginHorizontal: 10}}>
       <Icon
-        style={{ marginEnd: 20 }}
+        style={{marginEnd: 20}}
         name={
           Platform.select({
             ios: 'settings-outline',
             android: 'settings',
           }) as string
         }
-        type={Platform.select({ ios: 'ionicon', android: 'material' })}
+        type={Platform.select({ios: 'ionicon', android: 'material'})}
         color={colors.text}
         onPress={() => {
           props.navigate(Pages.SETTINGS);

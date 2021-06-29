@@ -16,5 +16,5 @@ export const defaults: DefaultProps = {
   dev: false,
   modelId: 'dtmi:azureiot:PhoneAsADevice;2',
   packageNameIOS: 'com.microsoft.iotpnp',
-  packageNameAndroid: 'com.iot_pnp'
+  packageNameAndroid: 'com.iot_pnp',
 };
