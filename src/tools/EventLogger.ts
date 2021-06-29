@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {EventEmitter} from 'events';
-import {IIoTCLogger, IOTC_LOGGING} from 'react-native-azure-iotcentral-client';
+import { EventEmitter } from 'events';
+import { IIoTCLogger, IOTC_LOGGING } from 'react-native-azure-iotcentral-client';
 
 export default class EventLogger extends EventEmitter implements IIoTCLogger {
   constructor(
@@ -32,19 +32,19 @@ Supported levels: ${Object.keys(IOTC_LOGGING).join(',')}`,
     if (this.logLevel === IOTC_LOGGING.ALL) {
       console.log(message);
       this.emit(this.eventName, {
-        eventName: `[IOTC_CLIENT] - (DEBUG)${
-          tag ? ` - ${tag.toUpperCase()}` : ''
-        }`,
+        eventName: `[IOTC_CLIENT] - (DEBUG)${tag ? ` - ${tag.toUpperCase()}` : ''
+          }`,
         eventData: message,
       });
     }
   }
   async log(message: string, tag?: string) {
-    if (this.logLevel !== IOTC_LOGGING.DISABLED) console.log(message);
+    if (this.logLevel !== IOTC_LOGGING.DISABLED) {
+      console.log(message);
+    }
     this.emit(this.eventName, {
-      eventName: `[IOTC_CLIENT] - (INFO)${
-        tag ? ` - ${tag.toUpperCase()}` : ''
-      }`,
+      eventName: `[IOTC_CLIENT] - (INFO)${tag ? ` - ${tag.toUpperCase()}` : ''
+        }`,
       eventData: message,
     });
   }
