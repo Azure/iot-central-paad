@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { useCallback, useContext, useMemo } from 'react';
-import { ThemeContext } from './contexts/theme';
+import {useCallback, useContext, useMemo} from 'react';
+import {ThemeContext} from './contexts/theme';
 import React from 'react';
-import { View, Switch, ScrollView, Platform, Alert } from 'react-native';
-import { StackActions, useNavigation } from '@react-navigation/native';
-import { Icon, ListItem } from 'react-native-elements';
-import { useDeliveryInterval, useSimulation } from './hooks/iotc';
-import { defaults } from './contexts/defaults';
+import {View, Switch, ScrollView, Platform, Alert} from 'react-native';
+import {StackActions, useNavigation} from '@react-navigation/native';
+import {Icon, ListItem} from 'react-native-elements';
+import {useDeliveryInterval, useSimulation} from './hooks/iotc';
+import {defaults} from './contexts/defaults';
 import Strings from 'strings';
-import { camelToName, Text } from 'components/typography';
-import { useBoolean, useTheme } from 'hooks';
-import { Pages, PagesNavigator, ThemeMode } from 'types';
-import { Loader } from 'components/loader';
-import { StorageContext } from 'contexts/storage';
+import {camelToName, Text} from 'components/typography';
+import {useBoolean, useTheme} from 'hooks';
+import {Pages, PagesNavigator, ThemeMode} from 'types';
+import {Loader} from 'components/loader';
+import {StorageContext} from 'contexts/storage';
 
 const pkg = require('../package.json');
 
@@ -31,10 +31,10 @@ type ProfileItem = {
 
 export default function Settings() {
   const [centralSimulated, simulate] = useSimulation();
-  const { mode } = useContext(ThemeContext);
-  const { colors, dark } = useTheme();
+  const {mode} = useContext(ThemeContext);
+  const {colors, dark} = useTheme();
   const [deliveryInterval] = useDeliveryInterval();
-  const { clear } = useContext(StorageContext);
+  const {clear} = useContext(StorageContext);
   const [loading] = useBoolean(false);
 
   const clearStorage = useCallback(() => {
@@ -56,7 +56,7 @@ export default function Settings() {
         {
           text: 'Cancel',
           style: 'cancel',
-          onPress: () => { },
+          onPress: () => {},
         },
       ],
       {
@@ -96,7 +96,7 @@ export default function Settings() {
         action: {
           type: 'expand',
           fn: navigation => {
-            navigation.navigate('Theme', { previousScreen: 'root' });
+            navigation.navigate('Theme', {previousScreen: 'root'});
           },
         },
       },
@@ -105,66 +105,66 @@ export default function Settings() {
         icon: 'timer-outline',
         subtitle:
           Strings.Settings.DeliveryInterval[
-          `${deliveryInterval}` as keyof typeof Strings.Settings.DeliveryInterval
+            `${deliveryInterval}` as keyof typeof Strings.Settings.DeliveryInterval
           ],
         action: {
           type: 'expand',
           fn: navigation => {
-            navigation.navigate('Interval', { previousScreen: 'root' });
+            navigation.navigate('Interval', {previousScreen: 'root'});
           },
         },
       },
       ...(defaults.dev
         ? [
-          {
-            title: 'Simulation Mode',
-            icon: dark ? 'sync-outline' : 'sync',
-            action: {
-              type: 'switch',
-              fn: async (val, nav: PagesNavigator) => {
-                const navState = nav.dangerouslyGetState();
-                await simulate(val);
-                if (val) {
-                  // if simulation just applied remove registration route
-                  nav.dispatch({
-                    ...StackActions.replace(Pages.ROOT),
-                    source: navState.routes.find(
-                      r => r.name === Pages.REGISTRATION,
-                    )?.key,
-                    target: navState.key,
-                  });
-                } else {
-                  // if simulation just applied remove registration route
-                  nav.dispatch({
-                    ...StackActions.replace(Pages.REGISTRATION),
-                    source: navState.routes.find(r => r.name === Pages.ROOT)
-                      ?.key,
-                    target: navState.key,
-                  });
-                }
+            {
+              title: 'Simulation Mode',
+              icon: dark ? 'sync-outline' : 'sync',
+              action: {
+                type: 'switch',
+                fn: async (val, nav: PagesNavigator) => {
+                  const navState = nav.dangerouslyGetState();
+                  await simulate(val);
+                  if (val) {
+                    // if simulation just applied remove registration route
+                    nav.dispatch({
+                      ...StackActions.replace(Pages.ROOT),
+                      source: navState.routes.find(
+                        r => r.name === Pages.REGISTRATION,
+                      )?.key,
+                      target: navState.key,
+                    });
+                  } else {
+                    // if simulation just applied remove registration route
+                    nav.dispatch({
+                      ...StackActions.replace(Pages.REGISTRATION),
+                      source: navState.routes.find(r => r.name === Pages.ROOT)
+                        ?.key,
+                      target: navState.key,
+                    });
+                  }
+                },
               },
-            },
-            value: centralSimulated,
-          } as ProfileItem,
-          {
-            title: 'Wipe data',
-            icon: 'trash-outline',
-            action: {
-              type: 'select',
-              fn: clearStorage,
-            }
-          } as ProfileItem
-        ]
+              value: centralSimulated,
+            } as ProfileItem,
+            {
+              title: 'Wipe data',
+              icon: 'trash-outline',
+              action: {
+                type: 'select',
+                fn: clearStorage,
+              },
+            } as ProfileItem,
+          ]
         : []),
       {
         title: 'Version',
         value: pkg.version,
       },
     ],
-    [deliveryInterval, mode, centralSimulated, dark, simulate],
+    [deliveryInterval, mode, centralSimulated, dark, simulate, clearStorage],
   );
   return (
-    <View style={{ flex: 1, marginVertical: 10 }}>
+    <View style={{flex: 1, marginVertical: 10}}>
       <Root items={items} colors={colors} dark={dark} />
       <Loader visible={loading} message={Strings.Core.Loading} modal={true} />
     </View>
@@ -175,7 +175,7 @@ const RightElement = React.memo<{
   item: ProfileItem;
   colors: any;
   dark: boolean;
-}>(({ item, colors, dark }) => {
+}>(({item, colors, dark}) => {
   const [enabled, setEnabled] = useBoolean(item.value as boolean);
   const nav = useNavigation<PagesNavigator>();
   if (item.action && item.action.type === 'switch') {
@@ -190,9 +190,9 @@ const RightElement = React.memo<{
           thumbColor: item.value
             ? colors.primary
             : dark
-              ? colors.text
-              : colors.background,
-          trackColor: { true: colors.border, false: colors.border },
+            ? colors.text
+            : colors.background,
+          trackColor: {true: colors.border, false: colors.border},
         })}
       />
     );
@@ -200,8 +200,8 @@ const RightElement = React.memo<{
   return null;
 });
 
-const Root = React.memo<{ items: ProfileItem[]; colors: any; dark: boolean }>(
-  ({ items, colors, dark }) => {
+const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
+  ({items, colors, dark}) => {
     const nav = useNavigation<PagesNavigator>();
 
     const styles = React.useMemo(
@@ -217,12 +217,12 @@ const Root = React.memo<{ items: ProfileItem[]; colors: any; dark: boolean }>(
     );
 
     return (
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView style={{flex: 1}}>
         {items.map((item, index) => (
           <ListItem
             key={`setting-${index}`}
             bottomDivider
-            containerStyle={{ backgroundColor: colors.card }}
+            containerStyle={{backgroundColor: colors.card}}
             onPress={
               item.action && item.action.type !== 'switch'
                 ? item.action.fn.bind(null, nav)

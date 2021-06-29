@@ -164,16 +164,16 @@ const Strings = {
     Mandatory: {
       Title: 'Update Required',
       Text: 'An update to {{0}} is required to continue',
-      Confirm: 'Update'
+      Confirm: 'Update',
     },
     Optional: {
       Title: 'Update Available',
       Text: 'An update to {{0}} is available. Would you like to update?',
       Confirm: 'Update',
       Cancel: 'Not now',
-      Skip: 'Skip this version'
-    }
-  }
+      Skip: 'Skip this version',
+    },
+  },
 };
 
 export function resolveString(data: string, ...values: string[]) {

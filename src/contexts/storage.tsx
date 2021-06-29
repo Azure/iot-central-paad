@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, { useCallback, useState } from 'react';
-import { IoTCCredentials } from 'react-native-azure-iotcentral-client';
+import React, {useCallback, useState} from 'react';
+import {IoTCCredentials} from 'react-native-azure-iotcentral-client';
 import * as Keychain from 'react-native-keychain';
-import { Debug, Log } from '../tools/CustomLogger';
-import { StateUpdater, ThemeMode } from '../types';
+import {Debug, Log} from '../tools/CustomLogger';
+import {StateUpdater, ThemeMode} from '../types';
 
 const USERNAME = 'IOTC_PAD_CLIENT';
 
@@ -15,8 +15,8 @@ type IStorageState = {
   skipVersion: string | null;
   deliveryInterval: number;
   credentials:
-  | (IoTCCredentials & { authKey?: string; keyType?: 'group' | 'device' })
-  | null;
+    | (IoTCCredentials & {authKey?: string; keyType?: 'group' | 'device'})
+    | null;
   initialized: boolean;
 };
 
@@ -36,7 +36,7 @@ export type IStorageContext = IStorageState & {
 };
 
 const StorageContext = React.createContext({} as IStorageContext);
-const { Provider } = StorageContext;
+const {Provider} = StorageContext;
 
 const retrieveStorage = async (update: StateUpdater<IStorageState>) => {
   /**
@@ -61,13 +61,13 @@ const retrieveStorage = async (update: StateUpdater<IStorageState>) => {
         parsed.credentials = null;
       }
       update(current => {
-        ret = { ...current, ...parsed, initialized: true };
+        ret = {...current, ...parsed, initialized: true};
         return ret;
       });
     }
   } else {
     update(current => {
-      ret = { ...current, credentials: null, initialized: true }
+      ret = {...current, credentials: null, initialized: true};
       return ret;
     });
   }
@@ -79,14 +79,14 @@ const persist = async (state: IStorageState) => {
   await Keychain.setGenericPassword(USERNAME, JSON.stringify(state));
 };
 
-const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const StorageProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
   const [state, setState] = useState<IStorageState>(initialState);
 
   const save = useCallback(
     async (data: Partial<IStorageState>, store: boolean = true) => {
       let newState;
       setState(current => {
-        newState = { ...current, ...data };
+        newState = {...current, ...data};
         return newState;
       });
       if (store && newState) {
@@ -114,4 +114,4 @@ const StorageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
   return <Provider value={value}>{children}</Provider>;
 };
 
-export { StorageProvider as default, StorageContext };
+export {StorageProvider as default, StorageContext};
