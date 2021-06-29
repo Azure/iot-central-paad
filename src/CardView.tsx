@@ -53,6 +53,7 @@ const CardView = React.memo<{
   return (
     <View style={{flex: 1, paddingVertical: 10}}>
       <FlatList
+        key={`flatlist-${componentName}-${items.length}`}
         numColumns={items.length > 4 ? 2 : 1}
         data={items}
         renderItem={getCard(
