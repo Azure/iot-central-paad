@@ -37,6 +37,10 @@ jobs:
     workingDirectory: .
     displayName: 'Install node dependencies'
 
+  - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
+    workingDirectory: .
+    displayName: 'Increment version in package.json'
+
   - task: DownloadSecureFile@1
     name: androidKeystore
     inputs:
@@ -85,6 +89,10 @@ jobs:
   - script: npm install
     workingDirectory: .
     displayName: 'Install node dependencies'
+
+  - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
+    workingDirectory: .
+    displayName: 'Increment version in package.json'
 
   - task: DownloadSecureFile@1
     name: androidKeystore
