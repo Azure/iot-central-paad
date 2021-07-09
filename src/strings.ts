@@ -140,7 +140,7 @@ const Strings = {
   FileUpload: {
     Start: 'Select an image to upload to Azure Storage',
     Footer:
-      "You'll need to configure file upload in your IoT solution before using this feature.",
+      "You'll need to configure file upload in your IoT solution before using this feature. ",
     LearnMore: {
       Title: 'Learn more',
       Url: 'https://aka.ms/iot-paad-fileupload',
