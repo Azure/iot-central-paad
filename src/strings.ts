@@ -133,7 +133,7 @@ const Strings = {
       Alert: {
         Title: 'Command received',
         Message:
-          'The device received command "{{0}}" from Azure IoT. Starting executing now.',
+          'The device received command "{{0}}" from Azure IoT. Starting execution now.',
       },
     },
   },
