@@ -15,11 +15,11 @@ import {
   launchCamera,
   launchImageLibrary,
 } from 'react-native-image-picker';
-import {View} from 'react-native-animatable';
-import {Card} from './components/card';
-import {useScreenDimensions} from './hooks/layout';
-import {Icon, ListItem} from 'react-native-elements';
-import {Headline, Link, Text} from './components';
+import { View } from 'react-native-animatable';
+import { Card } from './components/card';
+import { useScreenDimensions } from './hooks/layout';
+import { Icon, ListItem } from 'react-native-elements';
+import { Headline, Link, Text } from './components';
 import {
   useIoTCentralClient,
   useSimulation,
@@ -27,19 +27,19 @@ import {
   useBoolean,
   useTheme,
 } from 'hooks';
-import {Platform, Linking} from 'react-native';
-import {LogsContext} from './contexts/logs';
+import { Platform, Linking } from 'react-native';
+import { LogsContext } from './contexts/logs';
 import Strings from 'strings';
 import BottomPopup from 'components/bottomPopup';
 import ProgressCircleSnail from 'react-native-progress/CircleSnail';
-import {StyleDefinition} from 'types';
+import { StyleDefinition } from 'types';
 
 export default function FileUpload() {
-  const {colors} = useTheme();
+  const { colors } = useTheme();
   const [client] = useIoTCentralClient();
   const [simulated] = useSimulation();
-  const {screen} = useScreenDimensions();
-  const {append} = useContext(LogsContext);
+  const { screen } = useScreenDimensions();
+  const { append } = useContext(LogsContext);
   const [uploading, setUploading] = useBoolean(false);
   const [showSelector, setShowSelector] = useBoolean(false);
   const [uploadStatus, setuploadStatus] = useState<boolean | undefined>(
@@ -94,15 +94,14 @@ export default function FileUpload() {
             }
             console.log(`Current file name: ${curfileName}`);
             try {
-              setUploading.True();
-
               append({
                 eventName: 'FILE UPLOAD',
                 eventData: `Starting upload of file ${curfileName}`,
               });
               setFileName(curfileName!);
               setFileSize(formatBytes(response.fileSize!));
-              await new Promise(r => setTimeout(r, 6000));
+              setUploading.True();
+              // await new Promise(r => setTimeout(r, 6000));
               const res = await client?.uploadFile(
                 curfileName as string,
                 fileType,
@@ -118,9 +117,8 @@ export default function FileUpload() {
               } else {
                 append({
                   eventName: 'FILE UPLOAD',
-                  eventData: `Error uploading ${curfileName}${
-                    res?.errorMessage ? `. Reason:${res?.errorMessage}` : '.'
-                  }`,
+                  eventData: `Error uploading ${curfileName}${res?.errorMessage ? `. Reason:${res?.errorMessage}` : '.'
+                    }`,
                 });
                 setuploadStatus(false);
               }
@@ -143,10 +141,10 @@ export default function FileUpload() {
           alignItems: 'center',
           marginHorizontal: 30,
         }}>
-        <Headline style={{textAlign: 'center'}}>
+        <Headline style={{ textAlign: 'center' }}>
           {Strings.Simulation.Enabled}
         </Headline>
-        <Text style={{textAlign: 'center'}}>
+        <Text style={{ textAlign: 'center' }}>
           {' '}
           {Strings.FileUpload.NotAvailable} {Strings.Simulation.Disable}
         </Text>
@@ -155,8 +153,8 @@ export default function FileUpload() {
   }
 
   return (
-    <View style={{flex: 1}}>
-      <View style={{flex: 2, alignItems: 'center', justifyContent: 'center'}}>
+    <View style={{ flex: 1 }}>
+      <View style={{ flex: 2, alignItems: 'center', justifyContent: 'center' }}>
         <Card
           containerStyle={{
             flex: 0,
@@ -169,14 +167,14 @@ export default function FileUpload() {
           value={
             uploading
               ? () => (
-                  <UploadProgress
-                    fileSize={fileSize}
-                    filename={fileName}
-                    uploadStatus={uploadStatus}
-                    setUploading={setUploading}
-                  />
-                )
-              : UploadIcon
+                <UploadProgress
+                  fileSize={fileSize}
+                  filename={fileName}
+                  uploadStatus={uploadStatus}
+                  setUploading={setUploading}
+                />
+              )
+              : () => (<UploadIcon />)
           }
         />
       </View>
@@ -227,11 +225,11 @@ export default function FileUpload() {
 }
 
 function UploadIcon() {
-  const {colors} = useTheme();
-  const {screen} = useScreenDimensions();
+  const { colors } = useTheme();
+  const { screen } = useScreenDimensions();
   return (
-    <View style={{flex: 1, alignItems: 'center'}}>
-      <View style={{flex: 4, justifyContent: 'center'}}>
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <View style={{ flex: 4, justifyContent: 'center' }}>
         <Icon
           size={Math.floor(screen.width) / 3}
           name="cloud-upload-outline"
@@ -242,8 +240,8 @@ function UploadIcon() {
           color={colors.text}
         />
       </View>
-      <View style={{flex: 1, justifyContent: 'flex-end'}}>
-        <Text style={{marginTop: 30}}>{Strings.FileUpload.Start}</Text>
+      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <Text style={{ marginTop: 30 }}>{Strings.FileUpload.Start}</Text>
       </View>
     </View>
   );
@@ -255,9 +253,9 @@ function UploadProgress(props: {
   uploadStatus: boolean | undefined;
   setUploading: ISetBooleanFunctions;
 }) {
-  const {colors: themeColors} = useTheme();
-  const {uploadStatus, filename, setUploading} = props;
-  const {screen} = useScreenDimensions();
+  const { colors: themeColors } = useTheme();
+  const { uploadStatus, filename, setUploading } = props;
+  const { screen } = useScreenDimensions();
   const [showResult, setShowResult] = useState(false);
 
   const intid = useRef<number>();
@@ -295,7 +293,7 @@ function UploadProgress(props: {
 
   if (uploadStatus !== undefined && showResult) {
     return (
-      <View style={{flex: 1, alignItems: 'center'}}>
+      <View style={{ flex: 1, alignItems: 'center' }}>
         <Icon
           size={screen.height / 6}
           color={uploadStatus ? 'green' : 'red'}
@@ -324,7 +322,7 @@ function UploadProgress(props: {
   }
 
   return (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <View style={style.spinner}>
         <ProgressCircleSnail
           size={Math.floor(screen.width / 3)}
