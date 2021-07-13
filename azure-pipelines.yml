@@ -15,13 +15,13 @@ variables:
   - name: PAAD_BETARELEASE_VERSION_CODE
     value: 1
   - name: PAAD_BETARELEASE_VERSION_NAME
-    value: 1.0.4
+    value: 1.0.5
   - name: PAAD_RELEASE_PROJECT_NAME
     value: $(Project_Name)
   - name: PAAD_RELEASE_VERSION_CODE
     value: 1
   - name: PAAD_RELEASE_VERSION_NAME
-    value: 1.0.4
+    value: 1.0.5
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
