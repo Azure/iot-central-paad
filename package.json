@@ -1,6 +1,6 @@
 {
   "name": "iotc-paad",
-  "version": "1.0.5",
+  "version": "1.0.4",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
