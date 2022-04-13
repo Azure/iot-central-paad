@@ -4,15 +4,23 @@
 import {useCallback, useContext, useMemo} from 'react';
 import {ThemeContext} from './contexts/theme';
 import React from 'react';
-import {View, Switch, ScrollView, Platform, Alert} from 'react-native';
+import {
+  View,
+  Switch,
+  ScrollView,
+  Platform,
+  Alert,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
 import {StackActions, useNavigation} from '@react-navigation/native';
-import {Icon, ListItem} from 'react-native-elements';
+import {Icon, ListItem} from '@rneui/themed';
 import {useDeliveryInterval, useSimulation} from './hooks/iotc';
 import {defaults} from './contexts/defaults';
 import Strings from 'strings';
 import {camelToName, Text} from 'components/typography';
 import {useBoolean, useTheme} from 'hooks';
-import {Pages, PagesNavigator, ThemeMode} from 'types';
+import {Literal, Pages, PagesNavigator, ThemeMode} from 'types';
 import {Loader} from 'components/loader';
 import {StorageContext} from 'contexts/storage';
 
@@ -36,6 +44,9 @@ export default function Settings() {
   const [deliveryInterval] = useDeliveryInterval();
   const {clear} = useContext(StorageContext);
   const [loading] = useBoolean(false);
+  const styles: Literal<ViewStyle | TextStyle> = {
+    container: {flex: 1, marginVertical: 10},
+  };
 
   const clearStorage = useCallback(() => {
     Alert.alert(
@@ -122,7 +133,7 @@ export default function Settings() {
               action: {
                 type: 'switch',
                 fn: async (val, nav: PagesNavigator) => {
-                  const navState = nav.dangerouslyGetState();
+                  const navState = nav.getState();
                   await simulate(val);
                   if (val) {
                     // if simulation just applied remove registration route
@@ -164,7 +175,7 @@ export default function Settings() {
     [deliveryInterval, mode, centralSimulated, dark, simulate, clearStorage],
   );
   return (
-    <View style={{flex: 1, marginVertical: 10}}>
+    <View style={styles.container}>
       <Root items={items} colors={colors} dark={dark} />
       <Loader visible={loading} message={Strings.Core.Loading} modal={true} />
     </View>
@@ -206,6 +217,7 @@ const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
 
     const styles = React.useMemo(
       () => ({
+        container: {flex: 1},
         subtitle: {
           color: colors.secondary,
         },
@@ -217,7 +229,7 @@ const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
     );
 
     return (
-      <ScrollView style={{flex: 1}}>
+      <ScrollView style={styles.container}>
         {items.map((item, index) => (
           <ListItem
             key={`setting-${index}`}

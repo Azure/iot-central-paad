@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {EventEmitter} from 'events';
+import EventEmitter from 'events';
 
 export interface ISensor extends EventEmitter {
   id: string;
@@ -26,7 +26,8 @@ export const AVAILABLE_SENSORS = {
   GYROSCOPE: 'gyroscope',
 };
 
-export type SensorNames = typeof AVAILABLE_SENSORS[keyof typeof AVAILABLE_SENSORS];
+export type SensorNames =
+  typeof AVAILABLE_SENSORS[keyof typeof AVAILABLE_SENSORS];
 export {
   DATA_AVAILABLE_EVENT,
   SENSOR_UNAVAILABLE_EVENT,

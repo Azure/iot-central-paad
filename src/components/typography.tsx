@@ -1,9 +1,16 @@
+/* eslint-disable no-bitwise */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React from 'react';
-import {Text as ELText, TextProps} from 'react-native-elements';
-import {Dimensions, Platform, PixelRatio} from 'react-native';
+import React, {useMemo} from 'react';
+import {Text as ELText, TextProps} from '@rneui/themed';
+import {
+  Dimensions,
+  Platform,
+  PixelRatio,
+  StyleProp,
+  TextStyle,
+} from 'react-native';
 import {useTheme} from 'hooks';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
@@ -27,43 +34,45 @@ export function normalize(size: number) {
 export function Headline(props: Props) {
   const {children, style} = props;
   const {colors} = useTheme();
-  return (
-    <ELText
-      style={[
-        {fontSize: normalize(20), fontWeight: 'bold', color: colors.text},
-        style,
-      ]}>
-      {children}
-    </ELText>
+  const headlineStyle = useMemo<StyleProp<TextStyle>>(
+    () => [
+      {fontSize: normalize(20), fontWeight: 'bold', color: colors.text},
+      style,
+    ],
+    [colors.text, style],
   );
+
+  return <ELText style={headlineStyle}>{children}</ELText>;
 }
 
 export function Detail(props: Props) {
   const {children, style} = props;
   const {colors} = useTheme();
 
-  return (
-    <ELText
-      style={[
-        {fontSize: normalize(12), fontStyle: 'normal', color: colors.text},
-        style,
-      ]}>
-      {children}
-    </ELText>
+  const detailStyle = useMemo<StyleProp<TextStyle>>(
+    () => [
+      {fontSize: normalize(12), fontStyle: 'normal', color: colors.text},
+      style,
+    ],
+    [colors.text, style],
   );
+
+  return <ELText style={detailStyle}>{children}</ELText>;
 }
 
 export function Text(props: Props) {
   const {children, style, ...otherProps} = props;
   const {colors} = useTheme();
+  const textStyle = useMemo<StyleProp<TextStyle>>(
+    () => [
+      {fontSize: normalize(14), fontStyle: 'normal', color: colors.text},
+      style,
+    ],
+    [colors.text, style],
+  );
 
   return (
-    <ELText
-      style={[
-        {fontSize: normalize(14), fontStyle: 'normal', color: colors.text},
-        style,
-      ]}
-      {...otherProps}>
+    <ELText style={textStyle} {...otherProps}>
       {children}
     </ELText>
   );
@@ -84,21 +93,21 @@ export function Name(props: Props) {
   const {children, style} = props;
   const {colors} = useTheme();
 
-  return (
-    <ELText
-      style={[
-        {
-          fontSize: normalize(14),
-          fontWeight: 'bold',
-          color: colors.text,
-          fontStyle: 'normal',
-          letterSpacing: 1.15,
-        },
-        style,
-      ]}>
-      {children}
-    </ELText>
+  const nameStyle = useMemo<StyleProp<TextStyle>>(
+    () => [
+      {
+        fontSize: normalize(14),
+        fontWeight: 'bold',
+        color: colors.text,
+        fontStyle: 'normal',
+        letterSpacing: 1.15,
+      },
+      style,
+    ],
+    [colors.text, style],
   );
+
+  return <ELText style={nameStyle}>{children}</ELText>;
 }
 
 export function camelToName(text: string): string {
@@ -115,11 +124,16 @@ export function camelToName(text: string): string {
 
 export function bytesToSize(bytes: number): string {
   const sizes: string[] = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  if (bytes === 0) return 'n/a';
+  if (bytes === 0) {
+    return 'n/a';
+  }
   const i: number = parseInt(
     Math.floor(Math.log(bytes) / Math.log(1024)).toString(),
+    10,
   );
-  if (i === 0) return `${bytes} ${sizes[i]}`;
+  if (i === 0) {
+    return `${bytes} ${sizes[i]}`;
+  }
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
 }
 

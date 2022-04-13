@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {EventEmitter} from 'events';
 import {ISensor, DATA_AVAILABLE_EVENT, getRandom} from './internal';
 import Geolocation from '@react-native-community/geolocation';
+import EventEmitter from 'events';
 
 export default class GeoLocation extends EventEmitter implements ISensor {
   private enabled: boolean;

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, {useRef, useState, useEffect} from 'react';
-import {CardProps, IconProps, Icon, Input} from 'react-native-elements';
+import React, {useRef, useState, useEffect, useMemo} from 'react';
+import {CardProps, IconProps, Icon, Input} from '@rneui/themed';
 import {
   View,
   ColorValue,
@@ -19,7 +19,7 @@ import {
   bytesToSize,
   normalize,
 } from './typography';
-import {DataType} from 'types';
+import {DataType, StyleDefinition} from 'types';
 import {useTheme} from 'hooks';
 import Strings from 'strings';
 
@@ -42,7 +42,6 @@ export function Card(
   const {
     containerStyle,
     enabled,
-    onToggle,
     editable,
     onEdit,
     value,
@@ -61,46 +60,52 @@ export function Card(
     alignSelf: 'flex-end',
     justifyContent: 'flex-end',
   };
+  const styles = useMemo<StyleDefinition>(
+    () => ({
+      container: {
+        backgroundColor: colors.card,
+        flex: 1,
+        height: 200,
+        padding: 25,
+        margin: 10,
+        borderRadius: 20,
+        ...(!dark
+          ? {
+              shadowColor: "'rgba(0, 0, 0, 0.14)'",
+              shadowOffset: {
+                width: 0,
+                height: 3,
+              },
+              shadowOpacity: 0.8,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }
+          : {}),
+      },
+      content: {flex: 1, position: 'relative'},
+      enabled: {
+        backgroundColor: enabled ? barColor.current : 'white',
+        width: '60%',
+        height: 5,
+        marginBottom: 20,
+        borderRadius: 5,
+      },
+      cardBody: {flex: 2},
+      cardValues: {flexDirection: 'row', paddingVertical: 10},
+      unit: {color: '#9490a9', alignSelf: 'flex-end'},
+    }),
+    [colors.card, dark, enabled],
+  );
+
   return (
     <TouchableOpacity
-      style={[
-        {
-          backgroundColor: colors.card,
-          flex: 1,
-          height: 200,
-          padding: 25,
-          margin: 10,
-          borderRadius: 20,
-          ...(!dark
-            ? {
-                shadowColor: "'rgba(0, 0, 0, 0.14)'",
-                shadowOffset: {
-                  width: 0,
-                  height: 3,
-                },
-                shadowOpacity: 0.8,
-                shadowRadius: 3.84,
-                elevation: 5,
-              }
-            : {}),
-        },
-        containerStyle,
-      ]}
+      style={[styles.container, containerStyle]}
       {...otherProps}
       disabled={!onPress && !onLongPress}
       onPress={onPress}
       onLongPress={onLongPress}>
-      <View style={{flex: 1, position: 'relative'}}>
-        {enabled && (
-          <View
-            style={{
-              backgroundColor: enabled ? barColor.current : 'white',
-              width: `60%`,
-              height: 5,
-              marginBottom: 20,
-              borderRadius: 5,
-            }}></View>
-        )}
+      <View style={styles.content}>
+        {enabled && <View style={styles.enabled} />}
         {/* round checkbox for enable/disable */}
         {/* {onToggle && (
           <CheckBox
@@ -113,12 +118,12 @@ export function Card(
           />
         )} */}
 
-        <View style={{flex: 2}}>
+        <View style={styles.cardBody}>
           <Name style={{color: textColor}}>{otherProps.title}</Name>
           {typeof value === 'function' ? (
             value()
           ) : (
-            <View style={{flexDirection: 'row', paddingVertical: 10}}>
+            <View style={styles.cardValues}>
               <Value
                 value={value}
                 enabled
@@ -128,9 +133,7 @@ export function Card(
                 textColor={textColor}
               />
               {unit && enabled && (
-                <Headline style={{color: '#9490a9', alignSelf: 'flex-end'}}>
-                  {unit}
-                </Headline>
+                <Headline style={styles.unit}>{unit}</Headline>
               )}
             </View>
           )}
@@ -157,6 +160,11 @@ const Value = React.memo<{
   type?: DataType;
 }>(({value, enabled, editable, onEdit, textColor, type}) => {
   const [edited, setEdited] = useState(value);
+  const styles: StyleDefinition = {
+    container: {flex: 1, alignItems: 'center'},
+    editInput: {maxHeight: 50, marginBottom: 5},
+    stringVal: {fontSize: normalize(20), marginEnd: 5, color: textColor},
+  };
 
   useEffect(() => {
     setEdited(value);
@@ -202,25 +210,25 @@ const Value = React.memo<{
 
     if (editable && onEdit) {
       return (
-        <View style={{flex: 1, alignItems: 'center'}}>
+        <View style={styles.container}>
           <Input
+            shake={() => null}
             value={edited.toString()}
             onChangeText={setEdited}
             inputStyle={{color: textColor}}
-            containerStyle={{maxHeight: 50, marginBottom: 5}}
+            containerStyle={styles.editInput}
             keyboardType={typeof value === 'number' ? 'numeric' : 'default'}
           />
           <Button
             title={Strings.Client.Properties.Send}
-            onPress={e => onEdit(edited)}
+            onPress={() => onEdit(edited)}
             type="clear"
           />
         </View>
       );
     } else {
       return (
-        <Headline
-          style={{fontSize: normalize(20), marginEnd: 5, color: textColor}}>
+        <Headline style={styles.stringVal}>
           {/* {strVal.length > 6 ? `${strVal.substring(0, 6)}...` : strVal} */}
           {strVal}
         </Headline>

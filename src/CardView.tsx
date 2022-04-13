@@ -3,7 +3,7 @@
 
 import React from 'react';
 import {View, FlatList, ViewStyle, TextStyle} from 'react-native';
-import {ListItem} from 'react-native-elements';
+import {ListItem} from '@rneui/themed';
 import Strings from 'strings';
 import {ItemProps, Literal} from 'types';
 import {Card} from './components/card';
@@ -27,6 +27,7 @@ const CardView = React.memo<{
   const {colors} = useTheme();
   const styles = React.useMemo<Literal<ViewStyle | TextStyle>>(
     () => ({
+      container: {flex: 1, paddingVertical: 10},
       listItem: {
         backgroundColor: colors.card,
       },
@@ -51,7 +52,7 @@ const CardView = React.memo<{
   );
 
   return (
-    <View style={{flex: 1, paddingVertical: 10}}>
+    <View style={styles.container}>
       <FlatList
         key={`flatlist-${componentName}-${items.length}`}
         numColumns={items.length > 4 ? 2 : 1}
@@ -93,28 +94,31 @@ const CardView = React.memo<{
   );
 });
 
-const getCard = (
-  componentName?: string,
-  onItemPress?: CardPressCallback,
-  onItemLongPress?: CardPressCallback,
-  onEdit?: CardEditCallback,
-) => ({item, index}: {item: ItemProps; index: number}) => (
-  <Card
-    key={`${componentName ?? 'card'}-${index}`}
-    title={item.name}
-    value={item.value}
-    unit={item.unit}
-    dataType={item.dataType}
-    enabled={item.enabled}
-    editable={(item as any).editable}
-    icon={item.icon}
-    // onToggle={() => item.enable(!item.enabled)}
-    onLongPress={onItemLongPress && onItemLongPress.bind(null, item)} // edit card
-    onEdit={onEdit?.bind(null, item)}
-    onPress={
-      item.enabled && onItemPress ? onItemPress.bind(null, item) : undefined
-    }
-  />
-);
+const getCard =
+  (
+    componentName?: string,
+    onItemPress?: CardPressCallback,
+    onItemLongPress?: CardPressCallback,
+    onEdit?: CardEditCallback,
+  ) =>
+  ({item, index}: {item: ItemProps; index: number}) =>
+    (
+      <Card
+        key={`${componentName ?? 'card'}-${index}`}
+        title={item.name}
+        value={item.value}
+        unit={item.unit}
+        dataType={item.dataType}
+        enabled={item.enabled}
+        editable={(item as any).editable}
+        icon={item.icon}
+        // onToggle={() => item.enable(!item.enabled)}
+        onLongPress={onItemLongPress && onItemLongPress.bind(null, item)} // edit card
+        onEdit={onEdit?.bind(null, item)}
+        onPress={
+          item.enabled && onItemPress ? onItemPress.bind(null, item) : undefined
+        }
+      />
+    );
 
 export default CardView;

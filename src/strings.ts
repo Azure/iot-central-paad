@@ -39,8 +39,7 @@ const Strings = {
       Title: 'Clear Data',
       Alert: {
         Title: 'Do you really want to clear all data?',
-        Text:
-          'Proceeding will clear all stored device credentials and user preferences like theme mode and telemetry delivery interval.',
+        Text: 'Proceeding will clear all stored device credentials and user preferences like theme mode and telemetry delivery interval.',
       },
       Success: {
         Title: 'Success',
@@ -51,8 +50,7 @@ const Strings = {
   Registration: {
     Header: {
       Welcome: 'Welcome! ',
-      Text:
-        'Connect your phone to the Azure IoT cloud and experience the simplicity of IoT Plug and Play in just a few steps.',
+      Text: 'Connect your phone to the Azure IoT cloud and experience the simplicity of IoT Plug and Play in just a few steps.',
     },
     Footer: 'Need help getting started? ',
     StartHere: {
@@ -82,16 +80,14 @@ const Strings = {
         Title: 'Register as a new device',
         Alert: {
           Title: 'Register as new device?',
-          Text:
-            "Once you register as a new device, your old connection will be disconnected and you'll be able to connect as a new device. Current device credentials will not be cleared until the new device actually connects. Data previously sent will remain in the cloud until you delete it.",
+          Text: "Once you register as a new device, your old connection will be disconnected and you'll be able to connect as a new device. Current device credentials will not be cleared until the new device actually connects. Data previously sent will remain in the cloud until you delete it.",
         },
       },
       Clear: {
         Title: 'Clear registration',
         Alert: {
           Title: 'Clear device registration info?',
-          Text:
-            'Are you sure to clear registration info? If proceed, device will disconnect and credentials will be wiped out. This means you need to register as a new device next time.',
+          Text: 'Are you sure to clear registration info? If proceed, device will disconnect and credentials will be wiped out. This means you need to register as a new device next time.',
         },
       },
       Footer: {

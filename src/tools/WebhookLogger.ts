@@ -37,7 +37,7 @@ Supported levels: ${Object.keys(IOTC_LOGGING).join(',')}`,
     }
   }
   async log(message: string, tag?: string) {
-    if (this.logLevel !== IOTC_LOGGING.DISABLED)
+    if (this.logLevel !== IOTC_LOGGING.DISABLED) {
       await fetch(this.url, {
         method: 'POST',
         body: `INFO${tag ? ` - ${tag.toUpperCase()}` : ''}: ${message}`,
@@ -45,5 +45,6 @@ Supported levels: ${Object.keys(IOTC_LOGGING).join(',')}`,
           'Content-Type': 'text/plain',
         },
       });
+    }
   }
 }

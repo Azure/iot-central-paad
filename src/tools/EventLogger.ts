@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {EventEmitter} from 'events';
+import EventEmitter from 'events';
 import {IIoTCLogger, IOTC_LOGGING} from 'react-native-azure-iotcentral-client';
 
 export default class EventLogger extends EventEmitter implements IIoTCLogger {

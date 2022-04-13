@@ -22,6 +22,7 @@ import {
   DATA_AVAILABLE_EVENT,
   ItemProps,
   LogItem,
+  NavigationProperty,
   SENSOR_UNAVAILABLE_EVENT,
   TimedLog,
 } from '../types';
@@ -33,7 +34,7 @@ export type IIcon = {
 };
 
 export function useScreenIcon(icon: IIcon): void {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProperty>();
 
   useEffect(() => {
     navigation.setParams({icon});
@@ -112,87 +113,89 @@ export function useSensors(): [
   EventManagementFN,
 ] {
   const [sensors, setSensors] = useState<ItemProps[]>(
-    ([
-      {
-        id: AVAILABLE_SENSORS.ACCELEROMETER,
-        name: 'Accelerometer',
-        dataType: 'object',
-        icon: {
-          name: 'rocket-outline',
-          type: Platform.select({
-            android: 'material-community',
-            default: 'ionicon',
-          }),
+    (
+      [
+        {
+          id: AVAILABLE_SENSORS.ACCELEROMETER,
+          name: 'Accelerometer',
+          dataType: 'object',
+          icon: {
+            name: 'rocket-outline',
+            type: Platform.select({
+              android: 'material-community',
+              default: 'ionicon',
+            }),
+          },
+          enabled: true, // TODO: auto-enable based on settings,
+          simulated: defaults.emulator,
         },
-        enabled: true, // TODO: auto-enable based on settings,
-        simulated: defaults.emulator,
-      },
-      {
-        id: AVAILABLE_SENSORS.GYROSCOPE,
-        name: 'Gyroscope',
-        dataType: 'object',
+        {
+          id: AVAILABLE_SENSORS.GYROSCOPE,
+          name: 'Gyroscope',
+          dataType: 'object',
 
-        enabled: true, // TODO: auto-enable based on settings
-        icon: {
-          name: 'compass-outline',
-          type: Platform.select({
-            android: 'material-community',
-            default: 'ionicon',
-          }),
+          enabled: true, // TODO: auto-enable based on settings
+          icon: {
+            name: 'compass-outline',
+            type: Platform.select({
+              android: 'material-community',
+              default: 'ionicon',
+            }),
+          },
+          simulated: defaults.emulator,
         },
-        simulated: defaults.emulator,
-      },
-      {
-        id: AVAILABLE_SENSORS.MAGNETOMETER,
-        name: 'Magnetometer',
-        dataType: 'object',
-        enabled: true, // TODO: auto-enable based on settings
-        icon: {
-          name: 'magnet-outline',
-          type: 'ionicon',
+        {
+          id: AVAILABLE_SENSORS.MAGNETOMETER,
+          name: 'Magnetometer',
+          dataType: 'object',
+          enabled: true, // TODO: auto-enable based on settings
+          icon: {
+            name: 'magnet-outline',
+            type: 'ionicon',
+          },
+          simulated: defaults.emulator,
         },
-        simulated: defaults.emulator,
-      },
-      {
-        id: AVAILABLE_SENSORS.BAROMETER,
-        dataType: 'number',
-        name: 'Barometer',
-        enabled: true, // TODO: auto-enable based on settings
-        icon: {
-          name: 'weather-partly-cloudy',
-          type: 'material-community',
+        {
+          id: AVAILABLE_SENSORS.BAROMETER,
+          dataType: 'number',
+          name: 'Barometer',
+          enabled: true, // TODO: auto-enable based on settings
+          icon: {
+            name: 'weather-partly-cloudy',
+            type: 'material-community',
+          },
+          simulated: defaults.emulator,
         },
-        simulated: defaults.emulator,
-      },
-      {
-        id: AVAILABLE_SENSORS.GEOLOCATION,
-        name: 'Geolocation',
-        dataType: 'object',
-        enabled: true, // TODO: auto-enable based on settings
-        icon: {
-          name: 'location-outline',
-          type: 'ionicon',
+        {
+          id: AVAILABLE_SENSORS.GEOLOCATION,
+          name: 'Geolocation',
+          dataType: 'object',
+          enabled: true, // TODO: auto-enable based on settings
+          icon: {
+            name: 'location-outline',
+            type: 'ionicon',
+          },
+          simulated: defaults.emulator,
         },
-        simulated: defaults.emulator,
-      },
-      {
-        id: AVAILABLE_SENSORS.BATTERY,
-        name: 'Battery level',
-        dataType: 'number',
-        enabled: true, // TODO: auto-enable based on settings,
-        simulated: defaults.emulator,
-        icon: {
-          name: Platform.select({
-            android: 'battery-medium',
-            default: 'battery-half-sharp',
-          }) as string,
-          type: Platform.select({
-            android: 'material-community',
-            default: 'ionicon',
-          }),
+        {
+          id: AVAILABLE_SENSORS.BATTERY,
+          name: 'Battery level',
+          dataType: 'number',
+          enabled: true, // TODO: auto-enable based on settings,
+          simulated: defaults.emulator,
+          icon: {
+            name: Platform.select({
+              android: 'battery-medium',
+              default: 'battery-half-sharp',
+            }) as string,
+            type: Platform.select({
+              android: 'material-community',
+              default: 'ionicon',
+            }),
+          },
         },
-      },
-    ] as ItemProps[]).map<ItemProps>(s => ({
+      ] as ItemProps[]
+    ).map<ItemProps>(s => ({
       ...s,
       enable: (val?: boolean) => {
         const enabled = val !== undefined ? val : true;

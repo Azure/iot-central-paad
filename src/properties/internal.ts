@@ -21,4 +21,5 @@ export const AVAILABLE_PROPERTIES = {
   TOTAL_MEMORY: 'totalMemory',
 };
 
-export type PropertyNames = typeof AVAILABLE_PROPERTIES[keyof typeof AVAILABLE_PROPERTIES];
+export type PropertyNames =
+  typeof AVAILABLE_PROPERTIES[keyof typeof AVAILABLE_PROPERTIES];

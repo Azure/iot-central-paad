@@ -44,17 +44,17 @@ export class IoTCMock implements IIoTCClient {
     this._connected = false;
   }
 
-  setModelId(modelId: string): void {
+  setModelId(_modelId: string): void {
     //no-op
   }
-  setGlobalEndpoint(endpoint: string): void {
+  setGlobalEndpoint(_endpoint: string): void {
     //no-op
   }
   async disconnect(): Promise<void> {
     await TimeOut(5); // simualate delay
     this._connected = false;
   }
-  async connect(copts?: {
+  async connect(_copts?: {
     cleanSession?: boolean | undefined;
     timeout?: number | undefined;
     cancellationToken?: CancellationToken | undefined;
@@ -62,7 +62,7 @@ export class IoTCMock implements IIoTCClient {
     await TimeOut(5); // simualate delay
     this._connected = true;
   }
-  async sendTelemetry(payload: any, properties?: any): Promise<void> {
+  async sendTelemetry(payload: any, _properties?: any): Promise<void> {
     await TimeOut(1);
     this.logger.debug(`Sending telemetry ${JSON.stringify(payload)}`);
   }
@@ -71,11 +71,10 @@ export class IoTCMock implements IIoTCClient {
     this.logger.debug(`Sending property ${JSON.stringify(payload)}`);
   }
   on(
-    eventName: string | IOTC_EVENTS.Properties,
-    callback: PropertyCallback,
-  ): void;
-  on(eventName: string | IOTC_EVENTS.Commands, callback: CommandCallback): void;
-  on(eventName: any, callback: any) {
+    ..._args:
+      | [eventName: string | IOTC_EVENTS.Properties, callback: PropertyCallback]
+      | [eventName: string | IOTC_EVENTS.Commands, callback: CommandCallback]
+  ) {
     //no-op
   }
   setLogging(logLevel: string | IOTC_LOGGING): void {
@@ -86,13 +85,13 @@ export class IoTCMock implements IIoTCClient {
   }
   async fetchTwin(): Promise<void> {
     await TimeOut(2);
-    this.logger.debug(`Fetching twin.`);
+    this.logger.debug('Fetching twin.');
   }
   async uploadFile(
-    fileName: string,
-    contentType: string,
-    fileData: any,
-    encoding?: string,
+    _fileName: string,
+    _contentType: string,
+    _fileData: any,
+    _encoding?: string,
   ): Promise<FileUploadResult> {
     return Promise.resolve({status: 200});
   }

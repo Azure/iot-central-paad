@@ -43,7 +43,7 @@ const retrieveStorage = async (update: StateUpdater<IStorageState>) => {
    * Credentials must be null if not available. This value means app has been initialized but no credentials are available.
    */
   Debug(
-    `Retrieving credentials from storage.`,
+    'Retrieving credentials from storage.',
     'storage_context',
     'retrieveStorage',
   );

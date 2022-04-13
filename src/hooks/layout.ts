@@ -37,9 +37,9 @@ export function useScreenDimensions() {
   );
 
   useEffect(() => {
-    Dimensions.addEventListener('change', onChange);
+    const changeSub = Dimensions.addEventListener('change', onChange);
     return () => {
-      Dimensions.removeEventListener('change', onChange);
+      changeSub.remove();
     };
   }, [orientation, onChange]);
   return {screen: screenData, orientation};

@@ -1,23 +1,29 @@
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
-platform :ios, '10.0'
-project 'IoT_PnP', 'AppCenterRelease' => :release
+platform :ios, '12.0'
+install! 'cocoapods', :deterministic_uuids => false
+
 permissions_path = '../node_modules/react-native-permissions/ios'
 pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
-pod 'RNCharts', :path => '../node_modules/react-native-charts-wrapper'
+
 target 'IoT_PnP' do
   config = use_native_modules!
+
+  # Flags change depending on the env values.
+  flags = get_default_flags()
 
   use_react_native!(
     :path => config[:reactNativePath],
     # to enable hermes on iOS, change `false` to `true` and then install pods
-    :hermes_enabled => false
+    :hermes_enabled => flags[:hermes_enabled],
+    :fabric_enabled => flags[:fabric_enabled],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
   target 'IoT_PnPTests' do
     inherit! :complete
-    use_react_native!
     # Pods for testing
   end
 
@@ -29,6 +35,7 @@ target 'IoT_PnP' do
 
   post_install do |installer|
     react_native_post_install(installer)
+    __apply_Xcode_12_5_M1_post_install_workaround(installer)
     # Error when archiving. Workaround.
     # Opened issue: https://github.com/facebook/react-native/issues/30335
     installer.pods_project.targets.each do |target|

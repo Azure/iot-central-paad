@@ -2,18 +2,12 @@
 // Licensed under the MIT License.
 
 import React, {useMemo} from 'react';
-import {
-  View,
-  ActivityIndicator,
-  ViewStyle,
-  ScaledSize,
-  TextStyle,
-} from 'react-native';
+import {View, ActivityIndicator, ViewStyle, ScaledSize} from 'react-native';
 import {Text} from './typography';
 import {Theme} from '@react-navigation/native';
-import {Button, Overlay} from 'react-native-elements';
+import {Button, Overlay} from '@rneui/themed';
 import {useScreenDimensions, useTheme} from 'hooks';
-import {Literal} from 'types';
+import {StyleDefinition} from 'types';
 
 type ILoaderButton = {
   text: string;
@@ -62,14 +56,15 @@ export function Loader(props: ILoaderProps) {
 
 const InnerLoader = React.memo<ILoaderProps & Theme & ScaledSize>(
   ({message, buttons, height, colors, style}) => {
-    const styles = useMemo<Literal<ViewStyle | TextStyle>>(
+    const styles = useMemo<StyleDefinition>(
       () => ({
-        body: {height: height / 4, padding: 0},
+        body: {height: height / 4, padding: 0, backgroundColor: colors.card},
         box: {flex: 2, justifyContent: 'center', alignItems: 'center'},
         message: {marginTop: 20},
         buttonsBox: {flex: 1, justifyContent: 'flex-end', margin: 0},
+        button: {paddingVertical: 10},
       }),
-      [height],
+      [height, colors.card],
     );
 
     return (
@@ -86,7 +81,7 @@ const InnerLoader = React.memo<ILoaderProps & Theme & ScaledSize>(
                 type="clear"
                 title={b.text}
                 onPress={b.onPress}
-                style={{paddingVertical: 10}}
+                style={styles.button}
               />
             ))}
           </View>
