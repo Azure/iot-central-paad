@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {EventEmitter} from 'events';
 import {
   ISensor,
   DATA_AVAILABLE_EVENT,
@@ -14,6 +13,7 @@ import {
   setUpdateIntervalForType,
   SensorTypes,
 } from 'react-native-sensors';
+import EventEmitter from 'events';
 
 export default class Magnetometer extends EventEmitter implements ISensor {
   private enabled: boolean;

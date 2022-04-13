@@ -2,18 +2,13 @@
 // Licensed under the MIT License.
 
 import {StackNavigationProp} from '@react-navigation/stack';
-import {
-  GestureResponderEvent,
-  StyleProp,
-  TextStyle,
-  ViewStyle,
-} from 'react-native';
+import {GestureResponderEvent, TextStyle, ViewStyle} from 'react-native';
 import {
   LineData,
   LineValue,
   LineDatasetConfig,
 } from 'react-native-charts-wrapper';
-import {IconProps} from 'react-native-elements';
+import {IconProps} from '@rneui/themed';
 
 export const Screens = {
   TELEMETRY_SCREEN: 'Telemetry',
@@ -91,7 +86,7 @@ export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
 export type LogItem = {eventName: string; eventData: string};
 export type TimedLog = {timestamp: number | string; logItem: LogItem}[];
 
-export type StyleDefinition = {[x: string]: StyleProp<ViewStyle | TextStyle>};
+export type StyleDefinition = Literal<ViewStyle | TextStyle>;
 
 /**
  * Chart typings

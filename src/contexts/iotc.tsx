@@ -25,7 +25,7 @@ const {Provider} = IoTCContext;
 
 const IoTCProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
   const [state, dispatch] = useReducer(
-    (state: ICentralState, action: ICentralAction) => {
+    (centralState: ICentralState, action: ICentralAction) => {
       switch (action.type) {
         case 'UPDATE_CLIENT':
           return {
@@ -34,11 +34,11 @@ const IoTCProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
             registeringNew: false,
           };
         case 'SET_CONNECTING':
-          return {...state, connecting: action.value};
+          return {...centralState, connecting: action.value};
         case 'SET_REGISTERING':
-          return {...state, registeringNew: action.value};
+          return {...centralState, registeringNew: action.value};
         default:
-          return {...state};
+          return {...centralState};
       }
     },
     {client: null, connecting: false, registeringNew: false},

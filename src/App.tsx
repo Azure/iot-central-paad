@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, {useState, useEffect, useContext} from 'react';
-import {View, Platform} from 'react-native';
+import React, {useState, useEffect, useContext, useMemo} from 'react';
+import {View, Platform, ViewStyle, TextStyle} from 'react-native';
 import Settings from './Settings';
 import {
   NavigationContainer,
@@ -11,9 +11,9 @@ import {
 } from '@react-navigation/native';
 import {
   NavigationParams,
-  NavigationProperty,
   Pages,
   NavigationPages,
+  Literal,
   // ChartType,
 } from 'types';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
@@ -26,7 +26,7 @@ import {
 } from 'contexts';
 import LogoLight from './assets/IoT-Plug-And-Play_Dark.svg';
 import LogoDark from './assets/IoT-Plug-And-Play_Light.svg';
-import {Icon} from 'react-native-elements';
+import {Icon} from '@rneui/themed';
 import {createStackNavigator} from '@react-navigation/stack';
 import {Text} from './components/typography';
 import {Welcome} from './Welcome';
@@ -129,7 +129,7 @@ const Navigation = React.memo(() => {
         <Stack.Screen name={Pages.SETTINGS} component={Settings} />
         <Stack.Screen
           name={Pages.THEME}
-          options={({navigation}: {navigation: NavigationProperty}) => ({
+          options={() => ({
             stackAnimation: 'flip',
             headerTitle: Platform.select({
               ios: undefined,
@@ -164,7 +164,7 @@ const Navigation = React.memo(() => {
         </Stack.Screen>
         <Stack.Screen
           name={Pages.INTERVAL}
-          options={({navigation}: {navigation: NavigationProperty}) => ({
+          options={() => ({
             stackAnimation: 'flip',
             headerTitle: Platform.select({
               ios: undefined,
@@ -220,29 +220,22 @@ const Navigation = React.memo(() => {
 
 const Logo = React.memo(() => {
   const {colors, dark} = useTheme();
+  const textStyle = useMemo<ViewStyle | TextStyle>(
+    () => ({
+      ...styles.logoText,
+      color: colors.text,
+    }),
+    [colors.text],
+  );
+
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        marginHorizontal: 10,
-      }}>
+    <View style={styles.logoContainer}>
       {dark ? (
         <LogoDark width={30} fill={colors.primary} />
       ) : (
         <LogoLight width={30} fill={colors.primary} />
       )}
-      <Text
-        style={{
-          marginStart: 10,
-          color: colors.text,
-          fontWeight: 'bold',
-          fontSize: 16,
-          letterSpacing: 0.1,
-        }}>
-        {Strings.Title}
-      </Text>
+      <Text style={textStyle}>{Strings.Title}</Text>
     </View>
   );
 });
@@ -250,9 +243,9 @@ const Logo = React.memo(() => {
 const Profile = React.memo((props: {navigate: any}) => {
   const {colors} = useTheme();
   return (
-    <View style={{marginHorizontal: 10}}>
+    <View style={styles.marginHorizontal10}>
       <Icon
-        style={{marginEnd: 20}}
+        style={styles.marginEnd20}
         name={
           Platform.select({
             ios: 'settings-outline',
@@ -268,3 +261,24 @@ const Profile = React.memo((props: {navigate: any}) => {
     </View>
   );
 });
+
+const styles: Literal<ViewStyle | TextStyle> = {
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    marginHorizontal: 10,
+  },
+  logoText: {
+    marginStart: 10,
+    fontWeight: 'bold',
+    fontSize: 16,
+    letterSpacing: 0.1,
+  },
+  marginHorizontal10: {
+    marginHorizontal: 10,
+  },
+  marginEnd20: {
+    marginEnd: 20,
+  },
+};

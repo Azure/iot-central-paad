@@ -67,7 +67,7 @@ export default class Barometer extends EventEmitter implements ISensor {
     if (this.simulated) {
       const intId = setInterval(
         function (this: Barometer) {
-          this.emit(DATA_AVAILABLE_EVENT, this.id, {pressure: getRandom()});
+          this.emit(DATA_AVAILABLE_EVENT, this.id, getRandom());
         }.bind(this),
         this.interval,
       );

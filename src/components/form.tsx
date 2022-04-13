@@ -2,11 +2,18 @@
 // Licensed under the MIT License.
 
 import {useTheme} from 'hooks';
-import React from 'react';
-import {Keyboard, Platform, TouchableWithoutFeedback, View} from 'react-native';
-import {Input} from 'react-native-elements';
+import React, {useMemo} from 'react';
+import {
+  Keyboard,
+  Platform,
+  TouchableWithoutFeedback,
+  View,
+  ViewStyle,
+} from 'react-native';
+import {Input} from '@rneui/themed';
 import ButtonGroup from './buttonGroup';
 import {Text, Name, normalize} from './typography';
+import {StyleDefinition} from 'types';
 
 export type FormItem = {
   id: string;
@@ -60,26 +67,33 @@ const Form = React.memo<FormProps>(
       }
     }, [submit, submitAction, onSubmit, values]);
 
+    const styles = useMemo<StyleDefinition>(
+      () => ({
+        title: {marginBottom: 20},
+        item: {
+          fontSize: normalize(17),
+          fontWeight: 'bold',
+          color: colors.text,
+          paddingLeft: 10,
+        },
+        buttonGroupContainer: {marginBottom: 10},
+        label: {color: colors.text, paddingBottom: 10},
+      }),
+      [colors.text],
+    );
+
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View>
-          {title && <Name style={{marginBottom: 20}}>{title}</Name>}
+          {title && <Name style={styles.title}>{title}</Name>}
           {items.map((item, index) => {
             if (item.choices && item.choices.length > 0) {
               return (
                 <View key={`formitem-${index}`}>
-                  <Text
-                    style={{
-                      fontSize: normalize(17),
-                      fontWeight: 'bold',
-                      color: colors.text,
-                      paddingLeft: 10,
-                    }}>
-                    {item.label}
-                  </Text>
+                  <Text style={styles.item}>{item.label}</Text>
                   <ButtonGroup
                     readonly={item.readonly}
-                    containerStyle={{marginBottom: 10}}
+                    containerStyle={styles.buttonGroupContainer as ViewStyle}
                     items={item.choices}
                     onCheckedChange={choiceId =>
                       setValues(current => ({...current, [item.id]: choiceId}))
@@ -93,19 +107,22 @@ const Form = React.memo<FormProps>(
             }
             return (
               <Input
+                shake={() => null}
                 key={`formitem-${index}`}
                 multiline={item.multiline}
                 value={values[item.id]}
                 label={item.label}
-                labelStyle={{color: colors.text, paddingBottom: 10}}
+                labelStyle={styles.label}
                 disabled={item.readonly}
                 numberOfLines={item.multiline ? 6 : 1}
                 inputContainerStyle={
+                  // eslint-disable-next-line react-native/no-inline-styles
                   Platform.OS === 'android' && {
                     borderWidth: 0.5,
                     borderColor: colors.border,
                   }
                 }
+                // eslint-disable-next-line react-native/no-inline-styles
                 inputStyle={{
                   fontSize: normalize(14),
                   color: colors.text,

@@ -8,5 +8,5 @@ import {View} from 'react-native';
 export default function ScreenView() {
   const insets = useSafeAreaInsets();
 
-  return <View style={{marginTop: insets.top}}></View>;
+  return <View style={{marginTop: insets.top}} />;
 }

@@ -22,8 +22,8 @@ const CircularProgress = React.memo<AnimatedCircularProgressProps>(
           }
           return cur + 10;
         });
-        setInterval(interval =>
-          run.current ? interval + 100 : interval - 100,
+        setInterval(currentInterval =>
+          run.current ? currentInterval + 100 : currentInterval - 100,
         );
         run.current = !run.current;
       };

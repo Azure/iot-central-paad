@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -42,7 +43,7 @@ import {
   ItemProps,
 } from 'types';
 import {DEFAULT_DELIVERY_INTERVAL} from './sensors';
-import {Icon} from 'react-native-elements';
+import {Icon} from '@rneui/themed';
 import {playTorch} from 'tools/Torch';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
@@ -50,7 +51,7 @@ const Tab = createBottomTabNavigator<NavigationScreens>();
 const Root = React.memo<{
   route: RouteProp<
     Record<string, NavigationParams & {previousScreen?: string}>,
-    `Root`
+    'Root'
   >;
   navigation: PagesNavigator;
 }>(({navigation}) => {
@@ -176,7 +177,7 @@ const Root = React.memo<{
         );
         append({
           eventName: 'INFO',
-          eventData: `End turning on/off light.`,
+          eventData: 'End turning on/off light.',
         });
         return;
       }
@@ -299,9 +300,9 @@ const Root = React.memo<{
       )}
       <Tab.Navigator
         key="tab"
-        tabBarOptions={Platform.select({
-          android: {safeAreaInsets: {bottom: 0}},
-        })}>
+        screenOptions={{
+          headerShown: false,
+        }}>
         <Tab.Screen
           name={Screens.TELEMETRY_SCREEN}
           options={{
@@ -309,7 +310,7 @@ const Root = React.memo<{
               <TabBarIcon icon={icons.Telemetry} color={color} size={size} />
             ),
           }}>
-          {getCardView(sensors, 'Telemetry', true)}
+          {getCardView(sensors, 'Telemetry')}
         </Tab.Screen>
         {/* <Tab.Screen
           name={Screens.HEALTH_SCREEN}
@@ -393,36 +394,33 @@ const Root = React.memo<{
   );
 });
 
-const getCardView = (items: ItemProps[], name: string, detail: boolean) => ({
-  navigation,
-}: {
-  navigation: any;
-}) => (
-  <CardView
-    items={items}
-    componentName={name}
-    onItemLongPress={item => {
-      item.enable(!item.enabled);
-    }}
-    // TEMP: temporary disabled charts
-    // onItemPress={
-    //   detail
-    //     ? item => {
-    //         navigation.navigate('Insight', {
-    //           chartType:
-    //             item.id === AVAILABLE_SENSORS.GEOLOCATION
-    //               ? ChartType.MAP
-    //               : ChartType.DEFAULT,
-    //           currentValue: item.value,
-    //           telemetryId: item.id,
-    //           title: camelToName(item.id),
-    //           backTitle: 'Telemetry',
-    //         });
-    //       }
-    //     : undefined
-    // }
-  />
-);
+const getCardView = (items: ItemProps[], name: string) => () =>
+  (
+    <CardView
+      items={items}
+      componentName={name}
+      onItemLongPress={item => {
+        item.enable(!item.enabled);
+      }}
+      // TEMP: temporary disabled charts
+      // onItemPress={
+      //   detail
+      //     ? item => {
+      //         navigation.navigate('Insight', {
+      //           chartType:
+      //             item.id === AVAILABLE_SENSORS.GEOLOCATION
+      //               ? ChartType.MAP
+      //               : ChartType.DEFAULT,
+      //           currentValue: item.value,
+      //           telemetryId: item.id,
+      //           title: camelToName(item.id),
+      //           backTitle: 'Telemetry',
+      //         });
+      //       }
+      //     : undefined
+      // }
+    />
+  );
 
 const TabBarIcon = React.memo<{icon: IIcon; color: string; size: number}>(
   ({icon, color, size}) => {

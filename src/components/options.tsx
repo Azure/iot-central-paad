@@ -4,7 +4,8 @@
 import {useTheme} from 'hooks';
 import React, {useEffect} from 'react';
 import {View} from 'react-native';
-import {CheckBox, ListItem} from 'react-native-elements';
+import {CheckBox, ListItem} from '@rneui/themed';
+import {StyleDefinition} from 'types';
 
 export type Option = {
   id: string;
@@ -28,7 +29,7 @@ const Options = React.memo<{
     }),
   );
 
-  const style = React.useMemo(
+  const style = React.useMemo<StyleDefinition>(
     () => ({
       container: {
         flex: 1,
@@ -40,7 +41,7 @@ const Options = React.memo<{
         color: colors.text,
       },
       checkBox: {
-        color: colors.text,
+        backgroundColor: colors.card,
       },
     }),
     [colors],
@@ -63,6 +64,7 @@ const Options = React.memo<{
           containerStyle={style.listItem}>
           <CheckBox
             center
+            containerStyle={style.checkBox}
             checkedIcon="dot-circle-o"
             uncheckedIcon="circle-o"
             checkedColor={colors.text}

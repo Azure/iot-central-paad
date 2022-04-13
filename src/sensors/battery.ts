@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import EventEmitter from 'events';
 import DeviceInfo from 'react-native-device-info';
-import {EventEmitter} from 'events';
 import {ISensor, DATA_AVAILABLE_EVENT} from './internal';
 
 export default class Battery extends EventEmitter implements ISensor {

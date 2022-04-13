@@ -10,6 +10,7 @@ import {
   IOTC_EVENTS,
   IoTCCredentials,
   IoTCClient,
+  IOTC_LOGGING,
 } from 'react-native-azure-iotcentral-client';
 import {StorageContext, IoTCContext} from 'contexts';
 import {Debug, EventLogger} from 'tools';
@@ -55,7 +56,7 @@ export type ConnectionOptions = {
 };
 
 /**
- * 
+ *
  * @returns [
     connect,
     cancel,
@@ -73,9 +74,8 @@ export function useConnectIoTCentralClient(): [
   () => void,
   {loading: boolean; client: IIoTCClient | null; error: any},
 ] {
-  const {client, connecting, setConnecting, setClient} = useContext(
-    IoTCContext,
-  );
+  const {client, connecting, setConnecting, setClient} =
+    useContext(IoTCContext);
   const {save: saveCredentials, simulated} = useContext(StorageContext);
   const [error, setError] = useState<any>(null);
   const connectRequest = useRef(new CancellationToken());
@@ -108,13 +108,15 @@ export function useConnectIoTCentralClient(): [
           credentials.deviceKey,
           eventLogger.current,
         );
+        console.log('setting client');
+        iotc.setLogging(IOTC_LOGGING.ALL);
       } else {
         Debug(
-          `Error connecting IoTC Client. Credentials invalid`,
+          'Error connecting IoTC Client. Credentials invalid',
           '_connect_internal',
           'connect_catch',
         );
-        setError(`Credentials invalid`);
+        setError('Credentials invalid');
         setConnecting(false);
         throw 'Credentials invalid';
       }
@@ -131,8 +133,10 @@ export function useConnectIoTCentralClient(): [
           timeout: 30,
           cancellationToken: connectRequest.current,
         });
+        console.log('connected');
         setClient(iotc);
       } catch (err) {
+        console.log('errore');
         Debug(
           `Error connecting IoTC Client: ${err}`,
           '_connect_internal',
@@ -163,6 +167,7 @@ export function useConnectIoTCentralClient(): [
         await _connect_internal(credentials);
         await saveCredentials({credentials});
       } catch (err) {
+        console.log(err);
         setError(err);
         setConnecting(false);
       }
@@ -191,7 +196,7 @@ export function useConnectIoTCentralClient(): [
   useEffect(() => {
     const currentEventLog = eventLogger.current;
     Debug(
-      `Going through initial useeffect.`,
+      'Going through initial useeffect.',
       'useConnectIoTCentralClient',
       'iotc.ts:137',
     );
@@ -214,8 +219,8 @@ export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
   const {save, simulated} = useContext(StorageContext);
 
   const setSimulated = useCallback(
-    async (simulated: boolean) => {
-      await save({simulated});
+    async (simulatedVal: boolean) => {
+      await save({simulated: simulatedVal});
     },
     [save],
   );

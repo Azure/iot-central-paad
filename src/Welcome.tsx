@@ -9,7 +9,7 @@ import * as Animatable from 'react-native-animatable';
 import {defaults} from './contexts/defaults';
 import DeviceInfo from 'react-native-device-info';
 import {StateUpdater, StyleDefinition, ThemeMode} from './types';
-import ProgressCircleSnail from 'react-native-progress/CircleSnail';
+import {CircleSnail} from 'react-native-progress';
 import {useScreenDimensions} from './hooks/layout';
 import {StorageContext, ThemeContext} from 'contexts';
 import {Name} from 'components/typography';
@@ -124,7 +124,7 @@ export function Welcome(props: {
         <LogoLight width={100} height={100} style={style.logo} />
       )}
       <Name style={style.name}>{title}</Name>
-      <ProgressCircleSnail
+      <CircleSnail
         style={style.spinner}
         size={Math.floor(screen.width / 8)}
         indeterminate={true}

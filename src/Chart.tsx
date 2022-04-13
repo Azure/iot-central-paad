@@ -10,6 +10,7 @@ import {
   LineChartOptions,
   ChartType,
   ChartSearchSpan,
+  StyleDefinition,
 } from 'types';
 import {SensorMap} from 'sensors';
 import {StyleSheet, View} from 'react-native';
@@ -71,25 +72,40 @@ const Chart = React.memo<{
   const [data, setData] = React.useState<TelemetryData>({});
   const [metadata, setMetadata] = React.useState<TelemetryMetaData>({});
   const chartRef = React.useRef<WebView>(null);
-  const mapStyle = React.useMemo(
+  const styles = React.useMemo<StyleDefinition>(
     () => ({
-      flex: 3,
-      margin: 20,
-      borderRadius: 20,
-      ...(!dark
-        ? {
-            shadowColor: "'rgba(0, 0, 0, 0.14)'",
-            shadowOffset: {
-              width: 0,
-              height: 3,
-            },
-            shadowOpacity: 0.8,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }
-        : {}),
+      map: {
+        flex: 3,
+        margin: 20,
+        borderRadius: 20,
+        ...(!dark
+          ? {
+              shadowColor: "'rgba(0, 0, 0, 0.14)'",
+              shadowOffset: {
+                width: 0,
+                height: 3,
+              },
+              shadowOpacity: 0.8,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }
+          : {}),
+      },
+      mapContainer: {flex: 1},
+      webView: {flex: 2, justifyContent: 'flex-start'},
+      loading: {
+        position: 'absolute',
+        height: '100%',
+        width: '100%',
+        backgroundColor: colors.background,
+      },
+      summary: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: 40,
+      },
     }),
-    [dark],
+    [colors.background, dark],
   );
   const searchSpan: ChartSearchSpan = React.useMemo(() => {
     const to = new Date();
@@ -118,9 +134,9 @@ const Chart = React.memo<{
 
   const chartDataOptions = React.useMemo(
     () =>
-      Object.keys(metadata).map(telemetryId => ({
-        alias: metadata[telemetryId].displayName,
-        color: metadata[telemetryId].color,
+      Object.keys(metadata).map(telemId => ({
+        alias: metadata[telemId].displayName,
+        color: metadata[telemId].color,
         searchSpan,
       })),
     [metadata, searchSpan],
@@ -251,17 +267,17 @@ const Chart = React.memo<{
   const getChartCompatibleData = React.useCallback(
     (telemetryData: TelemetryData) =>
       Object.keys(telemetryData).reduce<ChartData[]>(
-        (data, telemetryId) => [
-          ...data,
+        (chartData, telemId) => [
+          ...chartData,
           {
-            [telemetryId]: {
-              [metadata[telemetryId].displayName]: telemetryData[
-                telemetryId
+            [telemId]: {
+              [metadata[telemId].displayName]: telemetryData[
+                telemId
               ].values.reduce<SeriesData>(
                 (values, value) => ({
                   ...values,
                   [value.timestamp]: {
-                    [telemetryId]: value.value,
+                    [telemId]: value.value,
                   },
                 }),
                 {},
@@ -309,8 +325,8 @@ const Chart = React.memo<{
 
   if (chartType === ChartType.MAP) {
     return (
-      <View style={{flex: 1}}>
-        <Map style={mapStyle} location={currentValue} />
+      <View style={styles.mapContainer}>
+        <Map style={styles.map} location={currentValue} />
         <View style={style.summary}>
           <Text>
             <Name>Latitude:</Name> {currentValue.lat}
@@ -331,7 +347,7 @@ const Chart = React.memo<{
           <View style={style.chart}>
             <WebView
               originWhitelist={['*']}
-              containerStyle={{flex: 2, justifyContent: 'flex-start'}}
+              containerStyle={styles.webView}
               ref={chartRef}
               source={{
                 html,
@@ -340,26 +356,12 @@ const Chart = React.memo<{
               // use theme background color when chart is loading
               // style allows to cover all webview space as per issue:
               // https://github.com/react-native-webview/react-native-webview/issues/1031
-              renderLoading={() => (
-                <View
-                  style={{
-                    position: 'absolute',
-                    height: '100%',
-                    width: '100%',
-                    backgroundColor: colors.background,
-                  }}
-                />
-              )}
+              renderLoading={() => <View style={styles.loading} />}
             />
             <View style={style.summary}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-around',
-                  marginTop: 40,
-                }}>
-                {Object.keys(data).map((telemetryId, i) => {
-                  const telemetry = data[telemetryId];
+              <View style={styles.summary}>
+                {Object.keys(data).map((telId, i) => {
+                  const telemetry = data[telId];
                   if (!telemetry) {
                     return null;
                   }
@@ -373,9 +375,9 @@ const Chart = React.memo<{
                       size={screen.width / 5}
                       width={5}
                       fill={fill}
-                      tintColor={metadata[telemetryId].color}
+                      tintColor={metadata[telId].color}
                       backgroundColor={LightenDarkenColor(
-                        metadata[telemetryId].color,
+                        metadata[telId].color,
                         90,
                         true,
                       )}

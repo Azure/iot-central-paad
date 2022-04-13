@@ -27,6 +27,7 @@ const Map = React.memo<{
     //@ts-ignore
     <AnimatedMap
       provider={PROVIDER_DEFAULT}
+      // eslint-disable-next-line react-native/no-inline-styles
       style={style ? style : {width: '100%', height: '100%'}}
       scrollEnabled={true}
       zoomEnabled={true}

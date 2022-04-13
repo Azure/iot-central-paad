@@ -1,12 +1,14 @@
+/* eslint-disable react-native/no-inline-styles */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React from 'react';
-import {Platform, StyleSheet, View} from 'react-native';
-import {Icon} from 'react-native-elements';
+import React, {useMemo} from 'react';
+import {Platform, StyleSheet, TextStyle, View, ViewStyle} from 'react-native';
+import {Icon} from '@rneui/themed';
 import Scanner from 'react-native-qrcode-scanner';
-import {BarCodeReadEvent} from 'react-native-camera';
 import {Text} from './typography';
+import {Literal} from 'types';
+import {BarCodeReadEvent} from 'react-native-camera';
 
 interface QRCodeScannerProps {
   height: number;
@@ -27,7 +29,8 @@ export type IQRCodeProps = QRCodeScannerProps & {
 
 export default class QRCodeScanner
   extends React.Component<IQRCodeProps, {}>
-  implements IQRCodeScanner {
+  implements IQRCodeScanner
+{
   public overlayDimension: any;
   private qrCodeRef: Scanner | null;
   public onRead: (e: Event) => void | Promise<void>;
@@ -97,7 +100,8 @@ export default class QRCodeScanner
                 left: 0,
                 position: 'absolute',
                 top: 0,
-              }}></View>
+              }}
+            />
             <View
               key="right"
               style={{
@@ -107,7 +111,8 @@ export default class QRCodeScanner
                 right: 0,
                 position: 'absolute',
                 top: 0,
-              }}></View>
+              }}
+            />
             <View
               key="top"
               style={{
@@ -117,7 +122,8 @@ export default class QRCodeScanner
                 height: verticals + 40,
                 top: 0,
                 position: 'absolute',
-              }}></View>
+              }}
+            />
             <View
               key="bottom"
               style={{
@@ -127,7 +133,8 @@ export default class QRCodeScanner
                 height: verticals + 40,
                 bottom: -80,
                 position: 'absolute',
-              }}></View>
+              }}
+            />
             {this.onClose && (
               <Icon
                 name="close-circle-outline"
@@ -171,57 +178,62 @@ export default class QRCodeScanner
 function QRCodeMask(props: {width: number; color: string}) {
   const {width: markerWidth, color} = props;
   const sectorWidth = markerWidth / 5;
+  const styles = useMemo<Literal<ViewStyle | TextStyle>>(
+    () => ({
+      container: {
+        position: 'relative',
+        width: markerWidth,
+        height: markerWidth,
+      },
+      topLeft: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        height: sectorWidth,
+        width: sectorWidth,
+        borderColor: color,
+        borderLeftWidth: 5,
+        borderTopWidth: 5,
+      },
+      topRight: {
+        position: 'absolute',
+        top: 0,
+        left: markerWidth - sectorWidth,
+        height: sectorWidth,
+        width: sectorWidth,
+        borderColor: color,
+        borderRightWidth: 5,
+        borderTopWidth: 5,
+      },
+      bottomLeft: {
+        position: 'absolute',
+        top: markerWidth - sectorWidth,
+        left: 0,
+        height: sectorWidth,
+        width: sectorWidth,
+        borderColor: color,
+        borderLeftWidth: 5,
+        borderBottomWidth: 5,
+      },
+      bottomRight: {
+        position: 'absolute',
+        top: markerWidth - sectorWidth,
+        left: markerWidth - sectorWidth,
+        height: sectorWidth,
+        width: sectorWidth,
+        borderColor: color,
+        borderRightWidth: 5,
+        borderBottomWidth: 5,
+      },
+    }),
+    [color, markerWidth, sectorWidth],
+  );
   return (
-    <View
-      style={{position: 'relative', width: markerWidth, height: markerWidth}}>
-      <View
-        key="top-left"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          height: sectorWidth,
-          width: sectorWidth,
-          borderColor: color,
-          borderLeftWidth: 5,
-          borderTopWidth: 5,
-        }}></View>
-      <View
-        key="top-right"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: markerWidth - sectorWidth,
-          height: sectorWidth,
-          width: sectorWidth,
-          borderColor: color,
-          borderRightWidth: 5,
-          borderTopWidth: 5,
-        }}></View>
-      <View
-        key="bottom-left"
-        style={{
-          position: 'absolute',
-          top: markerWidth - sectorWidth,
-          left: 0,
-          height: sectorWidth,
-          width: sectorWidth,
-          borderColor: color,
-          borderLeftWidth: 5,
-          borderBottomWidth: 5,
-        }}></View>
-      <View
-        key="bottom-right"
-        style={{
-          position: 'absolute',
-          top: markerWidth - sectorWidth,
-          left: markerWidth - sectorWidth,
-          height: sectorWidth,
-          width: sectorWidth,
-          borderColor: color,
-          borderRightWidth: 5,
-          borderBottomWidth: 5,
-        }}></View>
+    <View style={styles.container}>
+      <View key="top-left" style={styles.topLeft} />
+      <View key="top-right" style={styles.topRight} />
+      <View key="bottom-left" style={styles.bottomLeft} />
+      <View key="bottom-right" style={styles.bottomRight} />
     </View>
   );
 }

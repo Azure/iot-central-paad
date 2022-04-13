@@ -18,7 +18,7 @@ import {
 import {View} from 'react-native-animatable';
 import {Card} from './components/card';
 import {useScreenDimensions} from './hooks/layout';
-import {Icon, ListItem} from 'react-native-elements';
+import {Icon, ListItem} from '@rneui/themed';
 import {Headline, Link, Text} from './components';
 import {
   useIoTCentralClient,
@@ -27,12 +27,12 @@ import {
   useBoolean,
   useTheme,
 } from 'hooks';
-import {Platform, Linking} from 'react-native';
+import {Platform, Linking, ViewStyle, TextStyle} from 'react-native';
 import {LogsContext} from './contexts/logs';
 import Strings from 'strings';
 import BottomPopup from 'components/bottomPopup';
-import ProgressCircleSnail from 'react-native-progress/CircleSnail';
-import {StyleDefinition} from 'types';
+import {CircleSnail} from 'react-native-progress';
+import {Literal, StyleDefinition} from 'types';
 
 export default function FileUpload() {
   const {colors} = useTheme();
@@ -49,8 +49,24 @@ export default function FileUpload() {
   const [fileName, setFileName] = useState('');
   const [fileSize, setFileSize] = useState('');
 
-  const styles = useMemo(
+  const styles = useMemo<Literal<ViewStyle | TextStyle>>(
     () => ({
+      flex1: {flex: 1},
+      container: {
+        flex: 0,
+        marginBottom: 40,
+        alignItems: 'center',
+        marginHorizontal: 40,
+      },
+      simulatedContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginHorizontal: 30,
+      },
+      centerText: {
+        textAlign: 'center',
+      },
       listItem: {
         backgroundColor: colors.card,
       },
@@ -60,8 +76,14 @@ export default function FileUpload() {
       closeItemText: {
         color: 'gray',
       },
+      card: {
+        flex: 0,
+        height: screen.height / 2,
+        width: screen.width - 100,
+      },
+      cardWrapper: {flex: 2, alignItems: 'center', justifyContent: 'center'},
     }),
-    [colors],
+    [colors, screen],
   );
 
   useEffect(() => {
@@ -84,13 +106,13 @@ export default function FileUpload() {
           } else {
             // send response data
             let fileType = 'image/jpg';
-            if (response.type) {
-              fileType = response.type;
+            if (response.assets?.[0].type) {
+              fileType = response.assets?.[0].type;
             }
 
-            let curfileName = response.fileName;
+            let curfileName = response.assets?.[0].fileName;
             if (!curfileName && Platform.OS === 'ios') {
-              curfileName = response.uri?.split('/').pop();
+              curfileName = response.assets?.[0].uri?.split('/').pop();
             }
             console.log(`Current file name: ${curfileName}`);
             try {
@@ -99,13 +121,13 @@ export default function FileUpload() {
                 eventData: `Starting upload of file ${curfileName}`,
               });
               setFileName(curfileName!);
-              setFileSize(formatBytes(response.fileSize!));
+              setFileSize(formatBytes(response.assets?.[0].fileSize!));
               setUploading.True();
               // await new Promise(r => setTimeout(r, 6000));
               const res = await client?.uploadFile(
                 curfileName as string,
                 fileType,
-                response.base64,
+                response.assets?.[0].base64,
                 'base64',
               );
               if (res && res.status >= 200 && res.status < 300) {
@@ -135,17 +157,11 @@ export default function FileUpload() {
 
   if (simulated) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginHorizontal: 30,
-        }}>
-        <Headline style={{textAlign: 'center'}}>
+      <View style={styles.simulatedContainer}>
+        <Headline style={styles.centerText}>
           {Strings.Simulation.Enabled}
         </Headline>
-        <Text style={{textAlign: 'center'}}>
+        <Text style={styles.centerText}>
           {' '}
           {Strings.FileUpload.NotAvailable} {Strings.Simulation.Disable}
         </Text>
@@ -154,14 +170,10 @@ export default function FileUpload() {
   }
 
   return (
-    <View style={{flex: 1}}>
-      <View style={{flex: 2, alignItems: 'center', justifyContent: 'center'}}>
+    <View style={styles.flex1}>
+      <View style={styles.cardWrapper}>
         <Card
-          containerStyle={{
-            flex: 0,
-            height: screen.height / 2,
-            width: screen.width - 100,
-          }}
+          containerStyle={styles.card}
           enabled={false}
           title=""
           onPress={setShowSelector.True}
@@ -180,13 +192,7 @@ export default function FileUpload() {
         />
       </View>
 
-      <View
-        style={{
-          flex: 0,
-          marginBottom: 40,
-          alignItems: 'center',
-          marginHorizontal: 40,
-        }}>
+      <View style={styles.container}>
         <Text>
           {Strings.FileUpload.Footer}
           <Link
@@ -228,9 +234,16 @@ export default function FileUpload() {
 function UploadIcon() {
   const {colors} = useTheme();
   const {screen} = useScreenDimensions();
+
+  const styles: Literal<ViewStyle | TextStyle> = {
+    container: {flex: 1, alignItems: 'center'},
+    wrapper: {flex: 4, justifyContent: 'center'},
+    startContainer: {flex: 1, justifyContent: 'flex-end'},
+    start: {marginTop: 30},
+  };
   return (
-    <View style={{flex: 1, alignItems: 'center'}}>
-      <View style={{flex: 4, justifyContent: 'center'}}>
+    <View style={styles.container}>
+      <View style={styles.wrapper}>
         <Icon
           size={Math.floor(screen.width) / 3}
           name="cloud-upload-outline"
@@ -241,8 +254,8 @@ function UploadIcon() {
           color={colors.text}
         />
       </View>
-      <View style={{flex: 1, justifyContent: 'flex-end'}}>
-        <Text style={{marginTop: 30}}>{Strings.FileUpload.Start}</Text>
+      <View style={styles.startContainer}>
+        <Text style={styles.start}>{Strings.FileUpload.Start}</Text>
       </View>
     </View>
   );
@@ -275,6 +288,12 @@ function UploadProgress(props: {
       cancel: {
         color: 'red',
       },
+      spinnerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      container: {flex: 1, alignItems: 'center'},
     }),
     [],
   );
@@ -294,7 +313,7 @@ function UploadProgress(props: {
 
   if (uploadStatus !== undefined && showResult) {
     return (
-      <View style={{flex: 1, alignItems: 'center'}}>
+      <View style={style.container}>
         <Icon
           size={screen.height / 6}
           color={uploadStatus ? 'green' : 'red'}
@@ -323,9 +342,9 @@ function UploadProgress(props: {
   }
 
   return (
-    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+    <View style={style.spinnerContainer}>
       <View style={style.spinner}>
-        <ProgressCircleSnail
+        <CircleSnail
           size={Math.floor(screen.width / 3)}
           indeterminate={true}
           thickness={3}
@@ -345,8 +364,10 @@ function UploadProgress(props: {
 }
 
 function formatBytes(a: number, b = 2) {
-  if (0 === a) return '0 Bytes';
-  const c = 0 > b ? 0 : b;
+  if (a === 0) {
+    return '0 Bytes';
+  }
+  const c = b < 0 ? 0 : b;
   const d = Math.floor(Math.log(a) / Math.log(1024));
   return (
     parseFloat((a / Math.pow(1024, d)).toFixed(c)) +
