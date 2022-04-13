@@ -31,9 +31,9 @@ and click on React Native CLI Quickstart for more detailed instructions.
 "Installing dependencies" is the section that explains
 developer setup. If you are developing on Windows for Android you will need:
 
-1. Node.JS (10+)
+1. Node.JS (12+)
 1. Java SE Development Kit (JDK 8+)
-1. Python 2.7+/3.7+
+1. Python 3.7+
 1. Android Studio
 1. React Native command line interface
 1. Npm or Yarn
@@ -42,10 +42,8 @@ To set up a real device for development, follow the instructions for device setu
 
 ## Installation
 ```shell
-git clone https://github.com/lucadruda/cpm-poc
-
-cd cpm-poc
-
-yarn install ( or 'npm install' if using npm)
+git clone https://github.com/Azure/iot-central-paad
+cd iot-central-paad
+npm install
 
 ```
