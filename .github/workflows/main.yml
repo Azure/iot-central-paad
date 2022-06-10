@@ -1,0 +1,19 @@
+name: CI
+
+# Run this workflow every time a commit gets pushed to main or a pull request gets opened against main
+on:
+  pull_request:
+    branches: 
+      - master
+
+jobs:
+    build:
+        name: Call Azure Pipeline
+        runs-on: macOS-12
+        steps:
+        - name: Azure Pipelines Action
+          uses: Azure/pipelines@v1
+          with:
+            azure-devops-project-url: https://msazure.visualstudio.com/One
+            azure-pipeline-name: 'iotc-paad'
+            azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
