@@ -98,7 +98,7 @@ jobs:
         displayName: 'Build Mobile Application'
         inputs:
           actions: 'build archive'
-          configuration: 'Release'
+          configuration: 'Dogfood'
           xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
           scheme: '$(Project_Name)'
           sdk: 'iphoneos15.4'
