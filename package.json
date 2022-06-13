@@ -23,6 +23,7 @@
     "@rneui/base": "^4.0.0-rc.1",
     "@rneui/themed": "^4.0.0-rc.1",
     "events": "^3.3.0",
+    "intl": "^1.2.5",
     "react": "^17.0.2",
     "react-native": "0.68.0",
     "react-native-animatable": "^1.3.3",
