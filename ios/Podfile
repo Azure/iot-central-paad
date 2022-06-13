@@ -39,7 +39,7 @@ target 'IoT_PnP' do
     # Error when archiving. Workaround.
     # Opened issue: https://github.com/facebook/react-native/issues/30335
     installer.pods_project.targets.each do |target|
-      if target.name == "React-Core.common-AccessibilityResources"
+      if target.name == "React-Core-AccessibilityResources"
        target.remove_from_project
       end
     end
