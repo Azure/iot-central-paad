@@ -228,6 +228,12 @@ android {
             }
         }
         betaRelease {
+            if (System.env.PAAD_BETARELEASE_STORE_FILE) {
+                storeFile file(System.env.PAAD_BETARELEASE_STORE_FILE)
+                storePassword System.env.PAAD_BETARELEASE_STORE_PASSWORD
+                keyAlias System.env.PAAD_BETARELEASE_KEY_ALIAS
+                keyPassword System.env.PAAD_BETARELEASE_KEY_PASSWORD
+            }
             if (project.hasProperty('PAAD_BETARELEASE_STORE_FILE')) {
                 storeFile file(PAAD_BETARELEASE_STORE_FILE)
                 storePassword PAAD_BETARELEASE_STORE_PASSWORD
