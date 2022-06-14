@@ -24,14 +24,7 @@ jobs:
   - job: Android_Beta
     condition: and(succeeded(), eq(variables.isMaster, false))
     steps:
-      - task: NodeTool@0
-        inputs:
-          versionSpec: '12.18.4'
-        displayName: 'Install Node'
-
-      - script: npm install
-        workingDirectory: .
-        displayName: 'Install node dependencies'
+      - template: ./node-build.yml
 
       - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
         workingDirectory: .
@@ -76,14 +69,7 @@ jobs:
       releaseApk: $(apkPath)/release/$(Project_Name)-release.apk
     condition: and(succeeded(), eq(variables.isMaster, true))
     steps:
-      - task: NodeTool@0
-        inputs:
-          versionSpec: '12.18.4'
-        displayName: 'Install Node'
-
-      - script: npm install
-        workingDirectory: .
-        displayName: 'Install node dependencies'
+      - template: ./node-build.yml
 
       - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
         workingDirectory: .
