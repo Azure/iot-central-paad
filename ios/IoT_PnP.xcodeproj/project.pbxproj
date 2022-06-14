@@ -630,7 +630,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = UBF8T346G9;
+				DEVELOPMENT_TEAM = 9KBH5RKYEW;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = IoT_PnP/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
@@ -644,9 +644,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.microsoft.iotpnp;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.iotcentral-paad-df";
 				PRODUCT_NAME = IoT_PnP;
-				PROVISIONING_PROFILE_SPECIFIER = "IoT Plug and Play Development";
+				PROVISIONING_PROFILE_SPECIFIER = "Iotcentral Paad Dogfood Development";
 				SWIFT_OBJC_BRIDGING_HEADER = "IoT_PnP-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
