@@ -24,7 +24,14 @@ jobs:
   - job: Android_Beta
     condition: and(succeeded(), eq(variables.isMaster, false))
     steps:
+    
       - template: ./node-build.yml
+
+      - task: JavaToolInstaller@0
+        inputs:
+          versionSpec: '11'
+          jdkArchitectureOption: 'x64'
+          jdkSourceOption: 'PreInstalled'
 
       - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
         workingDirectory: .
@@ -70,6 +77,12 @@ jobs:
     condition: and(succeeded(), eq(variables.isMaster, true))
     steps:
       - template: ./node-build.yml
+
+      - task: JavaToolInstaller@0
+        inputs:
+          versionSpec: '11'
+          jdkArchitectureOption: 'x64'
+          jdkSourceOption: 'PreInstalled'
 
       - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
         workingDirectory: .
