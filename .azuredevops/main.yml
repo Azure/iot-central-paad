@@ -5,16 +5,163 @@ pool:
 variables:
   - name: isMaster
     value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
-  - group: iotc-cpm-android
-  - name: CPM_DEBUG_PROJECT_NAME
+  - group: iotc-paad-android
+  - name: PAAD_BETARELEASE_PROJECT_NAME
     value: $(Project_Name)
-  - name: CPM_RELEASE_PROJECT_NAME
+  - name: PAAD_BETARELEASE_VERSION_CODE
+    value: 1
+  - name: PAAD_BETARELEASE_VERSION_NAME
+    value: 1.0.6
+  - name: PAAD_RELEASE_PROJECT_NAME
     value: $(Project_Name)
-  - name: rootPath
-    value: '$(System.DefaultWorkingDirectory)'
+  - name: PAAD_RELEASE_VERSION_CODE
+    value: 1
+  - name: PAAD_RELEASE_VERSION_NAME
+    value: 1.0.6
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 jobs:
+  - job: Android_Beta
+    condition: and(succeeded(), eq(variables.isMaster, false))
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '12.18.4'
+        displayName: 'Install Node'
+
+      - script: npm install
+        workingDirectory: .
+        displayName: 'Install node dependencies'
+
+      - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
+        workingDirectory: .
+        displayName: 'Increment version in package.json'
+
+      - task: DownloadSecureFile@1
+        name: androidKeystore
+        inputs:
+          secureFile: iotc-paad.keystore
+
+      - bash: |
+          PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
+          echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
+          echo "Using variable: $GOOGLE_MAPS_API_KEY"
+          echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
+          cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
+          ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
+        env:
+          GOOGLE_MAPS_KEY: $(googlemapskey)
+      - bash: env | sort
+
+      - task: Gradle@2
+        inputs:
+          workingDirectory: 'android'
+          gradleWrapperFile: 'android/gradlew'
+          gradleOptions: '-Xmx3072m'
+          publishJUnitResults: false
+          testResultsFiles: '**/TEST-*.xml'
+          tasks: 'assembleBetaRelease'
+
+      - task: PublishBuildArtifacts@1
+        displayName: "Publish Build Artifact"
+        inputs:
+          PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
+          ArtifactName: 'android'
+          publishLocation: 'Container'
+
+  - job: Android_Release
+    variables:
+      apkPath: android/app/build/outputs/apk
+      unsignedApk: $(apkPath)/release/$(Project_Name)-release-unsigned.apk
+      releaseApk: $(apkPath)/release/$(Project_Name)-release.apk
+    condition: and(succeeded(), eq(variables.isMaster, true))
+    steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '12.18.4'
+        displayName: 'Install Node'
+
+      - script: npm install
+        workingDirectory: .
+        displayName: 'Install node dependencies'
+
+      - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
+        workingDirectory: .
+        displayName: 'Increment version in package.json'
+
+      - task: DownloadSecureFile@1
+        name: androidKeystore
+        inputs:
+          secureFile: paad-release.keystore
+
+      - bash: |
+          PAAD_RELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
+          echo "##vso[task.setvariable variable=PAAD_RELEASE_VERSION_CODE]$PAAD_RELEASE_VERSION_CODE"
+          echo "Using variable: $GOOGLE_MAPS_API_KEY"
+          echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
+          cp $(androidKeystore.secureFilePath) android/app/$PAAD_RELEASE_STORE_FILE
+          ls -l android/app/$PAAD_RELEASE_STORE_FILE
+        env:
+          GOOGLE_MAPS_KEY: $(googlemapskey)
+      - bash: env | sort
+
+      - task: Gradle@2
+        inputs:
+          workingDirectory: 'android'
+          gradleWrapperFile: 'android/gradlew'
+          gradleOptions: '-Xmx3072m'
+          publishJUnitResults: false
+          testResultsFiles: '**/TEST-*.xml'
+          tasks: 'assembleRelease'
+
+      - task: EsrpCodeSigning@1
+        displayName: 'Sign build'
+        inputs:
+          ConnectedServiceName: 'IoT PnP PaaD'
+          FolderPath: '$(apkPath)/release'
+          Pattern: '*.apk'
+          signConfigType: 'inlineSignParams'
+          inlineOperation: |
+            [
+                  {
+                      "KeyCode" : "CP-464774-Java",
+                      "OperationCode" : "AndroidSign",
+                      "Parameters" : {},
+                      "ToolName" : "sign",
+                      "ToolVersion" : "1.0"
+                  }
+            ]
+          SessionTimeout: '60'
+          MaxConcurrency: '50'
+          MaxRetryAttempts: '5'
+
+
+      - task: PublishBuildArtifacts@1
+        displayName: "Publish Build Artifact"
+        inputs:
+          PathtoPublish: '$(unsignedApk)'
+          ArtifactName: 'android'
+          publishLocation: 'Container'
+        
+      - task: AndroidSigning@3
+        displayName: 'Zip aligning APK'
+        inputs:
+          apksign: false
+          zipalign: true
+      
+      - task: Bash@3
+        displayName: "Rename Signed APK"
+        inputs:
+          targetType: 'inline'
+          script: 'mv $(unsignedApk) $(releaseApk)'
+
+      - task: PublishBuildArtifacts@1
+        displayName: "Publish Build Artifact"
+        inputs:
+          PathtoPublish: '$(releaseApk)'
+          ArtifactName: 'android'
+          publishLocation: 'Container'
+
   - job: iOS_Beta
     timeoutInMinutes: 120
     condition: and(succeeded(), eq(variables.isMaster, false))
@@ -320,41 +467,3 @@ jobs:
           PathtoPublish: '$(signedExtractedPath)'
           ArtifactName: 'ios_signed'
           publishLocation: 'Container'
-  # - job: Android_Release
-  #   steps:
-  #     - template: ./node-build.yml
-  #     - task: DownloadSecureFile@1
-  #       name: androidKeystore
-  #       inputs:
-  #         secureFile: iotc-cpm-release.keystore
-
-  #     - bash: |
-  #         CPM_RELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
-  #         echo "##vso[task.setvariable variable=CPM_RELEASE_VERSION_CODE]$CPM_RELEASE_VERSION_CODE"
-  #         cp $(androidKeystore.secureFilePath) android/app/$CPM_RELEASE_STORE_FILE
-  #         ls -l android/app/$CPM_RELEASE_STORE_FILE
-
-  #     - bash: env | sort
-
-  #     - bash: npx jetify
-
-  #     - task: Gradle@2
-  #       env:
-  #         KEYSTORE_PASSWORD: $(CPM_RELEASE_STORE_PASSWORD)
-  #         KEYSTORE: $(CPM_RELEASE_STORE_FILE)
-  #         KEY_ALIAS: $(CPM_RELEASE_KEY_ALIAS)
-  #         KEY_PASSWORD: $(CPM_RELEASE_KEY_PASSWORD)
-  #       inputs:
-  #         workingDirectory: 'android'
-  #         gradleWrapperFile: 'android/gradlew'
-  #         gradleOptions: '-Xmx3072m'
-  #         publishJUnitResults: false
-  #         testResultsFiles: '**/TEST-*.xml'
-  #         tasks: 'assembleRelease'
-
-  #     - task: PublishBuildArtifacts@1
-  #       displayName: 'Publish Build Artifact'
-  #       inputs:
-  #         PathtoPublish: 'android/app/build/outputs/apk/release/$(Project_Name)-release.apk'
-  #         ArtifactName: 'android'
-  #         publishLocation: 'Container'
