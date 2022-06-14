@@ -7,6 +7,9 @@ install! 'cocoapods', :deterministic_uuids => false
 permissions_path = '../node_modules/react-native-permissions/ios'
 pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
 
+project 'IoT_PnP',
+      'Dogfood' => :release
+
 target 'IoT_PnP' do
   config = use_native_modules!
 

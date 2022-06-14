@@ -100,7 +100,7 @@ jobs:
           actions: 'build archive'
           configuration: 'Dogfood'
           xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
-          scheme: '$(Project_Name)'
+          scheme: '$(Project_Name)_Dogfood'
           sdk: 'iphoneos15.4'
           useXcpretty: false
           exportPath: '$(exportPath)'
