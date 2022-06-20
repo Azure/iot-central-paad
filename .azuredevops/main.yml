@@ -121,13 +121,20 @@ jobs:
           signConfigType: 'inlineSignParams'
           inlineOperation: |
             [
-                  {
-                      "KeyCode" : "CP-464774-Java",
-                      "OperationCode" : "AndroidSign",
-                      "Parameters" : {},
-                      "ToolName" : "sign",
-                      "ToolVersion" : "1.0"
-                  }
+                {
+                    "KeyCode": "CP-464774-Java",
+                    "OperationCode": "Androidv2Sign",
+                    "ToolName": "sign",
+                    "ToolVersion": "1.0",
+                    "Parameters": {}
+                },
+                {
+                    "KeyCode": "CP-464774-Java",
+                    "OperationCode": "Androidv2Verify",
+                    "ToolName": "sign",
+                    "ToolVersion": "1.0",
+                    "Parameters": {}
+                }
             ]
           SessionTimeout: '60'
           MaxConcurrency: '50'
@@ -401,6 +408,7 @@ jobs:
           scheme: '$(Project_Name)'
           sdk: 'iphoneos15.4'
           useXcpretty: false
+          archivePath: '$(archivePath)'
           exportPath: '$(exportPath)'
           exportOptions: 'plist'
           exportOptionsPlist: '$(exportPath)/$(iOS_Development_ExportOptions)'
