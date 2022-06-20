@@ -371,7 +371,7 @@ jobs:
         inputs:
           SourceFolder: '$(Agent.TempDirectory)'
           Contents: '$(iOS_Distribution_Profile)'
-          TargetFolder: '$(exportPath)'
+          TargetFolder: '$(archivePath)'
           flattenFolders: true
       
       - task: CopyFiles@2
@@ -387,15 +387,15 @@ jobs:
         inputs:
           SourceFolder: '$(Agent.TempDirectory)'
           Contents: '$(iOS_ExportOptions)'
-          TargetFolder: '$(exportPath)'
+          TargetFolder: '$(archivePath)'
           flattenFolders: true
 
-      - bash: mv $(exportPath)/$(iOS_ExportOptions) $(exportPath)/ExportOptions.plist
+      - bash: mv $(archivePath)/$(iOS_ExportOptions) $(archivePath)/ExportOptions.plist
 
       - task: Xcode@5
         displayName: 'Build Mobile Application'
         inputs:
-          actions: 'build archive'
+          actions: 'build'
           configuration: 'Release'
           xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
           scheme: '$(Project_Name)'
@@ -421,7 +421,7 @@ jobs:
       - task: ArchiveFiles@2
         displayName: 'Create zip for signing'
         inputs:
-          rootFolderOrFile: '$(exportPath)'
+          rootFolderOrFile: '$(archivePath)'
           includeRootFolder: false
           archiveFile: '$(zipToSign)'
       
@@ -436,7 +436,7 @@ jobs:
         displayName: 'Sign build'
         inputs:
           ConnectedServiceName: 'IoT PnP PaaD'
-          FolderPath: '$(exportPath)'
+          FolderPath: '$(archivePath)'
           Pattern: '*.zip'
           signConfigType: 'inlineSignParams'
           inlineOperation: |
