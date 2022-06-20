@@ -330,8 +330,8 @@ jobs:
       exportPath: '$(rootPath)/output/export'
       xcodeDeveloperDir: '/Applications/Xcode_13.3.1.app/Contents/Developer'
       xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
-      zipToSign: '$(exportPath)/$(Project_Name).zip'
-      signedZip: '$(exportPath)/$(Project_Name).zip'
+      zipToSign: '$(archivePath)/$(Project_Name).zip'
+      signedZip: '$(archivePath)/$(Project_Name).zip'
       unsignedIpa: '$(exportPath)/$(Project_Name).ipa'
       signedExtractedPath: '$(exportPath)/signed'
     steps:
