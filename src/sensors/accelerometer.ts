@@ -14,6 +14,7 @@ import {
   SensorTypes,
 } from 'react-native-sensors';
 import EventEmitter from 'events';
+import { Platform } from 'react-native';
 
 export default class Accelerometer extends EventEmitter implements ISensor {
   private enabled: boolean;
@@ -63,14 +64,30 @@ export default class Accelerometer extends EventEmitter implements ISensor {
     }
   }
 
+  getNormalizedData(x: number, y: number, z: number): Vector {
+    // iOS returns accelerometer data in G's and Android returns it in m/s^2
+    // normalize to m/s^2
+
+    if (Platform.OS === 'ios') {
+      return {
+        x: x * 9.81,
+        y: y * 9.81,
+        z: z * 9.81,
+      };
+    }
+
+    return { x, y, z };
+  }
+
   async run() {
     if (this.simulated) {
       const intId = setInterval(
         function (this: Accelerometer) {
           this.emit(DATA_AVAILABLE_EVENT, this.id, {
-            x: getRandom(),
-            y: getRandom(),
-            z: getRandom(),
+            // Make limits +-2g
+            x: getRandom(-19.62, 19.62),
+            y: getRandom(-19.62, 19.62),
+            z: getRandom(-19.62, 19.62),
           });
         }.bind(this),
         this.interval,
@@ -83,7 +100,7 @@ export default class Accelerometer extends EventEmitter implements ISensor {
     } else {
       this.currentRun = accelerometer.subscribe(
         function (this: Accelerometer, {x, y, z}: Vector) {
-          this.emit(DATA_AVAILABLE_EVENT, this.id, {x, y, z});
+          this.emit(DATA_AVAILABLE_EVENT, this.id, this.getNormalizedData(x, y, z));
         }.bind(this),
         function (this: Accelerometer, error: any) {
           if (error) {
