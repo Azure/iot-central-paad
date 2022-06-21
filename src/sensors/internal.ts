@@ -13,8 +13,8 @@ export interface ISensor extends EventEmitter {
 
 export type Vector = {x: number; y: number; z: number};
 
-export function getRandom(): number {
-  return Math.round(Math.random() * 20) - 10;
+export function getRandom(min: number = -10, max: number = 10): number {
+  return Math.round(Math.random() * (max - min)) + min;
 }
 
 export const AVAILABLE_SENSORS = {
