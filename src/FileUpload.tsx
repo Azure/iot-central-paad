@@ -104,6 +104,8 @@ export default function FileUpload() {
           } else if (response.errorMessage) {
             console.log('ImagePicker Error: ', response.errorMessage);
           } else {
+            // send response data
+
             const rawFileType = response.assets?.[0].type;
             let fileType = 'image/jpeg';
 
