@@ -104,10 +104,14 @@ export default function FileUpload() {
           } else if (response.errorMessage) {
             console.log('ImagePicker Error: ', response.errorMessage);
           } else {
-            // send response data
+            const rawFileType = response.assets?.[0].type;
             let fileType = 'image/jpeg';
-            if (response.assets?.[0].type) {
-              fileType = response.assets?.[0].type;
+
+            // There is a bug with the image picker (at least on iOS) that causes the type for .jpg images to come back as 'image/jpg'
+            // which is invalid and will cause any mime type parsing to misidentify the file type
+            // Bug: https://github.com/react-native-image-picker/react-native-image-picker/issues/1856
+            if (rawFileType && rawFileType !== 'image/jpg') {
+              fileType = rawFileType;
             }
 
             let curfileName = response.assets?.[0].fileName;
