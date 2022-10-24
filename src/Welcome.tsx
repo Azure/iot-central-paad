@@ -73,39 +73,39 @@ export function Welcome(props: {
     defaults.dev = __DEV__;
     await new Promise(r => setTimeout(r, 2000));
     const storage = await read();
-    try {
-      const minorOrPatchUpdateDetails = await VersionCheck.needUpdate({
-        packageName: Platform.select({
-          ios: defaults.packageNameIOS,
-          android: defaults.packageNameAndroid,
-        }),
-      });
-      if (minorOrPatchUpdateDetails.isNeeded) {
-        await handleUpdate(
-          false,
-          storage.skipVersion,
-          minorOrPatchUpdateDetails.latestVersion,
-          minorOrPatchUpdateDetails.storeUrl,
-          save,
-        );
-      }
-      const breakingUpdateDetails = await VersionCheck.needUpdate({
-        depth: 1,
-        packageName: Platform.select({
-          ios: defaults.packageNameIOS,
-          android: defaults.packageNameAndroid,
-        }),
-      });
-      if (breakingUpdateDetails.isNeeded) {
-        await handleUpdate(
-          true,
-          storage.skipVersion,
-          breakingUpdateDetails.latestVersion,
-          breakingUpdateDetails.storeUrl,
-          save,
-        );
-      }
-    } catch (e) {}
+    // try {
+    //   const minorOrPatchUpdateDetails = await VersionCheck.needUpdate({
+    //     packageName: Platform.select({
+    //       ios: defaults.packageNameIOS,
+    //       android: defaults.packageNameAndroid,
+    //     }),
+    //   });
+    //   if (minorOrPatchUpdateDetails.isNeeded) {
+    //     await handleUpdate(
+    //       false,
+    //       storage.skipVersion,
+    //       minorOrPatchUpdateDetails.latestVersion,
+    //       minorOrPatchUpdateDetails.storeUrl,
+    //       save,
+    //     );
+    //   }
+    //   const breakingUpdateDetails = await VersionCheck.needUpdate({
+    //     depth: 1,
+    //     packageName: Platform.select({
+    //       ios: defaults.packageNameIOS,
+    //       android: defaults.packageNameAndroid,
+    //     }),
+    //   });
+    //   if (breakingUpdateDetails.isNeeded) {
+    //     await handleUpdate(
+    //       true,
+    //       storage.skipVersion,
+    //       breakingUpdateDetails.latestVersion,
+    //       breakingUpdateDetails.storeUrl,
+    //       save,
+    //     );
+    //   }
+    // } catch (e) {}
   }, [read, save]);
 
   useEffect(() => {

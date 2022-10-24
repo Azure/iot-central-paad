@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import React, {useState, useEffect, useContext, useMemo} from 'react';
-import {View, Platform, ViewStyle, TextStyle} from 'react-native';
+import {View, Platform, ViewStyle, TextStyle, PermissionsAndroid} from 'react-native';
 import Settings from './Settings';
 import {
   NavigationContainer,
@@ -44,11 +44,72 @@ import Chart from 'Chart';
 import Strings from 'strings';
 import {Option} from 'components/options';
 import Options from 'components/options';
+import { BleManager, State } from 'react-native-ble-plx';
 
 const Stack = createStackNavigator<NavigationPages>();
 
 export default function App() {
   const [initialized, setInitialized] = useState(false);
+  const bleManager = React.useRef<BleManager>();
+
+  React.useEffect(() => {
+    (async function() {
+      if (Platform.OS === 'android') {
+        console.log('REQUESTING PERMS');
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Bluetooth Permission',
+            message: `Application would like to use bluetooth and location permissions`,
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          throw new Error("Permission rejected");
+        }
+      }
+  
+      if (!bleManager.current) {
+        bleManager.current = new BleManager();
+      }
+  
+      const sub = bleManager.current.onStateChange(s => {
+        if (s === State.PoweredOn) {
+          sub.remove();
+          bleManager.current?.startDeviceScan(null, null, (err, device) => {
+            if (err) {
+              console.log('DEVICE ERROR:', err.errorCode, err.reason);
+            }
+            if (device) {
+              console.log('DEVICE INFO', device.name, device.id);
+            }
+  
+            if (device?.name?.startsWith('Govee')) {
+              bleManager.current?.stopDeviceScan();
+              console.log('IS CONNECTABLE', device.isConnectable);
+              device.connect()
+                .then(device => {
+                  return device.discoverAllServicesAndCharacteristics();
+                })
+                .then(device => {
+                  return device.services();
+                })
+                .then(services => {
+                    return Promise.all(services.map(s => s.characteristics()));
+                })
+                .then(chars => {
+                  console.log('SERVICE DATA: ', JSON.stringify(chars, null, 4));
+                });
+            }
+          })
+        }
+        console.log('BLUETOOTH STATE:', s);
+      }, true);
+    })();
+  }, []);
+
   return (
     <ThemeProvider>
       <SafeAreaProvider>
