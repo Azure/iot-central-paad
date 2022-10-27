@@ -152,6 +152,11 @@ export function useConnectIoTCentralClient(): [
 
   const connect = useCallback(
     async (credentialsData: any, options?: ConnectionOptions) => {
+      // Guard against double scanning a code and recieving an error from DPS for trying to connect twice
+      if (connecting) {
+        return;
+      }
+
       setConnecting(true);
       try {
         let credentials;
