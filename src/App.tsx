@@ -45,6 +45,7 @@ import Strings from 'strings';
 import {Option} from 'components/options';
 import Options from 'components/options';
 import { BleManager, State } from 'react-native-ble-plx';
+import {Buffer} from 'buffer';
 
 const Stack = createStackNavigator<NavigationPages>();
 
@@ -78,32 +79,82 @@ export default function App() {
       const sub = bleManager.current.onStateChange(s => {
         if (s === State.PoweredOn) {
           sub.remove();
-          bleManager.current?.startDeviceScan(null, null, (err, device) => {
-            if (err) {
-              console.log('DEVICE ERROR:', err.errorCode, err.reason);
+          console.log('connecting to device');
+
+          bleManager.current?.startDeviceScan(null, {scanMode: 2}, (e, device) => {
+            if (device?.name?.startsWith('Govee') && device.manufacturerData) {
+              // console.log('manufacturer data: ', device.manufacturerData);
+              const buf = Buffer.from(device.manufacturerData, 'base64');
+              if (buf.toString('ascii').includes('INTELLI_ROCKS')) {
+                return;
+              }
+
+              // 88 ec 00 14 09 3b 0e 64 02
+              // 0  1  2 [3  4] [5  6] [7]  8
+              //          ^      ^      ^
+              //          temp   hum    batt
+
+              const temp = buf.readInt16LE(3) / 100;
+              const humidity = buf.readInt16LE(5) / 100;
+              const battery = buf.readUint8(7);
+              console.log(device.manufacturerData)
+              console.log({temp, humidity, battery});
             }
-            if (device) {
-              console.log('DEVICE INFO', device.name, device.id);
-            }
+          });
+
+          // bleManager.current?.connectToDevice('A4:C1:38:CE:EE:BF', {})
+          // // bleManager.current?.connectToDevice('A0:38:F8:A7:28:D2')
+          //   .then(device => {
+          //     console.log('discovering')
+          //     return device.discoverAllServicesAndCharacteristics();
+          //   })
+          //   .then(device => {
+          //     console.log('reading services')
+          //     return device.services();
+          //   })
+          //   .then(services => {
+          //       console.log('mapping chars')
+          //       return Promise.all(services.map(s => s.characteristics()));
+          //   })
+          //   .then(chars => {
+          //     console.log('reading chars')
+          //     // chars.flat().forEach(c => {
+          //     //   console.log(JSON.stringify({...c, '_manager': undefined}, null, 4))
+          //     // })
+          //     return Promise.all(
+          //       chars
+          //         .flat()
+          //         // .forEach(c => {
+          //         //   if (c.isReadable && c.isNotifiable) {
+          //         //     console.log('Monitoring char', c.uuid)
+          //         //     c.monitor((e, char) => {
+          //         //       console.log('Notified by char', c.uuid)
+          //         //       if (e) {
+          //         //         console.error(e);
+          //         //       }
   
-            if (device?.name?.startsWith('Govee')) {
-              bleManager.current?.stopDeviceScan();
-              console.log('IS CONNECTABLE', device.isConnectable);
-              device.connect()
-                .then(device => {
-                  return device.discoverAllServicesAndCharacteristics();
-                })
-                .then(device => {
-                  return device.services();
-                })
-                .then(services => {
-                    return Promise.all(services.map(s => s.characteristics()));
-                })
-                .then(chars => {
-                  console.log('SERVICE DATA: ', JSON.stringify(chars, null, 4));
-                });
-            }
-          })
+          //         //       if (char?.value) {
+          //         //         console.log('Char', char.uuid, char.value);
+          //         //       }
+          //         //     })
+          //         //   }
+          //         // })
+          //         .filter(char => char.isReadable)
+          //         .map(char => char.read())
+          //     );
+          //   })
+          //   .then(chars => {
+          //     console.log('reading values')
+          //     chars.forEach(c => {
+          //         if (c.value) {
+          //           // const val = Buffer.from(c.value, 'base64');
+          //           // const num = new DataView(val.buffer).getInt16(0)
+                    
+          //           console.log('Value of characteristic:', c.uuid, c.value, JSON.stringify({...c, '_manager': undefined}, null, 4))
+          //         }
+          //     });
+          //   })
+          //   .catch(console.error)
         }
         console.log('BLUETOOTH STATE:', s);
       }, true);
