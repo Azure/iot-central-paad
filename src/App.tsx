@@ -53,113 +53,59 @@ export default function App() {
   const [initialized, setInitialized] = useState(false);
   const bleManager = React.useRef<BleManager>();
 
-  React.useEffect(() => {
-    (async function() {
-      if (Platform.OS === 'android') {
-        console.log('REQUESTING PERMS');
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Bluetooth Permission',
-            message: `Application would like to use bluetooth and location permissions`,
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          },
-        );
-        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-          throw new Error("Permission rejected");
-        }
-      }
+  // React.useEffect(() => {
+  //   (async function() {
+  //     if (Platform.OS === 'android') {
+  //       console.log('REQUESTING PERMS');
+  //       const granted = await PermissionsAndroid.request(
+  //         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  //         {
+  //           title: 'Bluetooth Permission',
+  //           message: `Application would like to use bluetooth and location permissions`,
+  //           buttonNeutral: 'Ask Me Later',
+  //           buttonNegative: 'Cancel',
+  //           buttonPositive: 'OK',
+  //         },
+  //       );
+  //       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+  //         throw new Error("Permission rejected");
+  //       }
+  //     }
   
-      if (!bleManager.current) {
-        bleManager.current = new BleManager();
-      }
+  //     if (!bleManager.current) {
+  //       bleManager.current = new BleManager();
+  //     }
   
-      const sub = bleManager.current.onStateChange(s => {
-        if (s === State.PoweredOn) {
-          sub.remove();
-          console.log('connecting to device');
+  //     const sub = bleManager.current.onStateChange(s => {
+  //       if (s === State.PoweredOn) {
+  //         sub.remove();
+  //         console.log('connecting to device');
 
-          bleManager.current?.startDeviceScan(null, {scanMode: 2}, (e, device) => {
-            if (device?.name?.startsWith('Govee') && device.manufacturerData) {
-              // console.log('manufacturer data: ', device.manufacturerData);
-              const buf = Buffer.from(device.manufacturerData, 'base64');
-              if (buf.toString('ascii').includes('INTELLI_ROCKS')) {
-                return;
-              }
+  //         bleManager.current?.startDeviceScan(null, {scanMode: 2}, (e, device) => {
+  //           if (device?.name?.startsWith('Govee') && device.manufacturerData) {
+  //             // console.log('manufacturer data: ', device.manufacturerData);
+  //             const buf = Buffer.from(device.manufacturerData, 'base64');
+  //             if (buf.toString('ascii').includes('INTELLI_ROCKS')) {
+  //               return;
+  //             }
 
-              // 88 ec 00 14 09 3b 0e 64 02
-              // 0  1  2 [3  4] [5  6] [7]  8
-              //          ^      ^      ^
-              //          temp   hum    batt
+  //             // 88 ec 00 14 09 3b 0e 64 02
+  //             // 0  1  2 [3  4] [5  6] [7]  8
+  //             //          ^      ^      ^
+  //             //          temp   hum    batt
 
-              const temp = buf.readInt16LE(3) / 100;
-              const humidity = buf.readInt16LE(5) / 100;
-              const battery = buf.readUint8(7);
-              console.log(device.manufacturerData)
-              console.log({temp, humidity, battery});
-            }
-          });
-
-          // bleManager.current?.connectToDevice('A4:C1:38:CE:EE:BF', {})
-          // // bleManager.current?.connectToDevice('A0:38:F8:A7:28:D2')
-          //   .then(device => {
-          //     console.log('discovering')
-          //     return device.discoverAllServicesAndCharacteristics();
-          //   })
-          //   .then(device => {
-          //     console.log('reading services')
-          //     return device.services();
-          //   })
-          //   .then(services => {
-          //       console.log('mapping chars')
-          //       return Promise.all(services.map(s => s.characteristics()));
-          //   })
-          //   .then(chars => {
-          //     console.log('reading chars')
-          //     // chars.flat().forEach(c => {
-          //     //   console.log(JSON.stringify({...c, '_manager': undefined}, null, 4))
-          //     // })
-          //     return Promise.all(
-          //       chars
-          //         .flat()
-          //         // .forEach(c => {
-          //         //   if (c.isReadable && c.isNotifiable) {
-          //         //     console.log('Monitoring char', c.uuid)
-          //         //     c.monitor((e, char) => {
-          //         //       console.log('Notified by char', c.uuid)
-          //         //       if (e) {
-          //         //         console.error(e);
-          //         //       }
-  
-          //         //       if (char?.value) {
-          //         //         console.log('Char', char.uuid, char.value);
-          //         //       }
-          //         //     })
-          //         //   }
-          //         // })
-          //         .filter(char => char.isReadable)
-          //         .map(char => char.read())
-          //     );
-          //   })
-          //   .then(chars => {
-          //     console.log('reading values')
-          //     chars.forEach(c => {
-          //         if (c.value) {
-          //           // const val = Buffer.from(c.value, 'base64');
-          //           // const num = new DataView(val.buffer).getInt16(0)
-                    
-          //           console.log('Value of characteristic:', c.uuid, c.value, JSON.stringify({...c, '_manager': undefined}, null, 4))
-          //         }
-          //     });
-          //   })
-          //   .catch(console.error)
-        }
-        console.log('BLUETOOTH STATE:', s);
-      }, true);
-    })();
-  }, []);
+  //             const temp = buf.readInt16LE(3) / 100;
+  //             const humidity = buf.readInt16LE(5) / 100;
+  //             const battery = buf.readUint8(7);
+  //             // console.log(device.manufacturerData)
+  //             console.log({platform: Platform.OS, temp, humidity, battery, rssi: device.rssi});
+  //           }
+  //         });
+  //       }
+  //       console.log('BLUETOOTH STATE:', s);
+  //     }, true);
+  //   })();
+  // }, []);
 
   return (
     <ThemeProvider>

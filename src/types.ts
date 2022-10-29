@@ -16,6 +16,7 @@ export const Screens = {
   LOGS_SCREEN: 'Logs',
   HEALTH_SCREEN: 'Health',
   FILE_UPLOAD_SCREEN: 'Image Upload',
+  BLUETOOTH: 'Bluetooth',
 } as const;
 
 export const Pages = {

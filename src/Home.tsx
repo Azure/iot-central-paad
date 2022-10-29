@@ -45,6 +45,7 @@ import {
 import {DEFAULT_DELIVERY_INTERVAL} from './sensors';
 import {Icon} from '@rneui/themed';
 import {playTorch} from 'tools/Torch';
+import { BluetoothPage } from 'Bluetooth';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 
@@ -125,6 +126,10 @@ const Root = React.memo<{
         type: 'material-community',
       },
     }) as IIcon,
+    [Screens.BLUETOOTH]: {
+      name: 'bluetooth',
+      type: 'material-community',
+    },
   });
 
   const icons = iconsRef.current;
@@ -367,6 +372,21 @@ const Root = React.memo<{
                 />
               )}
         </Tab.Screen>
+
+        <Tab.Screen
+          name={Screens.BLUETOOTH}
+          component={BluetoothPage}
+          options={{
+            tabBarIcon: ({color, size}) => (
+              <TabBarIcon
+                icon={icons[Screens.BLUETOOTH]}
+                color={color}
+                size={size}
+              />
+            ),
+          }}
+        />
+
         <Tab.Screen
           name={Screens.FILE_UPLOAD_SCREEN}
           component={FileUpload}
