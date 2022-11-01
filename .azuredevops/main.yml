@@ -11,13 +11,13 @@ variables:
   - name: PAAD_BETARELEASE_VERSION_CODE
     value: 1
   - name: PAAD_BETARELEASE_VERSION_NAME
-    value: 1.0.7
+    value: 1.0.8
   - name: PAAD_RELEASE_PROJECT_NAME
     value: $(Project_Name)
   - name: PAAD_RELEASE_VERSION_CODE
     value: 1
   - name: PAAD_RELEASE_VERSION_NAME
-    value: 1.0.7
+    value: 1.0.8
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 stages:
