@@ -1,31 +1,31 @@
-import {BleError, BleManager as NativeBle, BleManagerOptions, Device, ScanOptions, UUID} from 'react-native-ble-plx';
+import {BleManager, BleManagerOptions, Device} from 'react-native-ble-plx';
+import {BleDeviceModel} from './devices/BleDevice';
+import {GenericDeviceModel} from './devices/GenericDevice';
+import {Govee5074Model} from './devices/Govee5074';
 
-type ScanCallback = (error: BleError | null, scannedDevice: Device | null) => void;
+const DeviceModels = new Set<BleDeviceModel>([Govee5074Model]);
 
-export class BleManager extends NativeBle {
-    protected constructor(options?: BleManagerOptions) {
-        super(options);
+export class IotcBleManager extends BleManager {
+  protected constructor(options?: BleManagerOptions) {
+    super(options);
+  }
+
+  private static instance: IotcBleManager;
+  public static getInstance(): IotcBleManager {
+    if (!this.instance) {
+      this.instance = new IotcBleManager();
     }
 
-    private static instance: BleManager;
-    public static getInstance(): BleManager {
-        if (!BleManager.instance) {
-            BleManager.instance = new BleManager();
-        }
-        return BleManager.instance;
+    return this.instance;
+  }
+
+  public getModelForDevice(device: Device): BleDeviceModel {
+    for (const model of DeviceModels.values()) {
+      if (model.matches(device)) {
+        return model;
+      }
     }
 
-    private scannedDevices: Device[] = [];
-    private deviceIds: Set<UUID> = new Set();
-
-    private scanCallback: ScanCallback = () => {};
-
-    // public async startDeviceScan(UUIDs: string[] | null, options: ScanOptions | null, listener: ScanCallback): void {
-    //     this.scanCallback = listener;
-
-
-    // }
-    public setScanCallback(callback: ScanCallback): void {
-        this.scanCallback = callback;
-    }
+    return GenericDeviceModel;
+  }
 }

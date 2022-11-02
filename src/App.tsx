@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import React, {useState, useEffect, useContext, useMemo} from 'react';
-import {View, Platform, ViewStyle, TextStyle, PermissionsAndroid} from 'react-native';
+import {View, Platform, ViewStyle, TextStyle} from 'react-native';
 import Settings from './Settings';
 import {
   NavigationContainer,
@@ -44,68 +44,11 @@ import Chart from 'Chart';
 import Strings from 'strings';
 import {Option} from 'components/options';
 import Options from 'components/options';
-import { BleManager, State } from 'react-native-ble-plx';
-import {Buffer} from 'buffer';
 
 const Stack = createStackNavigator<NavigationPages>();
 
 export default function App() {
   const [initialized, setInitialized] = useState(false);
-  const bleManager = React.useRef<BleManager>();
-
-  // React.useEffect(() => {
-  //   (async function() {
-  //     if (Platform.OS === 'android') {
-  //       console.log('REQUESTING PERMS');
-  //       const granted = await PermissionsAndroid.request(
-  //         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-  //         {
-  //           title: 'Bluetooth Permission',
-  //           message: `Application would like to use bluetooth and location permissions`,
-  //           buttonNeutral: 'Ask Me Later',
-  //           buttonNegative: 'Cancel',
-  //           buttonPositive: 'OK',
-  //         },
-  //       );
-  //       if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-  //         throw new Error("Permission rejected");
-  //       }
-  //     }
-  
-  //     if (!bleManager.current) {
-  //       bleManager.current = new BleManager();
-  //     }
-  
-  //     const sub = bleManager.current.onStateChange(s => {
-  //       if (s === State.PoweredOn) {
-  //         sub.remove();
-  //         console.log('connecting to device');
-
-  //         bleManager.current?.startDeviceScan(null, {scanMode: 2}, (e, device) => {
-  //           if (device?.name?.startsWith('Govee') && device.manufacturerData) {
-  //             // console.log('manufacturer data: ', device.manufacturerData);
-  //             const buf = Buffer.from(device.manufacturerData, 'base64');
-  //             if (buf.toString('ascii').includes('INTELLI_ROCKS')) {
-  //               return;
-  //             }
-
-  //             // 88 ec 00 14 09 3b 0e 64 02
-  //             // 0  1  2 [3  4] [5  6] [7]  8
-  //             //          ^      ^      ^
-  //             //          temp   hum    batt
-
-  //             const temp = buf.readInt16LE(3) / 100;
-  //             const humidity = buf.readInt16LE(5) / 100;
-  //             const battery = buf.readUint8(7);
-  //             // console.log(device.manufacturerData)
-  //             console.log({platform: Platform.OS, temp, humidity, battery, rssi: device.rssi});
-  //           }
-  //         });
-  //       }
-  //       console.log('BLUETOOTH STATE:', s);
-  //     }, true);
-  //   })();
-  // }, []);
 
   return (
     <ThemeProvider>

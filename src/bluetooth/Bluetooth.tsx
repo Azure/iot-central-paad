@@ -14,11 +14,10 @@ import {
   PermissionsAndroid,
 } from 'react-native';
 import {Device, State, UUID} from 'react-native-ble-plx';
-import {BleManager} from './BleManager';
-import {Pages} from 'types';
+import {IotcBleManager} from './BleManager';
+import {ItemProps, Pages} from 'types';
 import {Loader, Text} from '../components';
-import {useTheme} from '../hooks';
-import {Buffer} from 'buffer';
+import {useIoTCentralClient, useTheme} from '../hooks';
 import CardView from 'CardView';
 
 type BluetoothStackParamList = {
@@ -160,7 +159,7 @@ function useBluetoothDevicesList(shouldScan: boolean) {
           throw new Error('Permission rejected');
         }
       }
-      const bleManager = BleManager.getInstance();
+      const bleManager = IotcBleManager.getInstance();
 
       const sub = bleManager.onStateChange(s => {
         if (s === State.PoweredOn) {
@@ -168,14 +167,7 @@ function useBluetoothDevicesList(shouldScan: boolean) {
 
           bleManager.startDeviceScan(null, {scanMode: 2}, (e, device) => {
             if (e) {
-              console.error(
-                e,
-                e.message,
-                e.reason,
-                e.androidErrorCode,
-                e.errorCode,
-                e.attErrorCode,
-              );
+              console.error(e);
             }
 
             if (!device?.name) {
@@ -197,132 +189,66 @@ function useBluetoothDevicesList(shouldScan: boolean) {
   return {devices};
 }
 
-function tempEnable(_value?: boolean) {}
-function tempSendInterval(_i: number) {}
-
 function BluetoothDetail({
   route: {
     params: {deviceId},
   },
 }: StackScreenProps<BluetoothStackParamList, typeof Pages.BLUETOOTH_DETAIL>) {
-  //   const [device, setDevice] = React.useState<Device>();
-  const [data, setData] = React.useState<any>(null);
+  const [[items, deviceName], setData] = React.useState<
+    [ItemProps[] | null, string]
+  >(() => [null, '']);
+  const [iotcentralClient] = useIoTCentralClient();
 
-  const onDeviceRead = React.useCallback((device: Device) => {
-    if (device?.name?.startsWith('Govee') && device.manufacturerData) {
-      const buf = Buffer.from(device.manufacturerData, 'base64');
-      if (buf.toString('ascii').includes('INTELLI_ROCKS')) {
+  React.useEffect(() => {
+    const bleManager = IotcBleManager.getInstance();
+
+    bleManager.startDeviceScan(null, {scanMode: 2}, (error, device) => {
+      if (error) {
+        console.error(error);
+      }
+
+      if (device?.id !== deviceId) {
         return;
       }
 
-      // 88 ec 00 14 09 3b 0e 64 02
-      // 0  1  2 [3  4] [5  6] [7]  8
-      //          ^      ^      ^
-      //          temp   hum    batt
-
-      const temp = buf.readInt16LE(3) / 100;
-      const humidity = buf.readInt16LE(5) / 100;
-      const battery = buf.readUint8(7);
-
-      setData({
-        name: device.name,
-        temp,
-        humidity,
-        battery,
-        rssi: device.rssi,
-      });
-    } else if (device.manufacturerData) {
-      setData({
-        name: device.name,
-        rssi: device.rssi,
-      });
-    }
-  }, []);
-
-  React.useEffect(() => {
-    const bleManager = BleManager.getInstance();
-    bleManager.startDeviceScan(null, {scanMode: 2}, (e, d) => {
-      if (e) {
-        console.error(e);
+      const model = bleManager.getModelForDevice(device);
+      if (!model) {
+        // Default behavior for unmodelled device
+        return;
       }
 
-      if (d?.id === deviceId) {
-        onDeviceRead(d);
+      const deviceData = model.onScan(device);
+      if (!deviceData) {
+        return;
       }
+
+      const itemProps = model.getItemProps(deviceData);
+
+      iotcentralClient?.sendTelemetry(deviceData);
+      iotcentralClient?.sendProperty({bleDeviceName: device.name});
+
+      setData([
+        itemProps.map(item => ({
+          ...item,
+          sendInterval(_value) {},
+          enable(_value) {},
+        })),
+        device.name ?? '',
+      ]);
     });
-  }, [deviceId, onDeviceRead]);
+  }, [deviceId, iotcentralClient]);
 
-  if (!data) {
+  if (!(deviceName && items)) {
     return <Loader visible message="Scanning for device" />;
   }
 
   return (
     <>
       <Text style={{fontSize: 20, textAlign: 'center', marginTop: 10}}>
-        {data.name}
+        {deviceName}
       </Text>
-      <CardView
-        items={[
-          data.temp && {
-            id: 'temp',
-            name: 'Temperature',
-            enabled: true,
-            simulated: false,
-            enable: tempEnable,
-            sendInterval: tempSendInterval,
-            dataType: 'number',
-            value: data.temp,
-            unit: '°C',
-          },
-          data.humidity && {
-            id: 'humidity',
-            name: 'Humidity',
-            enabled: true,
-            simulated: false,
-            enable: tempEnable,
-            sendInterval: tempSendInterval,
-            dataType: 'number',
-            value: data.humidity,
-            unit: '%',
-          },
-          {
-            id: 'rssi',
-            name: 'RSSI',
-            enabled: true,
-            simulated: false,
-            enable: tempEnable,
-            sendInterval: tempSendInterval,
-            dataType: 'number',
-            value: data.rssi,
-            unit: 'dBm',
-          },
-          data.battery && {
-            id: 'battery',
-            name: 'Battery',
-            enabled: true,
-            simulated: false,
-            enable: tempEnable,
-            sendInterval: tempSendInterval,
-            dataType: 'number',
-            value: data.battery,
-            unit: '%',
-          },
-        ].filter(Boolean)}
-      />
+      <CardView items={items} />
     </>
-    // <View>
-    //     <Text>{device.name}</Text>
-    //     { data !== null &&
-    //         <>
-    //             <Text>Temperature: {data.temp} °C</Text>
-    //             <Text>Humidity: {data.humidity}%</Text>
-    //             <Text>Battery: {data.battery}%</Text>
-    //             <Text>RSSI: {data.rssi}</Text>
-    //             <Text>TX Power Level: {data.tx}</Text>
-    //         </>
-    //     }
-    //     <Text></Text>
-    // </View>
   );
 }
 
