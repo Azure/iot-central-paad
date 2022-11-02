@@ -45,7 +45,7 @@ import {
 import {DEFAULT_DELIVERY_INTERVAL} from './sensors';
 import {Icon} from '@rneui/themed';
 import {playTorch} from 'tools/Torch';
-import { BluetoothPage } from 'bluetooth/Bluetooth';
+import {BluetoothPage} from 'bluetooth/Bluetooth';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 
