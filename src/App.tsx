@@ -79,6 +79,8 @@ const Navigation = React.memo(() => {
   const [connect, cancel, , {client, loading}] = useConnectIoTCentralClient();
   const [simulated] = useSimulation();
 
+  const {colors} = useTheme();
+
   useEffect(() => {
     if (credentials && initialized && !client) {
       connect(credentials, {restore: true});
@@ -100,7 +102,15 @@ const Navigation = React.memo(() => {
           ) {
             return {
               ...defaultOptions,
-              headerTitle: () => null,
+              headerTitle: () => (
+                <Text style={{
+                  ...styles.logoText,
+                  color: colors.text,
+                }}>
+                  {Strings.Title}
+                </Text>
+              ),
+              headerTitleAlign: 'left',
               headerLeft: () => <Logo />,
               headerRight: () => <Profile navigate={navigation.navigate} />,
             };
@@ -219,24 +229,16 @@ const Navigation = React.memo(() => {
   );
 });
 
-const Logo = React.memo(() => {
+const Logo = React.memo(function Logo() {
   const {colors, dark} = useTheme();
-  const textStyle = useMemo<ViewStyle | TextStyle>(
-    () => ({
-      ...styles.logoText,
-      color: colors.text,
-    }),
-    [colors.text],
-  );
 
   return (
     <View style={styles.logoContainer}>
-      {dark ? (
-        <LogoDark width={30} fill={colors.primary} />
-      ) : (
-        <LogoLight width={30} fill={colors.primary} />
-      )}
-      <Text style={textStyle}>{Strings.Title}</Text>
+        {dark ? (
+          <LogoDark width={30} fill={colors.primary} />
+        ) : (
+          <LogoLight width={30} fill={colors.primary} />
+        )}
     </View>
   );
 });
@@ -271,7 +273,6 @@ const styles: Literal<ViewStyle | TextStyle> = {
     marginHorizontal: 10,
   },
   logoText: {
-    marginStart: 10,
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 0.1,
