@@ -1,0 +1,164 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/azure-pipelines-vscode/main/service-schema.json
+pool:
+  vmImage: 'macOS-12'
+
+variables:
+  - name: isMaster
+    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+  - group: iotc-paad-android
+  - name: PAAD_BETARELEASE_PROJECT_NAME
+    value: $(Project_Name)
+  - name: PAAD_BETARELEASE_VERSION_CODE
+    value: 1
+  - name: PAAD_BETARELEASE_VERSION_NAME
+    value: 1.0.8
+  - name: PAAD_RELEASE_PROJECT_NAME
+    value: $(Project_Name)
+  - name: PAAD_RELEASE_VERSION_CODE
+    value: 1
+  - name: PAAD_RELEASE_VERSION_NAME
+    value: 1.0.8
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+stages:
+  - stage: Android
+    dependsOn: []
+    jobs:
+      - job: Android_Beta
+        steps:        
+          - template: ./node-build.yml
+
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '11'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          - task: DownloadSecureFile@1
+            name: androidKeystore
+            inputs:
+              secureFile: iotc-paad.keystore
+
+          - bash: |
+              PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
+              echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
+              echo "Using variable: $GOOGLE_MAPS_API_KEY"
+              echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
+              cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
+              ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
+            env:
+              GOOGLE_MAPS_KEY: $(googlemapskey)
+          - bash: env | sort
+
+          - task: Gradle@2
+            inputs:
+              workingDirectory: 'android'
+              gradleWrapperFile: 'android/gradlew'
+              gradleOptions: '-Xmx3072m'
+              publishJUnitResults: false
+              testResultsFiles: '**/TEST-*.xml'
+              tasks: 'assembleBetaRelease'
+
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish Build Artifact"
+            inputs:
+              PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
+              ArtifactName: 'android'
+              publishLocation: 'Container'
+
+  - stage: iOS
+    dependsOn: []
+    jobs:
+      - job: iOS_Beta
+        timeoutInMinutes: 120
+        variables:
+          rootPath: '$(System.DefaultWorkingDirectory)'
+          agentName: $[ dependencies.Setup.outputs['passOutput.AgentName'] ]
+          archivePath: '$(rootPath)/output/archive'
+          exportPath: '$(rootPath)/output/export'
+          xcodeDeveloperDir: '/Applications/Xcode_13.3.1.app/Contents/Developer'
+          xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
+          zipToSign: '$(exportPath)/$(Project_Name).zip'
+          signedZip: '$(exportPath)/$(Project_Name).zip'
+          unsignedIpa: '$(exportPath)/$(Project_Name).ipa'
+          signedExtractedPath: '$(exportPath)/signed'
+        steps:
+          - task: UseRubyVersion@0
+            inputs:
+              versionSpec: '< 2.8'
+          
+          - bash: gem install bundler cocoapods
+
+          - template: ./node-build.yml
+          - bash: npm run podinstall
+
+          - task: InstallAppleCertificate@2
+            inputs:
+              certSecureFile: '$(iOS_Dogfood_Development_Cert_Name)'
+              certPwd: '$(iOS_Dogfood_Development_Cert_Password)'
+              keychain: 'temp'
+
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provisioningProfileLocation: 'secureFiles'
+              provProfileSecureFile: '$(iOS_Dogfood_Development_Profile)'
+          
+          - task: DownloadSecureFile@1
+            displayName: 'Download distribution profile from Azure secure files storage'
+            inputs:
+              secureFile: '$(iOS_Dogfood_Distribution_Profile)'
+              retryCount: 5
+          
+          - task: DownloadSecureFile@1
+            displayName: 'Download dev exportoptions'
+            inputs:
+              secureFile: '$(iOS_Dogfood_Development_ExportOptions)'
+              retryCount: 5
+
+          - task: DownloadSecureFile@1
+            displayName: 'Download distribution exportoptions'
+            inputs:
+              secureFile: '$(iOS_Dogfood_ExportOptions)'
+              retryCount: 5
+
+          - task: CopyFiles@2
+            displayName: 'Copy distribution provisioning profile'
+            inputs:
+              SourceFolder: '$(Agent.TempDirectory)'
+              Contents: '$(iOS_Dogfood_Distribution_Profile)'
+              TargetFolder: '$(exportPath)'
+              flattenFolders: true
+          
+          - task: CopyFiles@2
+            displayName: 'Copy dev exportoptions'
+            inputs:
+              SourceFolder: '$(Agent.TempDirectory)'
+              Contents: '$(iOS_Dogfood_Development_ExportOptions)'
+              TargetFolder: '$(exportPath)'
+              flattenFolders: true
+
+          - task: CopyFiles@2
+            displayName: 'Copy distribution exportoptions'
+            inputs:
+              SourceFolder: '$(Agent.TempDirectory)'
+              Contents: '$(iOS_Dogfood_ExportOptions)'
+              TargetFolder: '$(exportPath)'
+              flattenFolders: true
+
+          - bash: mv $(exportPath)/$(iOS_Dogfood_ExportOptions) $(exportPath)/ExportOptions.plist
+
+          - task: Xcode@5
+            displayName: 'Build Mobile Application'
+            inputs:
+              actions: 'build'
+              configuration: 'Dogfood'
+              xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
+              scheme: '$(Project_Name)_Dogfood'
+              sdk: 'iphoneos15.4'
+              useXcpretty: false
+              signingOption: 'manual'
+              signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+              provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+              packageApp: false
+              xcodeVersion: 'specifyPath'
+              xcodeDeveloperDir: '$(xcodeDeveloperDir)'
