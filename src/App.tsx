@@ -1,19 +1,21 @@
+/* eslint-disable react/no-unstable-nested-components */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, {useState, useEffect, useContext, useMemo} from 'react';
-import {View, Platform, ViewStyle, TextStyle} from 'react-native';
+import React, {useState, useEffect, useContext} from 'react';
+import {View, Platform, StyleSheet} from 'react-native';
 import Settings from './Settings';
 import {
   NavigationContainer,
   DarkTheme,
   DefaultTheme,
+  getFocusedRouteNameFromRoute,
 } from '@react-navigation/native';
 import {
   NavigationParams,
   Pages,
   NavigationPages,
-  Literal,
+  Screens,
   // ChartType,
 } from 'types';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
@@ -92,6 +94,7 @@ const Navigation = React.memo(() => {
       <Stack.Navigator
         initialRouteName={simulated ? Pages.ROOT : Pages.REGISTRATION}
         screenOptions={({navigation, route}) => {
+          // console.log(getFocusedRouteNameFromRoute(route));
           const defaultOptions = {
             gestureEnabled: false,
             headerBackTitleVisible: false,
@@ -102,17 +105,24 @@ const Navigation = React.memo(() => {
           ) {
             return {
               ...defaultOptions,
+              headerShown:
+                getFocusedRouteNameFromRoute(route) !== Screens.BLUETOOTH_STACK,
               headerTitle: () => (
-                <Text style={{
-                  ...styles.logoText,
-                  color: colors.text,
-                }}>
+                <Text
+                  style={{
+                    ...styles.logoText,
+                    color: colors.text,
+                  }}>
                   {Strings.Title}
                 </Text>
               ),
               headerTitleAlign: 'left',
               headerLeft: () => <Logo />,
-              headerRight: () => <Profile navigate={navigation.navigate} />,
+              headerRight: () => (
+                <View style={styles.headerButtons}>
+                  <Profile navigate={navigation.navigate} />
+                </View>
+              ),
             };
           }
           return defaultOptions;
@@ -229,21 +239,21 @@ const Navigation = React.memo(() => {
   );
 });
 
-const Logo = React.memo(function Logo() {
+export const Logo = React.memo(function Logo() {
   const {colors, dark} = useTheme();
 
   return (
     <View style={styles.logoContainer}>
-        {dark ? (
-          <LogoDark width={30} fill={colors.primary} />
-        ) : (
-          <LogoLight width={30} fill={colors.primary} />
-        )}
+      {dark ? (
+        <LogoDark width={30} fill={colors.primary} />
+      ) : (
+        <LogoLight width={30} fill={colors.primary} />
+      )}
     </View>
   );
 });
 
-const Profile = React.memo((props: {navigate: any}) => {
+export const Profile = React.memo((props: {navigate: any}) => {
   const {colors} = useTheme();
   return (
     <View style={styles.marginHorizontal10}>
@@ -265,7 +275,7 @@ const Profile = React.memo((props: {navigate: any}) => {
   );
 });
 
-const styles: Literal<ViewStyle | TextStyle> = {
+export const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -283,4 +293,10 @@ const styles: Literal<ViewStyle | TextStyle> = {
   marginEnd20: {
     marginEnd: 20,
   },
-};
+  marginEnd10: {
+    marginEnd: 10,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+  },
+});

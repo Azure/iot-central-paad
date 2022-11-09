@@ -1,10 +1,7 @@
+/* eslint-disable react/no-unstable-nested-components */
 import {NavigationProp} from '@react-navigation/native';
-import {
-  createStackNavigator,
-  StackNavigationOptions,
-  StackScreenProps,
-} from '@react-navigation/stack';
-import {ListItem} from '@rneui/themed';
+import {createStackNavigator, StackScreenProps} from '@react-navigation/stack';
+import {Icon, ListItem} from '@rneui/themed';
 import * as React from 'react';
 import {
   View,
@@ -12,6 +9,8 @@ import {
   StyleSheet,
   Platform,
   PermissionsAndroid,
+  TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import {Device, State, UUID} from 'react-native-ble-plx';
 import {IotcBleManager} from './BleManager';
@@ -19,6 +18,8 @@ import {ItemProps, Pages} from 'types';
 import {Loader, Text} from '../components';
 import {useIoTCentralClient, useTheme} from '../hooks';
 import CardView from 'CardView';
+import {Logo, Profile, styles as appStyles} from 'App';
+import Strings from 'strings';
 
 type BluetoothStackParamList = {
   [Pages.BLUETOOTH_LIST]: undefined;
@@ -28,26 +29,46 @@ type BluetoothStackParamList = {
 };
 
 const BluetoothStack = createStackNavigator<BluetoothStackParamList>();
-const CommonScreenOptions: StackNavigationOptions = {
-  headerShown: false,
-};
 
 interface BluetoothPageProps {
   navigation: NavigationProp<ReactNavigation.RootParamList>;
 }
 
 export function BluetoothPage(_props: BluetoothPageProps) {
+  const {colors} = useTheme();
+
   return (
-    <BluetoothStack.Navigator initialRouteName={Pages.BLUETOOTH_LIST}>
+    <BluetoothStack.Navigator
+      initialRouteName={Pages.BLUETOOTH_LIST}
+      screenOptions={({navigation, route}) => {
+        return {
+          headerTitle: () => (
+            <Text
+              style={{
+                ...appStyles.logoText,
+                color: colors.text,
+              }}>
+              {Strings.Title}
+            </Text>
+          ),
+          headerTitleAlign: 'left',
+          headerLeft: () => <Logo />,
+          headerRight: () => (
+            <View style={appStyles.headerButtons}>
+              {route.name === Pages.BLUETOOTH_LIST && <ReloadButton />}
+              <Profile navigate={navigation.navigate} />
+            </View>
+          ),
+        };
+      }}>
       <BluetoothStack.Screen
         name={Pages.BLUETOOTH_LIST}
         component={BluetoothList}
-        options={CommonScreenOptions}
       />
       <BluetoothStack.Screen
         name={Pages.BLUETOOTH_DETAIL}
         component={BluetoothDetail}
-        options={CommonScreenOptions}
+        // options={CommonScreenOptions}
       />
     </BluetoothStack.Navigator>
   );
@@ -88,6 +109,15 @@ function BluetoothList({navigation}: BluetoothListProps) {
             navigation={navigation}
           />
         )}
+        onRefresh={() => IotcBleManager.getInstance().resetDeviceList()}
+        refreshing={devices.length === 0}
+        refreshControl={
+          <RefreshControl
+            refreshing={devices.length === 0}
+            onRefresh={() => IotcBleManager.getInstance().resetDeviceList()}
+            colors={[colors.text]}
+          />
+        }
       />
     </View>
   );
@@ -105,37 +135,46 @@ function BluetoothDeviceListItem({
   navigation,
 }: BluetoothDeviceListItemProps) {
   return (
-    <ListItem
+    <TouchableOpacity
       onPress={_e => {
         navigation.navigate(Pages.BLUETOOTH_DETAIL, {deviceId: item.id});
-      }}
-      bottomDivider
-      style={{
-        backgroundColor: colors.card,
       }}>
-      <ListItem.Content
-        style={{
-          ...styles.item,
-          backgroundColor: colors.card,
-        }}>
-        <ListItem.Title style={{color: colors.text}}>
-          {item.name}
-        </ListItem.Title>
-        <ListItem.Subtitle style={{color: colors.text}}>
-          {item.id}
-        </ListItem.Subtitle>
-      </ListItem.Content>
-    </ListItem>
+      <ListItem bottomDivider containerStyle={{backgroundColor: colors.card}}>
+        <ListItem.Content
+          style={{
+            ...styles.item,
+            backgroundColor: colors.card,
+          }}>
+          <ListItem.Title style={{...styles.itemTitle, color: colors.text}}>
+            {item.name}
+          </ListItem.Title>
+
+          <ListItem.Subtitle
+            style={{...styles.subtitleContainer, color: colors.text}}>
+            <View style={styles.subtitleContent}>
+              <Icon
+                name="signal"
+                type="material-community"
+                color={colors.text}
+              />
+              <Text style={styles.rssiText}>{item.rssi} dBm</Text>
+            </View>
+          </ListItem.Subtitle>
+        </ListItem.Content>
+      </ListItem>
+    </TouchableOpacity>
   );
 }
 
 function useBluetoothDevicesList(shouldScan: boolean) {
   const [devices, setDevices] = React.useState<Device[]>([]);
-  const seenIds = React.useRef<Set<string> | null>(null);
+  const deviceMap = React.useRef<Map<UUID, Device> | null>(null);
 
-  if (seenIds.current === null) {
-    seenIds.current = new Set();
+  if (deviceMap.current === null) {
+    deviceMap.current = new Map();
   }
+
+  const bleManager = IotcBleManager.getInstance();
 
   React.useEffect(() => {
     async function scan() {
@@ -159,7 +198,6 @@ function useBluetoothDevicesList(shouldScan: boolean) {
           throw new Error('Permission rejected');
         }
       }
-      const bleManager = IotcBleManager.getInstance();
 
       const sub = bleManager.onStateChange(s => {
         if (s === State.PoweredOn) {
@@ -174,17 +212,20 @@ function useBluetoothDevicesList(shouldScan: boolean) {
               return;
             }
 
-            if (!seenIds.current?.has(device.id)) {
-              seenIds.current?.add(device.id);
-              setDevices(prev => [...prev, device]);
-            }
+            deviceMap.current?.set(device.id, device);
+            setDevices(Array.from(deviceMap.current?.values() ?? []));
           });
         }
       }, true);
     }
 
+    bleManager.setResetDeviceListCallback(() => {
+      deviceMap.current?.clear();
+      setDevices([]);
+    });
+
     scan().catch(console.error);
-  }, [setDevices, shouldScan]);
+  }, [bleManager, setDevices, shouldScan]);
 
   return {devices};
 }
@@ -239,14 +280,16 @@ function BluetoothDetail({
   }, [deviceId, iotcentralClient]);
 
   if (!(deviceName && items)) {
-    return <Loader visible message="Scanning for device" />;
+    return (
+      <View style={styles.listLoaderContainer}>
+        <Loader visible message="Scanning for device" style={styles.loader} />
+      </View>
+    );
   }
 
   return (
     <>
-      <Text style={{fontSize: 20, textAlign: 'center', marginTop: 10}}>
-        {deviceName}
-      </Text>
+      <Text style={styles.deviceName}>{deviceName}</Text>
       <CardView items={items} />
     </>
   );
@@ -258,8 +301,61 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   item: {
-    padding: 10,
     fontSize: 18,
     height: 60,
   },
+  itemTitle: {
+    fontWeight: 'bold',
+  },
+  marginEnd10: {
+    marginEnd: 10,
+  },
+  deviceName: {
+    fontSize: 20,
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  subtitleContainer: {
+    marginTop: 10,
+  },
+  subtitleContent: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginTop: 0,
+  },
+  rssiText: {
+    marginStart: 5,
+  },
+  listLoaderContainer: {
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loader: {
+    width: '75%',
+  },
 });
+
+function ReloadButton() {
+  const {colors} = useTheme();
+  return (
+    <View>
+      <Icon
+        style={styles.marginEnd10}
+        name={
+          Platform.select({
+            ios: 'reload-outline',
+            android: 'reload',
+          }) as string
+        }
+        type={Platform.select({ios: 'ionicon', android: 'material'})}
+        color={colors.text}
+        onPress={() => {
+          IotcBleManager.getInstance().resetDeviceList();
+        }}
+      />
+    </View>
+  );
+}

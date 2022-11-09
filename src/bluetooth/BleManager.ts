@@ -11,6 +11,8 @@ export class IotcBleManager extends BleManager {
   }
 
   private static instance: IotcBleManager;
+  private resetDeviceListCallback: () => void = () => {};
+
   public static getInstance(): IotcBleManager {
     if (!this.instance) {
       this.instance = new IotcBleManager();
@@ -27,5 +29,13 @@ export class IotcBleManager extends BleManager {
     }
 
     return GenericDeviceModel;
+  }
+
+  public resetDeviceList(): void {
+    this.resetDeviceListCallback?.();
+  }
+
+  public setResetDeviceListCallback(callback: () => void) {
+    this.resetDeviceListCallback = callback;
   }
 }

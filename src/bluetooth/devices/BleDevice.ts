@@ -15,6 +15,9 @@ export interface BleDeviceModel<DataType = any> {
    * (Some devices use multiple advertisement formats and not all of them contain sensor data)
    */
   onScan(device: Device): DataType | null;
+  /**
+   * Map the data read in `onScan` into `itemProps` so it can be displayed in the app's UI
+   */
   getItemProps(data: DataType): DeviceItemProps[];
 }
 
