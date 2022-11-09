@@ -15,5 +15,5 @@ jobs:
           uses: Azure/pipelines@v1
           with:
             azure-devops-project-url: https://msazure.visualstudio.com/One
-            azure-pipeline-name: 'iotc-paad'
+            azure-pipeline-name: 'iot-central-paad'
             azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
