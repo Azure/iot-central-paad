@@ -295,6 +295,23 @@ function BluetoothDetail({
   );
 }
 
+function ReloadButton() {
+  const {colors} = useTheme();
+  return (
+    <View>
+      <Icon
+        style={styles.marginEnd10}
+        name="reload"
+        type={Platform.select({ios: 'ionicon', android: 'material-community'})}
+        color={colors.text}
+        onPress={() => {
+          IotcBleManager.getInstance().resetDeviceList();
+        }}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -337,25 +354,3 @@ const styles = StyleSheet.create({
     width: '75%',
   },
 });
-
-function ReloadButton() {
-  const {colors} = useTheme();
-  return (
-    <View>
-      <Icon
-        style={styles.marginEnd10}
-        name={
-          Platform.select({
-            ios: 'reload-outline',
-            android: 'reload',
-          }) as string
-        }
-        type={Platform.select({ios: 'ionicon', android: 'material'})}
-        color={colors.text}
-        onPress={() => {
-          IotcBleManager.getInstance().resetDeviceList();
-        }}
-      />
-    </View>
-  );
-}
