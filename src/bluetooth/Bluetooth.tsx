@@ -24,6 +24,7 @@ type BluetoothStackParamList = {
   [Pages.BLUETOOTH_LIST]: undefined;
   [Pages.BLUETOOTH_DETAIL]: {
     deviceId: UUID;
+    deviceName: string;
   };
 };
 
@@ -36,6 +37,8 @@ export function BluetoothPage() {
     <BluetoothStack.Navigator
       initialRouteName={Pages.BLUETOOTH_LIST}
       screenOptions={({navigation, route}) => {
+        const isListPage: boolean = route.name === Pages.BLUETOOTH_LIST;
+
         return {
           headerTitle: () => (
             <Text
@@ -43,16 +46,15 @@ export function BluetoothPage() {
                 ...appStyles.logoText,
                 color: colors.text,
               }}>
-              {Strings.Title}
+              {isListPage ? Strings.Title : route.params?.deviceName ?? ''}
             </Text>
           ),
           headerTitleAlign: 'left',
-          headerLeft:
-            route.name === Pages.BLUETOOTH_LIST ? () => <Logo /> : undefined,
+          headerLeft: isListPage ? () => <Logo /> : undefined,
           headerBackTitleVisible: false,
           headerRight: () => (
             <View style={appStyles.headerButtons}>
-              {route.name === Pages.BLUETOOTH_LIST && <ReloadButton />}
+              {isListPage && <ReloadButton />}
               <Profile navigate={navigation.navigate} />
             </View>
           ),
@@ -133,7 +135,10 @@ function BluetoothDeviceListItem({
   return (
     <TouchableOpacity
       onPress={_e => {
-        navigation.navigate(Pages.BLUETOOTH_DETAIL, {deviceId: item.id});
+        navigation.navigate(Pages.BLUETOOTH_DETAIL, {
+          deviceId: item.id,
+          deviceName: item.name ?? '',
+        });
       }}>
       <ListItem bottomDivider containerStyle={{backgroundColor: colors.card}}>
         <ListItem.Content
@@ -226,14 +231,17 @@ function useBluetoothDevicesList(shouldScan: boolean) {
   return {devices};
 }
 
+type BluetoothDetailProps = StackScreenProps<
+  BluetoothStackParamList,
+  typeof Pages.BLUETOOTH_DETAIL
+>;
+
 function BluetoothDetail({
   route: {
-    params: {deviceId},
+    params: {deviceId, deviceName},
   },
-}: StackScreenProps<BluetoothStackParamList, typeof Pages.BLUETOOTH_DETAIL>) {
-  const [[items, deviceName], setData] = React.useState<
-    [ItemProps[] | null, string]
-  >(() => [null, '']);
+}: BluetoothDetailProps) {
+  const [items, setData] = React.useState<ItemProps[] | null>(() => null);
   const [iotcentralClient] = useIoTCentralClient();
 
   React.useEffect(() => {
@@ -249,10 +257,6 @@ function BluetoothDetail({
       }
 
       const model = bleManager.getModelForDevice(device);
-      if (!model) {
-        // Default behavior for unmodelled device
-        return;
-      }
 
       const deviceData = model.onScan(device);
       if (!deviceData) {
@@ -264,14 +268,13 @@ function BluetoothDetail({
       iotcentralClient?.sendTelemetry(deviceData);
       iotcentralClient?.sendProperty({bleDeviceName: device.name});
 
-      setData([
+      setData(
         itemProps.map(item => ({
           ...item,
           sendInterval(_value) {},
           enable(_value) {},
         })),
-        device.name ?? '',
-      ]);
+      );
     });
   }, [deviceId, iotcentralClient]);
 
@@ -285,7 +288,6 @@ function BluetoothDetail({
 
   return (
     <>
-      <Text style={styles.deviceName}>{deviceName}</Text>
       <CardView items={items} />
     </>
   );
