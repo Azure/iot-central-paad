@@ -1,5 +1,4 @@
 /* eslint-disable react/no-unstable-nested-components */
-import {NavigationProp} from '@react-navigation/native';
 import {createStackNavigator, StackScreenProps} from '@react-navigation/stack';
 import {Icon, ListItem} from '@rneui/themed';
 import * as React from 'react';
@@ -30,11 +29,7 @@ type BluetoothStackParamList = {
 
 const BluetoothStack = createStackNavigator<BluetoothStackParamList>();
 
-interface BluetoothPageProps {
-  navigation: NavigationProp<ReactNavigation.RootParamList>;
-}
-
-export function BluetoothPage(_props: BluetoothPageProps) {
+export function BluetoothPage() {
   const {colors} = useTheme();
 
   return (
@@ -52,7 +47,9 @@ export function BluetoothPage(_props: BluetoothPageProps) {
             </Text>
           ),
           headerTitleAlign: 'left',
-          headerLeft: () => <Logo />,
+          headerLeft:
+            route.name === Pages.BLUETOOTH_LIST ? () => <Logo /> : undefined,
+          headerBackTitleVisible: false,
           headerRight: () => (
             <View style={appStyles.headerButtons}>
               {route.name === Pages.BLUETOOTH_LIST && <ReloadButton />}
@@ -68,7 +65,6 @@ export function BluetoothPage(_props: BluetoothPageProps) {
       <BluetoothStack.Screen
         name={Pages.BLUETOOTH_DETAIL}
         component={BluetoothDetail}
-        // options={CommonScreenOptions}
       />
     </BluetoothStack.Navigator>
   );
