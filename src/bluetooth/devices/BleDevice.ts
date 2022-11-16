@@ -5,6 +5,8 @@ export interface BleDeviceModel<DataType = any> {
   /**
    * Return true if the given device matches this model, false if not
    * `onScan` will only be called for this device if it matches according to this function
+   * Often this will be based on the name of the device but it can also be based on the
+   * bytes of the advertisement packet as well.
    */
   matches(device: Device): boolean;
   /**
