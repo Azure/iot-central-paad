@@ -11,7 +11,7 @@ The Bluetooth feature of the Azure IoT PaaD application allows you to read data 
 1. The app will start scanning for BLE devices nearby. Once they are found, they will show in the list.
 1. Tapping on a device will bring you to a detail view where you can see the data read from the device.
 Every time this data updates, it will be sent as a telemetry message.
-    - For most devices, the only data read will be the RSSI (signal strength). See below to learn how to read specific data from your own BLE sensor.
+    - For most devices, the only data read will be the RSSI (signal strength). See below to learn how to read specific data from your own BLE sensor by implementing the provided interface for your device.
 
 ## Implementing devices
 
