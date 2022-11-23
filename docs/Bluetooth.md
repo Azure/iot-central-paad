@@ -15,7 +15,7 @@ Every time this data updates, it will be sent as a telemetry message.
 
 ## Implementing devices
 
-    Note: Currently, the PaaD application supports reading data from BLE advertisements only. It does not support the BLE connection mechanism, nor reading/writing data to/from characteristics or services.
+    Note: Currently, the PaaD application supports reading data from BLE advertisements only. It does not support the BLE connection mechanism, nor reading/writing data to/from BLE characteristics or services.
 
 ### Implementation structure
 
