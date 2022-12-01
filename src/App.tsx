@@ -94,7 +94,6 @@ const Navigation = React.memo(() => {
       <Stack.Navigator
         initialRouteName={simulated ? Pages.ROOT : Pages.REGISTRATION}
         screenOptions={({navigation, route}) => {
-          // console.log(getFocusedRouteNameFromRoute(route));
           const defaultOptions = {
             gestureEnabled: false,
             headerBackTitleVisible: false,
