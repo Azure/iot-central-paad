@@ -16,6 +16,7 @@ export const Screens = {
   LOGS_SCREEN: 'Logs',
   HEALTH_SCREEN: 'Health',
   FILE_UPLOAD_SCREEN: 'Image Upload',
+  BLUETOOTH_STACK: 'Bluetooth',
 } as const;
 
 export const Pages = {
@@ -25,6 +26,8 @@ export const Pages = {
   INTERVAL: 'Interval',
   THEME: 'Theme',
   SETTINGS: 'Settings',
+  BLUETOOTH_LIST: 'Bluetooth List',
+  BLUETOOTH_DETAIL: 'Bluetooth Detail',
 } as const;
 
 /**
