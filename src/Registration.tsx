@@ -104,9 +104,12 @@ export const Registration = React.memo<{
   }, [parentNavigator, route]);
 
   useEffect(() => {
-    parentNavigator?.addListener('beforeRemove', () => {
+    const listener = () => {
       setRegisteringNew(false);
-    });
+    };
+    parentNavigator?.addListener('beforeRemove', listener);
+
+    return () => parentNavigator?.removeListener('beforeRemove', listener);
   }, [parentNavigator, setRegisteringNew]);
 
   useEffect(() => {

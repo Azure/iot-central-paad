@@ -18,6 +18,7 @@ The main features of the app are:
 - Sample properties (readonly and writeable).
 - Commands handling to enable/disable telemetry items and set their sending interval.
 - Commands logs to trace data in app.
+- Bluetooth Gateway (see [Bluetooth.md](./docs/Bluetooth.md) for documentation/implementation details)
 
 ## Build and Run
 
