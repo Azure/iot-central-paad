@@ -11,6 +11,8 @@ steps:
   - script: npm version prerelease --preid "$(Build.BuildNumber)" --no-git-tag-version
     workingDirectory: .
     displayName: "Increment version in package.json"
+    # For prod releases we should commit the version change to source. For test builds we can increment in the pipeline
+    condition: and(succeeded(), eq(variables.isMaster, false))
 
   - task: ShellScript@2
     inputs:
