@@ -43,6 +43,8 @@
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>"IoT Plug and Play" wants to access to bluetooth to collect data from external sensors</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>"IoT Plug and Play" wants to access to bluetooth to collect data from external sensors</string>
 	<key>NSCameraUsageDescription</key>
 	<string>"IoT Plug and Play" needs access to your camera for scanning QR codes and connect devices</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
