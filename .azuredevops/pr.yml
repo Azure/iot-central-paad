@@ -1,4 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/azure-pipelines-vscode/main/service-schema.json
+trigger: none
 pool:
   vmImage: 'macOS-12'
 
