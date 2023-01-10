@@ -1,6 +1,12 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/azure-pipelines-vscode/main/service-schema.json
 trigger:
-- master
+  branches:
+    include:
+    - master
+    - develop/*
+
+pr: none
+
 pool:
   vmImage: 'macOS-12'
 
