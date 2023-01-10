@@ -96,14 +96,12 @@ stages:
             displayName: 'Build Mobile Application'
             inputs:
               actions: 'build'
-              configuration: 'Dogfood'
+              configuration: 'PR'
               xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
               scheme: '$(Project_Name)_Dogfood'
               sdk: 'iphoneos15.4'
               useXcpretty: false
-              signingOption: 'manual'
-              signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
-              provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+              signingOption: 'nosign'
               packageApp: false
               xcodeVersion: 'specifyPath'
               xcodeDeveloperDir: '$(xcodeDeveloperDir)'
