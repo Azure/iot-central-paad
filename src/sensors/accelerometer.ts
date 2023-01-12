@@ -14,7 +14,7 @@ import {
   SensorTypes,
 } from 'react-native-sensors';
 import EventEmitter from 'events';
-import { Platform } from 'react-native';
+import {Platform} from 'react-native';
 
 export default class Accelerometer extends EventEmitter implements ISensor {
   private enabled: boolean;
@@ -76,7 +76,7 @@ export default class Accelerometer extends EventEmitter implements ISensor {
       };
     }
 
-    return { x, y, z };
+    return {x, y, z};
   }
 
   async run() {
@@ -100,7 +100,11 @@ export default class Accelerometer extends EventEmitter implements ISensor {
     } else {
       this.currentRun = accelerometer.subscribe(
         function (this: Accelerometer, {x, y, z}: Vector) {
-          this.emit(DATA_AVAILABLE_EVENT, this.id, this.getNormalizedData(x, y, z));
+          this.emit(
+            DATA_AVAILABLE_EVENT,
+            this.id,
+            this.getNormalizedData(x, y, z),
+          );
         }.bind(this),
         function (this: Accelerometer, error: any) {
           if (error) {

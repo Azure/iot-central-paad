@@ -27,7 +27,7 @@ export const AVAILABLE_SENSORS = {
 };
 
 export type SensorNames =
-  typeof AVAILABLE_SENSORS[keyof typeof AVAILABLE_SENSORS];
+  (typeof AVAILABLE_SENSORS)[keyof typeof AVAILABLE_SENSORS];
 export {
   DATA_AVAILABLE_EVENT,
   SENSOR_UNAVAILABLE_EVENT,

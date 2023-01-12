@@ -33,7 +33,7 @@ interface ButtonGroupProps {
 const ButtonGroup = React.memo<ButtonGroupProps>(
   ({items, onCheckedChange, defaultCheckedId, readonly, containerStyle}) => {
     const ids = items.map(i => i.id);
-    const [checked, setChecked] = React.useState<typeof ids[number]>(
+    const [checked, setChecked] = React.useState<(typeof ids)[number]>(
       defaultCheckedId ?? ids[0],
     );
     return (

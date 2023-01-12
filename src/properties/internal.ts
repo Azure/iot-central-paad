@@ -22,4 +22,4 @@ export const AVAILABLE_PROPERTIES = {
 };
 
 export type PropertyNames =
-  typeof AVAILABLE_PROPERTIES[keyof typeof AVAILABLE_PROPERTIES];
+  (typeof AVAILABLE_PROPERTIES)[keyof typeof AVAILABLE_PROPERTIES];
