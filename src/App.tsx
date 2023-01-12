@@ -128,9 +128,11 @@ const Navigation = React.memo(() => {
         }}>
         {/* @ts-ignore */}
         <Stack.Screen name={Pages.ROOT} component={Home} />
+        {/* @ts-ignore */}
         <Stack.Screen name={Pages.REGISTRATION} component={Registration} />
         <Stack.Screen
           name={Pages.INSIGHT}
+          //@ts-ignore
           component={Chart}
           options={({route}) => {
             let data = {};

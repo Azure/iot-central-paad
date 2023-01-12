@@ -57,8 +57,8 @@ export type valueof<T> = T[keyof T];
  */
 export type Ref<T> = React.RefObject<T>;
 
-export type ScreenNames = typeof Screens[keyof typeof Screens];
-export type PagesNames = typeof Pages[keyof typeof Pages];
+export type ScreenNames = (typeof Screens)[keyof typeof Screens];
+export type PagesNames = (typeof Pages)[keyof typeof Pages];
 /**
  * Defines type of screens
  */
