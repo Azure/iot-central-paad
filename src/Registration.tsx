@@ -217,7 +217,7 @@ const QRCodeScreen = React.memo<QRCodeScannerProps>(({connect, scannerRef}) => {
   const {screen, orientation} = useScreenDimensions();
   const {navigate} =
     useNavigation<
-      StackNavigationProp<any, typeof screens[keyof typeof screens]>
+      StackNavigationProp<any, (typeof screens)[keyof typeof screens]>
     >();
 
   const onRead = useCallback(
