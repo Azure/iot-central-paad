@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/azure-pipelines-vscode/main/service-schema.json
+pr:
+  - master
 pool:
   vmImage: 'macOS-12'
 
 variables:
-  - name: isMaster
-    value: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
   - group: iotc-paad-android
   - name: PAAD_BETARELEASE_PROJECT_NAME
     value: $(Project_Name)
@@ -92,73 +92,16 @@ stages:
           - template: ./node-build.yml
           - bash: npm run podinstall
 
-          - task: InstallAppleCertificate@2
-            inputs:
-              certSecureFile: '$(iOS_Dogfood_Development_Cert_Name)'
-              certPwd: '$(iOS_Dogfood_Development_Cert_Password)'
-              keychain: 'temp'
-
-          - task: InstallAppleProvisioningProfile@1
-            inputs:
-              provisioningProfileLocation: 'secureFiles'
-              provProfileSecureFile: '$(iOS_Dogfood_Development_Profile)'
-          
-          - task: DownloadSecureFile@1
-            displayName: 'Download distribution profile from Azure secure files storage'
-            inputs:
-              secureFile: '$(iOS_Dogfood_Distribution_Profile)'
-              retryCount: 5
-          
-          - task: DownloadSecureFile@1
-            displayName: 'Download dev exportoptions'
-            inputs:
-              secureFile: '$(iOS_Dogfood_Development_ExportOptions)'
-              retryCount: 5
-
-          - task: DownloadSecureFile@1
-            displayName: 'Download distribution exportoptions'
-            inputs:
-              secureFile: '$(iOS_Dogfood_ExportOptions)'
-              retryCount: 5
-
-          - task: CopyFiles@2
-            displayName: 'Copy distribution provisioning profile'
-            inputs:
-              SourceFolder: '$(Agent.TempDirectory)'
-              Contents: '$(iOS_Dogfood_Distribution_Profile)'
-              TargetFolder: '$(exportPath)'
-              flattenFolders: true
-          
-          - task: CopyFiles@2
-            displayName: 'Copy dev exportoptions'
-            inputs:
-              SourceFolder: '$(Agent.TempDirectory)'
-              Contents: '$(iOS_Dogfood_Development_ExportOptions)'
-              TargetFolder: '$(exportPath)'
-              flattenFolders: true
-
-          - task: CopyFiles@2
-            displayName: 'Copy distribution exportoptions'
-            inputs:
-              SourceFolder: '$(Agent.TempDirectory)'
-              Contents: '$(iOS_Dogfood_ExportOptions)'
-              TargetFolder: '$(exportPath)'
-              flattenFolders: true
-
-          - bash: mv $(exportPath)/$(iOS_Dogfood_ExportOptions) $(exportPath)/ExportOptions.plist
-
           - task: Xcode@5
             displayName: 'Build Mobile Application'
             inputs:
               actions: 'build'
-              configuration: 'Dogfood'
+              configuration: 'PR'
               xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
               scheme: '$(Project_Name)_Dogfood'
               sdk: 'iphoneos15.4'
               useXcpretty: false
-              signingOption: 'manual'
-              signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
-              provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+              signingOption: 'nosign'
               packageApp: false
               xcodeVersion: 'specifyPath'
               xcodeDeveloperDir: '$(xcodeDeveloperDir)'
