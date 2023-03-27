@@ -177,7 +177,7 @@ export function useConnectIoTCentralClient(): [
         setConnecting(false);
       }
     },
-    [setConnecting, _connect_internal, saveCredentials],
+    [setConnecting, _connect_internal, saveCredentials, connecting],
   );
 
   const cancel = useCallback(
