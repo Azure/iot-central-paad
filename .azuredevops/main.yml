@@ -8,7 +8,7 @@ trigger:
 pr: none
 
 pool:
-  vmImage: 'macOS-12'
+  vmImage: 'macOS-13'
 
 variables:
   - name: isMaster
