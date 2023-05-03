@@ -3,7 +3,7 @@ pr:
   - master
 trigger: none
 pool:
-  vmImage: 'macOS-12'
+  vmImage: 'macOS-13'
 
 variables:
   - group: iotc-paad-android
