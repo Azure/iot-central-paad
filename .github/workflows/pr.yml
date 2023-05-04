@@ -10,7 +10,7 @@ on:
 jobs:
     build:
         name: Call Azure Pipeline
-        runs-on: macOS-12
+        runs-on: macOS-13
         steps:
         - name: Azure Pipelines Action
           uses: Azure/pipelines@v1
