@@ -19,13 +19,13 @@ variables:
   - name: PAAD_BETARELEASE_VERSION_CODE
     value: 1
   - name: PAAD_BETARELEASE_VERSION_NAME
-    value: 1.1.0
+    value: 1.1.1
   - name: PAAD_RELEASE_PROJECT_NAME
     value: $(Project_Name)
   - name: PAAD_RELEASE_VERSION_CODE
     value: 1
   - name: PAAD_RELEASE_VERSION_NAME
-    value: 1.1.0
+    value: 1.1.1
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 stages:
@@ -194,14 +194,19 @@ stages:
           unsignedIpa: '$(exportPath)/$(Project_Name).ipa'
           signedExtractedPath: '$(exportPath)/signed'
         steps:
+          # Uncomment task below when macos-13 host machines become stable
           # - task: UseRubyVersion@0
           #   inputs:
           #     versionSpec: '< 2.8'
+
+          # --- RUBY WORKAROUND ----- #
+          # macos-13 host machines currently do not support ruby versions other than default (3.0.x). Our project requires 2.7.4.
           - bash: gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
           - bash: curl -sSL https://get.rvm.io | bash -s stable
           - bash: source /Users/runner/.rvm/scripts/rvm && rvm install 2.7.4
           - bash: source /Users/runner/.rvm/scripts/rvm && rvm use 2.7.4
-          
+          # --- END ----- #
+
           - bash: gem install bundler cocoapods
 
           - template: ./node-build.yml
@@ -351,9 +356,18 @@ stages:
           unsignedIpa: '$(exportPath)/$(Project_Name).ipa'
           signedExtractedPath: '$(exportPath)/signed'
         steps:
-          - task: UseRubyVersion@0
-            inputs:
-              versionSpec: '< 2.8'
+          # Uncomment task below when macos-13 host machines become stable
+          # - task: UseRubyVersion@0
+          #   inputs:
+          #     versionSpec: '< 2.8'
+
+          # --- RUBY WORKAROUND ----- #
+          # macos-13 host machines currently do not support ruby versions other than default (3.0.x). Our project requires 2.7.4.
+          - bash: gpg --keyserver keyserver.ubuntu.com --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+          - bash: curl -sSL https://get.rvm.io | bash -s stable
+          - bash: source /Users/runner/.rvm/scripts/rvm && rvm install 2.7.4
+          - bash: source /Users/runner/.rvm/scripts/rvm && rvm use 2.7.4
+          # --- END ----- #
           
           - bash: gem install bundler cocoapods
 
