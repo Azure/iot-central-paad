@@ -194,9 +194,12 @@ stages:
           unsignedIpa: '$(exportPath)/$(Project_Name).ipa'
           signedExtractedPath: '$(exportPath)/signed'
         steps:
-          - task: UseRubyVersion@0
-            inputs:
-              versionSpec: '< 2.8'
+          # - task: UseRubyVersion@0
+          #   inputs:
+          #     versionSpec: '< 2.8'
+          - bash: curl -sSL https://get.rvm.io | bash -s stable
+          - bash: rvm install 2.7.4
+          - bash: rvm use 2.7.4
           
           - bash: gem install bundler cocoapods
 
