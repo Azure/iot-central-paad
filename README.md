@@ -19,6 +19,8 @@ The main features of the app are:
 - Commands logs to trace data in app.
 - Bluetooth Gateway (see [Bluetooth.md](./docs/Bluetooth.md) for documentation/implementation details)
 
+You can read more about all features with instructions [here](./docs/Features.md).
+
 ## Build and Run
 
 The application is available for both Android and iOS.
