@@ -7,14 +7,13 @@ develop: [![Build status](https://build.appcenter.ms/v0.1/apps/82ba91a2-c68c-4b4
 
 
 ## What is this?
-An useful tool to start playing with Azure IoT Central without using a real IoT device. The smartphone or tablet can send telemetry data from its embedded sensors (accelerometer, gyroscope...) and registered health platforms (Apple Health Kit, Google Fit). It can also receive properties and commands to demonstrate basic functionalities.
+An useful tool to start playing with Azure IoT Central without using a real IoT device. The smartphone or tablet can send telemetry data from its embedded sensors (accelerometer, gyroscope...) and Bluetooth-LowEnergy (BLE) devices. It can also receive properties and commands to demonstrate basic functionalities.
 
 ## Features
 
 The main features of the app are:
 
 - Telemetry data from real embedded sensors and health platform records.
-- Real-time charts.
 - Sample properties (readonly and writeable).
 - Commands handling to enable/disable telemetry items and set their sending interval.
 - Commands logs to trace data in app.
@@ -25,26 +24,39 @@ The main features of the app are:
 The application is available for both Android and iOS.
 It can be run on simulator as well (Android Studio or Xcode required). In this case, sensor data is randomly generated.
 
-
-### Required tools
-See [React Native Getting Started](https://reactnative.dev/docs/getting-started)
-and click on React Native CLI Quickstart for more detailed instructions.
-"Installing dependencies" is the section that explains
-developer setup. If you are developing on Windows for Android you will need:
-
-1. Node.JS (12+)
-1. Java SE Development Kit (JDK 8+)
-1. Python 3.7+
-1. Android Studio
-1. React Native command line interface
-1. Npm or Yarn
-
-To set up a real device for development, follow the instructions for device setup [here.](https://reactnative.dev/docs/running-on-device)
-
-## Installation
+### Setup
 ```shell
 git clone https://github.com/Azure/iot-central-paad
 cd iot-central-paad
 npm install
+```
 
+#### iOS
+Install pods
+```shell
+cd ios && pod install
+```
+
+### Build source code
+Source code can be validated and formatted to ensure js bundle gets correctly generated. However this does not guarantee the application can run as expected on each platform due to the various native modules. Always run the application on simulators to check functionalities.
+
+#### Format, Lint and Typescript compile:
+```shell
+npm run build
+```
+
+#### Run Android
+```shell
+# runs on default simulator (as configured in Android Studio)
+npm run android
+
+```
+
+#### Run iOS
+```shell
+# runs on default simulator (as configured in XCode)
+npm run ios
+
+# runs on specific device
+npm run ios --device <device-id>
 ```
