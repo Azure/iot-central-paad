@@ -34,6 +34,32 @@ import BottomPopup from 'components/bottomPopup';
 import {CircleSnail} from 'react-native-progress';
 import {Literal, StyleDefinition} from 'types';
 
+const getCardValue = ({
+  uploading,
+  fileSize,
+  fileName,
+  uploadStatus,
+  setUploading,
+}: {
+  uploading: boolean;
+  fileSize: string;
+  fileName: string;
+  uploadStatus?: boolean;
+  setUploading: ISetBooleanFunctions;
+}) => {
+  if (uploading) {
+    return () => (
+      <UploadProgress
+        fileSize={fileSize}
+        filename={fileName}
+        uploadStatus={uploadStatus}
+        setUploading={setUploading}
+      />
+    );
+  }
+  return () => <UploadIcon />;
+};
+
 export default function FileUpload() {
   const {colors} = useTheme();
   const [client] = useIoTCentralClient();
@@ -120,7 +146,6 @@ export default function FileUpload() {
             if (!curfileName && Platform.OS === 'ios') {
               curfileName = response.assets?.[0].uri?.split('/').pop();
             }
-            console.log(`Current file name: ${curfileName}`);
             try {
               append({
                 eventName: 'FILE UPLOAD',
@@ -183,18 +208,13 @@ export default function FileUpload() {
           enabled={false}
           title=""
           onPress={setShowSelector.True}
-          value={
-            uploading
-              ? () => (
-                  <UploadProgress
-                    fileSize={fileSize}
-                    filename={fileName}
-                    uploadStatus={uploadStatus}
-                    setUploading={setUploading}
-                  />
-                )
-              : () => <UploadIcon />
-          }
+          value={getCardValue({
+            uploading,
+            fileSize,
+            fileName,
+            uploadStatus,
+            setUploading,
+          })}
         />
       </View>
 

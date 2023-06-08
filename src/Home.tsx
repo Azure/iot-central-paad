@@ -49,6 +49,111 @@ import {BluetoothPage} from 'bluetooth/Bluetooth';
 
 const Tab = createBottomTabNavigator<NavigationScreens>();
 
+const icons: {
+  [x in ScreenNames]: (props: {
+    focused: boolean;
+    color: string;
+    size: number;
+  }) => React.ReactNode;
+} = {
+  [Screens.TELEMETRY_SCREEN]: ({color, size}) => (
+    <TabBarIcon
+      size={size}
+      color={color}
+      icon={
+        Platform.select({
+          ios: {
+            name: 'stats-chart-outline',
+            type: 'ionicon',
+          },
+          android: {
+            name: 'chart-bar',
+            type: 'material-community',
+          },
+        }) as IIcon
+      }
+    />
+  ),
+  [Screens.PROPERTIES_SCREEN]: ({color, size}) => (
+    <TabBarIcon
+      size={size}
+      color={color}
+      icon={
+        Platform.select({
+          ios: {
+            name: 'create-outline',
+            type: 'ionicon',
+          },
+          android: {
+            name: 'playlist-edit',
+            type: 'material-community',
+          },
+        }) as IIcon
+      }
+    />
+  ),
+  [Screens.HEALTH_SCREEN]: ({color, size}) => (
+    <TabBarIcon
+      size={size}
+      color={color}
+      icon={
+        {
+          name: 'heartbeat',
+          type: 'font-awesome',
+        } as IIcon
+      }
+    />
+  ),
+  [Screens.FILE_UPLOAD_SCREEN]: ({color, size}) => (
+    <TabBarIcon
+      size={size}
+      color={color}
+      icon={
+        Platform.select({
+          ios: {
+            name: 'cloud-upload-outline',
+            type: 'ionicon',
+          },
+          android: {
+            name: 'cloud-upload-outline',
+            type: 'material-community',
+          },
+        }) as IIcon
+      }
+    />
+  ),
+  [Screens.LOGS_SCREEN]: ({color, size}) => (
+    <TabBarIcon
+      size={size}
+      color={color}
+      icon={
+        Platform.select({
+          ios: {
+            name: 'console',
+            type: 'material-community',
+          },
+          android: {
+            name: 'console',
+            type: 'material-community',
+          },
+        }) as IIcon
+      }
+    />
+  ),
+  [Screens.BLUETOOTH_STACK]: ({color, size}) => (
+    <TabBarIcon
+      size={size}
+      color={color}
+      icon={
+        {
+          name: 'bluetooth',
+          type: 'material-community',
+        } as IIcon
+      }
+    />
+  ),
+};
+
 const Root = React.memo<{
   route: RouteProp<
     Record<string, NavigationParams & {previousScreen?: string}>,
@@ -81,58 +186,6 @@ const Root = React.memo<{
   );
   const [iotcentralClient] = useIoTCentralClient(onConnectionRefresh);
 
-  const iconsRef = useRef<{[x in ScreenNames]: IIcon}>({
-    [Screens.TELEMETRY_SCREEN]: Platform.select({
-      ios: {
-        name: 'stats-chart-outline',
-        type: 'ionicon',
-      },
-      android: {
-        name: 'chart-bar',
-        type: 'material-community',
-      },
-    }) as IIcon,
-    [Screens.PROPERTIES_SCREEN]: Platform.select({
-      ios: {
-        name: 'create-outline',
-        type: 'ionicon',
-      },
-      android: {
-        name: 'playlist-edit',
-        type: 'material-community',
-      },
-    }) as IIcon,
-    [Screens.HEALTH_SCREEN]: {
-      name: 'heartbeat',
-      type: 'font-awesome',
-    } as IIcon,
-    [Screens.FILE_UPLOAD_SCREEN]: Platform.select({
-      ios: {
-        name: 'cloud-upload-outline',
-        type: 'ionicon',
-      },
-      android: {
-        name: 'cloud-upload-outline',
-        type: 'material-community',
-      },
-    }) as IIcon,
-    [Screens.LOGS_SCREEN]: Platform.select({
-      ios: {
-        name: 'console',
-        type: 'material-community',
-      },
-      android: {
-        name: 'console',
-        type: 'material-community',
-      },
-    }) as IIcon,
-    [Screens.BLUETOOTH_STACK]: {
-      name: 'bluetooth',
-      type: 'material-community',
-    },
-  });
-
-  const icons = iconsRef.current;
   const sensorRef = useRef(sensors);
   // const healthRef = useRef(healths);
 
@@ -311,9 +364,7 @@ const Root = React.memo<{
         <Tab.Screen
           name={Screens.TELEMETRY_SCREEN}
           options={{
-            tabBarIcon: ({color, size}) => (
-              <TabBarIcon icon={icons.Telemetry} color={color} size={size} />
-            ),
+            tabBarIcon: icons.Telemetry,
           }}>
           {getCardView(sensors, 'Telemetry')}
         </Tab.Screen>
@@ -329,9 +380,7 @@ const Root = React.memo<{
         <Tab.Screen
           name={Screens.PROPERTIES_SCREEN}
           options={{
-            tabBarIcon: ({color, size}) => (
-              <TabBarIcon icon={icons.Properties} color={color} size={size} />
-            ),
+            tabBarIcon: icons.Properties,
           }}>
           {propertiesLoading
             ? () => (
@@ -377,13 +426,7 @@ const Root = React.memo<{
           name={Screens.BLUETOOTH_STACK}
           component={BluetoothPage}
           options={{
-            tabBarIcon: ({color, size}) => (
-              <TabBarIcon
-                icon={icons[Screens.BLUETOOTH_STACK]}
-                color={color}
-                size={size}
-              />
-            ),
+            tabBarIcon: icons.Bluetooth,
           }}
         />
 
@@ -391,22 +434,14 @@ const Root = React.memo<{
           name={Screens.FILE_UPLOAD_SCREEN}
           component={FileUpload}
           options={{
-            tabBarIcon: ({color, size}) => (
-              <TabBarIcon
-                icon={icons['Image Upload']}
-                color={color}
-                size={size}
-              />
-            ),
+            tabBarIcon: icons['Image Upload'],
           }}
         />
         <Tab.Screen
           name={Screens.LOGS_SCREEN}
           component={Logs}
           options={{
-            tabBarIcon: ({color, size}) => (
-              <TabBarIcon icon={icons.Logs} color={color} size={size} />
-            ),
+            tabBarIcon: icons.Logs,
           }}
         />
       </Tab.Navigator>
