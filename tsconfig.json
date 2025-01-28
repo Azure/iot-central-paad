@@ -1,4 +1,5 @@
 {
+  "extends": "@react-native/typescript-config/tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
@@ -6,37 +7,23 @@
     "isolatedModules": true,
     "sourceMap": true,
     "jsx": "react-native",
-    "lib": [
-      "es6"
-    ],
-    "moduleResolution": "node",
+    "lib": ["es6"],
+    // "moduleResolution": "node",
     "resolveJsonModule": true,
     "noEmit": true,
     "strict": true,
     "noUnusedLocals": true,
-    "module": "commonjs",
+    // "module": "commonjs",
     "target": "es2017",
     "skipLibCheck": true,
     "baseUrl": "./src",
     "paths": {
-      "tools/*": [
-        "tools/*"
-      ],
-      "hooks/*": [
-        "hooks/*"
-      ],
-      "properties/*": [
-        "properties/*"
-      ],
-      "contexts/*": [
-        "contexts/*"
-      ],
-      "sensors/*":[
-        "sensors/*"
-      ],
-      "components/*":[
-        "components/*"
-      ]
+      "tools/*": ["tools/*"],
+      "hooks/*": ["hooks/*"],
+      "properties/*": ["properties/*"],
+      "contexts/*": ["contexts/*"],
+      "sensors/*": ["sensors/*"],
+      "components/*": ["components/*"]
     }
   },
   "exclude": [
