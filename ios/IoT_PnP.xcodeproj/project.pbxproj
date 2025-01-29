@@ -494,7 +494,7 @@
 				CODE_SIGN_ENTITLEMENTS = IoT_PnP/IoT_PnPDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 1.2.0;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = IoT_PnP/Info.plist;
@@ -527,7 +527,7 @@
 				CODE_SIGN_ENTITLEMENTS = IoT_PnP/IoT_PnP.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 1.2.0;
 				DEVELOPMENT_TEAM = UBF8T346G9;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = IoT_PnP/Info.plist;
@@ -633,7 +633,7 @@
 				CODE_SIGN_ENTITLEMENTS = IoT_PnP/IoT_PnP.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 1.2.0;
 				DEVELOPMENT_TEAM = 9KBH5RKYEW;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = IoT_PnP/Info.plist;
@@ -766,7 +766,7 @@
 				CODE_SIGN_ENTITLEMENTS = IoT_PnP/IoT_PnP.entitlements;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 1.2.0;
 				DEVELOPMENT_TEAM = 9KBH5RKYEW;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = IoT_PnP/Info.plist;
