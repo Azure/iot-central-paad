@@ -3,7 +3,7 @@ pr:
 - master
 trigger: none
 pool:
-  vmImage: 'macOS-13'
+  vmImage: 'macOS-14'
 
 variables:
 - group: iotc-paad-android
@@ -77,7 +77,7 @@ stages:
       agentName: $[ dependencies.Setup.outputs['passOutput.AgentName'] ]
       archivePath: '$(rootPath)/output/archive'
       exportPath: '$(rootPath)/output/export'
-      xcodeDeveloperDir: '/Applications/Xcode_13.3.1.app/Contents/Developer'
+      xcodeDeveloperDir: '/Applications/Xcode_16.2.0.app/Contents/Developer'
       xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
       zipToSign: '$(exportPath)/$(Project_Name).zip'
       signedZip: '$(exportPath)/$(Project_Name).zip'
