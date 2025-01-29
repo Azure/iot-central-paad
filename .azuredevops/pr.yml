@@ -1,108 +1,108 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/azure-pipelines-vscode/main/service-schema.json
 pr:
-  - master
+- master
 trigger: none
 pool:
   vmImage: 'macOS-13'
 
 variables:
-  - group: iotc-paad-android
-  - name: PAAD_BETARELEASE_PROJECT_NAME
-    value: $(Project_Name)
-  - name: PAAD_BETARELEASE_VERSION_CODE
-    value: 1
-  - name: PAAD_BETARELEASE_VERSION_NAME
-    value: 1.1.1
-  - name: PAAD_RELEASE_PROJECT_NAME
-    value: $(Project_Name)
-  - name: PAAD_RELEASE_VERSION_CODE
-    value: 1
-  - name: PAAD_RELEASE_VERSION_NAME
-    value: 1.1.1
+- group: iotc-paad-android
+- name: PAAD_BETARELEASE_PROJECT_NAME
+  value: $(Project_Name)
+- name: PAAD_BETARELEASE_VERSION_CODE
+  value: 1
+- name: PAAD_BETARELEASE_VERSION_NAME
+  value: 1.1.1
+- name: PAAD_RELEASE_PROJECT_NAME
+  value: $(Project_Name)
+- name: PAAD_RELEASE_VERSION_CODE
+  value: 1
+- name: PAAD_RELEASE_VERSION_NAME
+  value: 1.1.1
 
 name: $(Date:yyyyMMdd)$(Rev:.r)
 stages:
-  - stage: Android
-    dependsOn: []
-    jobs:
-      - job: Android_Beta
-        steps:        
-          - template: ./node-build.yml
+- stage: Android
+  dependsOn: []
+  jobs:
+  - job: Android_Beta
+    steps:
+    - template: ./node-build.yml
 
-          - task: JavaToolInstaller@0
-            inputs:
-              versionSpec: '11'
-              jdkArchitectureOption: 'x64'
-              jdkSourceOption: 'PreInstalled'
+    - task: JavaToolInstaller@0
+      inputs:
+        versionSpec: '11'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
 
-          - task: DownloadSecureFile@1
-            name: androidKeystore
-            inputs:
-              secureFile: iotc-paad.keystore
+    - task: DownloadSecureFile@1
+      name: androidKeystore
+      inputs:
+        secureFile: iotc-paad.keystore
 
-          - bash: |
-              PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
-              echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
-              echo "Using variable: $GOOGLE_MAPS_API_KEY"
-              echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
-              cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
-              ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
-            env:
-              GOOGLE_MAPS_KEY: $(googlemapskey)
-          - bash: env | sort
+    - bash: |
+        PAAD_BETARELEASE_VERSION_CODE=$(echo $(Build.BuildNumber) | sed 's/\.//')
+        echo "##vso[task.setvariable variable=PAAD_BETARELEASE_VERSION_CODE]$PAAD_BETARELEASE_VERSION_CODE"
+        echo "Using variable: $GOOGLE_MAPS_API_KEY"
+        echo "##vso[task.setvariable variable=GOOGLE_MAPS_API_KEY]$GOOGLE_MAPS_KEY"
+        cp $(androidKeystore.secureFilePath) android/app/$PAAD_BETARELEASE_STORE_FILE
+        ls -l android/app/$PAAD_BETARELEASE_STORE_FILE
+      env:
+        GOOGLE_MAPS_KEY: $(googlemapskey)
+    - bash: env | sort
 
-          - task: Gradle@2
-            inputs:
-              workingDirectory: 'android'
-              gradleWrapperFile: 'android/gradlew'
-              gradleOptions: '-Xmx3072m'
-              publishJUnitResults: false
-              testResultsFiles: '**/TEST-*.xml'
-              tasks: 'assembleBetaRelease'
+    - task: Gradle@2
+      inputs:
+        workingDirectory: 'android'
+        gradleWrapperFile: 'android/gradlew'
+        gradleOptions: '-Xmx3072m'
+        publishJUnitResults: false
+        testResultsFiles: '**/TEST-*.xml'
+        tasks: 'assembleBetaRelease'
 
-          - task: PublishBuildArtifacts@1
-            displayName: "Publish Build Artifact"
-            inputs:
-              PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
-              ArtifactName: 'android'
-              publishLocation: 'Container'
+    - task: PublishBuildArtifacts@1
+      displayName: "Publish Build Artifact"
+      inputs:
+        PathtoPublish: 'android/app/build/outputs/apk/betaRelease/$(Project_Name)-betaRelease.apk'
+        ArtifactName: 'android'
+        publishLocation: 'Container'
 
-  - stage: iOS
-    dependsOn: []
-    jobs:
-      - job: iOS_Beta
-        timeoutInMinutes: 120
-        variables:
-          rootPath: '$(System.DefaultWorkingDirectory)'
-          agentName: $[ dependencies.Setup.outputs['passOutput.AgentName'] ]
-          archivePath: '$(rootPath)/output/archive'
-          exportPath: '$(rootPath)/output/export'
-          xcodeDeveloperDir: '/Applications/Xcode_13.3.1.app/Contents/Developer'
-          xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
-          zipToSign: '$(exportPath)/$(Project_Name).zip'
-          signedZip: '$(exportPath)/$(Project_Name).zip'
-          unsignedIpa: '$(exportPath)/$(Project_Name).ipa'
-          signedExtractedPath: '$(exportPath)/signed'
-        steps:
-          - task: UseRubyVersion@0
-            inputs:
-              versionSpec: '< 2.8'
-          
-          - bash: gem install bundler cocoapods
+- stage: iOS
+  dependsOn: []
+  jobs:
+  - job: iOS_Beta
+    timeoutInMinutes: 120
+    variables:
+      rootPath: '$(System.DefaultWorkingDirectory)'
+      agentName: $[ dependencies.Setup.outputs['passOutput.AgentName'] ]
+      archivePath: '$(rootPath)/output/archive'
+      exportPath: '$(rootPath)/output/export'
+      xcodeDeveloperDir: '/Applications/Xcode_13.3.1.app/Contents/Developer'
+      xcarchivePath: '$(archivePath)/$(Project_Name).xcarchive'
+      zipToSign: '$(exportPath)/$(Project_Name).zip'
+      signedZip: '$(exportPath)/$(Project_Name).zip'
+      unsignedIpa: '$(exportPath)/$(Project_Name).ipa'
+      signedExtractedPath: '$(exportPath)/signed'
+    steps:
+    - task: UseRubyVersion@0
+      inputs:
+        versionSpec: '>= 2.8'
 
-          - template: ./node-build.yml
-          - bash: npm run podinstall
+    - bash: gem install bundler cocoapods
 
-          - task: Xcode@5
-            displayName: 'Build Mobile Application'
-            inputs:
-              actions: 'build'
-              configuration: 'PR'
-              xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
-              scheme: '$(Project_Name)_Dogfood'
-              sdk: 'iphoneos15.4'
-              useXcpretty: false
-              signingOption: 'nosign'
-              packageApp: false
-              xcodeVersion: 'specifyPath'
-              xcodeDeveloperDir: '$(xcodeDeveloperDir)'
+    - template: ./node-build.yml
+    - bash: npm run podinstall
+
+    - task: Xcode@5
+      displayName: 'Build Mobile Application'
+      inputs:
+        actions: 'build'
+        configuration: 'PR'
+        xcWorkspacePath: '$(rootPath)/ios/$(Project_Name).xcworkspace'
+        scheme: '$(Project_Name)_Dogfood'
+        sdk: 'iphoneos18.2'
+        useXcpretty: false
+        signingOption: 'nosign'
+        packageApp: false
+        xcodeVersion: 'specifyPath'
+        xcodeDeveloperDir: '$(xcodeDeveloperDir)'
