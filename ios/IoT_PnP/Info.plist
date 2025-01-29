@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMotionUsageDescription</key>
+	<string>Gyroscope and accelerometer data can be sent to your Azure IoT application.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -42,11 +44,11 @@
 		</dict>
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>"IoT Plug and Play" wants to access to bluetooth to collect data from external sensors</string>
+	<string>&quot;IoT Plug and Play&quot; wants to access to bluetooth to collect data from external sensors</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>"IoT Plug and Play" wants to access to bluetooth to collect data from external sensors</string>
+	<string>&quot;IoT Plug and Play&quot; wants to access to bluetooth to collect data from external sensors</string>
 	<key>NSCameraUsageDescription</key>
-	<string>"IoT Plug and Play" needs access to your camera for scanning QR codes and connect devices</string>
+	<string>&quot;IoT Plug and Play&quot; needs access to your camera for scanning QR codes and connect devices</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Your location will be sent to your Azure IoT application, to be shown on a map. Microsoft does not collect or has access to your location. </string>
 	<key>NSLocationAlwaysUsageDescription</key>
@@ -54,7 +56,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location will be sent to your Azure IoT application, to be shown on a map. Microsoft does not collect or has access to your location. </string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>"IoT Plug and Play" wants to access your gallery to upload pictures to Azure IoT</string>
+	<string>&quot;IoT Plug and Play&quot; wants to access your gallery to upload pictures to Azure IoT</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>FontAwesome.ttf</string>
