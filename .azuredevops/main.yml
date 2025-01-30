@@ -33,8 +33,7 @@ stages:
     dependsOn: []
     jobs:
       - job: Android_Beta
-        # TEMP, revert before merging
-        condition: and(succeeded(), eq(variables.isMaster, true))
+        condition: and(succeeded(), eq(variables.isMaster, false))
         steps:
         
           - template: ./node-build.yml
@@ -82,8 +81,7 @@ stages:
           apkPath: android/app/build/outputs/apk
           unsignedApk: $(apkPath)/release/$(Project_Name)-release-unsigned.apk
           releaseApk: $(apkPath)/release/$(Project_Name)-release.apk
-        # TEMP: Revert before merging
-        condition: and(succeeded(), eq(variables.isMaster, false))
+        condition: and(succeeded(), eq(variables.isMaster, true))
         steps:
           - template: node-build.yml
 
