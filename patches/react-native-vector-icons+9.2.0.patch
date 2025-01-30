@@ -1,0 +1,25 @@
+diff --git a/node_modules/react-native-vector-icons/fonts.gradle b/node_modules/react-native-vector-icons/fonts.gradle
+index 5485fac..6bd6ab2 100644
+--- a/node_modules/react-native-vector-icons/fonts.gradle
++++ b/node_modules/react-native-vector-icons/fonts.gradle
+@@ -24,9 +24,20 @@ afterEvaluate {
+         }
+     }
+ 
++    // Patched per https://stackoverflow.com/a/76614223 to avoid updating the library unless necessary
+     android.applicationVariants.all { def variant ->
+         def targetName = variant.name.capitalize()
++        def lintVitalAnalyzeTask = tasks.findByName("lintVitalAnalyze${targetName}")
++            if (lintVitalAnalyzeTask) {
++                lintVitalAnalyzeTask.dependsOn(fontCopyTask)
++            }
++        
+         def generateAssetsTask = tasks.findByName("generate${targetName}Assets")
+         generateAssetsTask.dependsOn(fontCopyTask)
++        
++        def generateLintReportTask = tasks.findByName("generate${targetName}LintVitalReportModel")
++        if (generateLintReportTask) {
++            generateLintReportTask.dependsOn(fontCopyTask)
++        }
+     }
+ }

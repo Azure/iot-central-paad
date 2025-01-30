@@ -25,21 +25,17 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>localhost</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-			</dict>
-		</dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>"IoT Plug and Play" wants to access to bluetooth to collect data from external sensors</string>
@@ -53,6 +49,8 @@
 	<string>Your location will be sent to your Azure IoT application, to be shown on a map. Microsoft does not collect or has access to your location. </string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location will be sent to your Azure IoT application, to be shown on a map. Microsoft does not collect or has access to your location. </string>
+	<key>NSMotionUsageDescription</key>
+	<string>Gyroscope and accelerometer data can be sent to your Azure IoT application.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>"IoT Plug and Play" wants to access your gallery to upload pictures to Azure IoT</string>
 	<key>UIAppFonts</key>
@@ -66,7 +64,7 @@
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
