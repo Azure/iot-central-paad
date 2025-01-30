@@ -33,7 +33,8 @@ stages:
     dependsOn: []
     jobs:
       - job: Android_Beta
-        condition: and(succeeded(), eq(variables.isMaster, false))
+        # TEMP, revert before merging
+        condition: and(succeeded(), eq(variables.isMaster, true))
         steps:
         
           - template: ./node-build.yml
@@ -81,9 +82,10 @@ stages:
           apkPath: android/app/build/outputs/apk
           unsignedApk: $(apkPath)/release/$(Project_Name)-release-unsigned.apk
           releaseApk: $(apkPath)/release/$(Project_Name)-release.apk
-        condition: and(succeeded(), eq(variables.isMaster, true))
+        # TEMP: Revert before merging
+        condition: and(succeeded(), eq(variables.isMaster, false))
         steps:
-          - template: ./node-build.yml
+          - template: node-build.yml
 
           - task: JavaToolInstaller@0
             inputs:
