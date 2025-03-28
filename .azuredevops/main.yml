@@ -137,12 +137,16 @@ stages:
             inputs:
               apksign: false
               zipalign: true
-
-          - task: EsrpCodeSigning@1
-            displayName: 'Sign build'
+              
+          - task: EsrpCodeSigning@5
             inputs:
-              ConnectedServiceName: 'IoT PnP PaaD'
-              FolderPath: '$(apkPath)/release'
+              ConnectedServiceName: 'IOTC_PAAD_MI'
+              AppRegistrationClientId: '$(MI_CLIENT_ID)'
+              AppRegistrationTenantId: '$(TENANT_ID)'
+              UseMSIAuthentication: true
+              AuthAKVName: '$(AKV_NAME)'
+              AuthSignCertName: '$(SIGNING_CERT_NAME)'
+              FolderPath: 'src\myapp\$(BuildConfiguration)\Release'
               Pattern: '*.apk'
               signConfigType: 'inlineSignParams'
               inlineOperation: |
@@ -165,6 +169,7 @@ stages:
               SessionTimeout: '60'
               MaxConcurrency: '50'
               MaxRetryAttempts: '5'
+              PendingAnalysisWaitTimeoutMinutes: '5'
           
           - task: Bash@3
             displayName: "Rename Signed APK"
