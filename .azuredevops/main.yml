@@ -126,11 +126,10 @@ stages:
               publishLocation: 'Container'
 
           - task: UseDotNet@2
-            displayName: 'Use .NET Core sdk(temporary)'
+            displayName: 'Use .NET Core sdk'
             inputs:
-              packageType: sdk
-              version: 2.1.x
-              installationPath: $(Agent.ToolsDirectory)/dotnet
+              packageType: 'sdk'
+              version: '9.x'
 
           - task: AndroidSigning@3
             displayName: 'Zip aligning APK'
