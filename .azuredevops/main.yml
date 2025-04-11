@@ -142,6 +142,7 @@ stages:
               ConnectedServiceName: 'IOTC_PAAD_MI'
               AppRegistrationClientId: '$(MI_CLIENT_ID)'
               AppRegistrationTenantId: '$(TENANT_ID)'
+              EsrpClientId: '$(MI_CLIENT_ID)'
               UseMSIAuthentication: true
               AuthAKVName: '$(AKV_NAME)'
               AuthSignCertName: '$(SIGNING_CERT_NAME)'
