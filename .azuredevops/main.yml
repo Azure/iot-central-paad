@@ -146,7 +146,7 @@ stages:
               UseMSIAuthentication: true
               AuthAKVName: '$(AKV_NAME)'
               AuthSignCertName: '$(SIGNING_CERT_NAME)'
-              FolderPath: 'src\myapp\$(BuildConfiguration)\Release'
+              FolderPath: '$(apkPath)/release'
               Pattern: '*.apk'
               signConfigType: 'inlineSignParams'
               inlineOperation: |
