@@ -82,8 +82,8 @@ android {
         applicationId "com.iot_pnp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 202504281
-        versionName '1.2.0'
+        versionCode 202505081
+        versionName '1.2.1'
         missingDimensionStrategy 'react-native-camera', 'general'
     }
 
