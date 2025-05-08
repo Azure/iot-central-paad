@@ -422,13 +422,15 @@ const Root = React.memo<{
               )}
         </Tab.Screen>
 
-        <Tab.Screen
-          name={Screens.BLUETOOTH_STACK}
-          component={BluetoothPage}
-          options={{
-            tabBarIcon: icons.Bluetooth,
-          }}
-        />
+        {Platform.OS !== 'android' && (
+          <Tab.Screen
+            name={Screens.BLUETOOTH_STACK}
+            component={BluetoothPage}
+            options={{
+              tabBarIcon: icons.Bluetooth,
+            }}
+          />
+        )}
 
         <Tab.Screen
           name={Screens.FILE_UPLOAD_SCREEN}
