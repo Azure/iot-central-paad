@@ -13,7 +13,7 @@ jobs:
         runs-on: macOS-13
         steps:
         - name: Azure Pipelines Action
-          uses: Azure/pipelines@v1
+          uses: Azure/pipelines@354dddefceb0b503a61338ca81e4091eae3bc84f # v1
           with:
             azure-devops-project-url: https://msazure.visualstudio.com/One
             azure-pipeline-name: 'iot-central-paad-pr'
