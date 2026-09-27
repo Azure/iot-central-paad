@@ -32,10 +32,17 @@ commit and toolchain; a written workflow is not evidence of a successful run.
 
 On September 18, the ADR footer run `35379275362` stopped before native builds
 because Expo's online compatibility check required newly published SDK 57 patches.
-The shared foundation pins now select Expo `57.0.24`, build-properties `57.0.21`,
+That refresh selected Expo `57.0.24`, build-properties `57.0.21`,
 and constants, image-picker and location `57.0.19`; React and React Native are
 unchanged. The online check remains enabled; earlier native results below apply
 to their recorded sources rather than automatically covering new dependency pins.
+
+The September 27 connection-map delivery run `36341300284` encountered the same
+online patch-version gate. With explicit owner approval, the current pins select
+Expo `57.0.25`, build-properties `57.0.22`, and image-picker/location `57.0.20`.
+Constants, React and React Native remain unchanged. The compatibility check is
+not bypassed; the updated native resolution follows the explicit lock-refresh
+and review process below before ordinary deployment-mode iOS validation.
 
 The first refresh attempt, ADR run `35380792854`, rejected the changed
 `ExpoLocation` podspec while still using `pod install`. Explicit refresh now uses
