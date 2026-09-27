@@ -1,0 +1,272 @@
+appId: ${MAESTRO_APP_ID}
+name: Dedicated-device real DPS assignment, local proof and cold restore
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: deny
+- runFlow:
+    file: dismiss-quickstep-anr.yaml
+    env:
+      APP_ID: ${MAESTRO_APP_ID}
+- extendedWaitUntil:
+    visible:
+      id: registration-manual
+    timeout: 60000
+- tapOn:
+    id: registration-manual
+- assertVisible:
+    id: connection-registrationId
+- tapOn:
+    id: registration-back
+- assertVisible:
+    id: registration-manual
+- tapOn:
+    id: registration-manual
+- tapOn:
+    id: connection-registrationId
+- eraseText
+- inputText: ${MAESTRO_REGISTRATION_ID}
+- assertVisible:
+    id: connection-registrationId
+    text: ${MAESTRO_REGISTRATION_ID_PATTERN}
+- tapOn:
+    id: connection-scopeId
+- eraseText
+- inputText: ${MAESTRO_SCOPE_ID}
+- pressKey: Enter
+- assertVisible:
+    id: connection-scopeId
+    text: '^${MAESTRO_SCOPE_ID}$'
+- scrollUntilVisible:
+    element:
+      id: connection-provisioningHost
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: connection-provisioningHost
+- eraseText
+- inputText: ${MAESTRO_PROVISIONING_HOST}
+- pressKey: Enter
+- assertVisible:
+    id: connection-provisioningHost
+    text: ${MAESTRO_PROVISIONING_HOST_PATTERN}
+- scrollUntilVisible:
+    element:
+      id: connection-deviceKey
+    direction: UP
+    timeout: 15000
+- tapOn:
+    id: connection-deviceKey
+# The pinned iOS typer can drop rapid events. Each call uses its slow first-character path.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - evalScript: ${output.keyIndex = 0}
+      - repeat:
+          times: ${MAESTRO_DEVICE_KEY.length}
+          commands:
+            - inputText: ${MAESTRO_DEVICE_KEY.charAt(output.keyIndex)}
+            - evalScript: ${output.keyIndex = output.keyIndex + 1}
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - inputText: ${MAESTRO_DEVICE_KEY}
+- pressKey: Enter
+- scrollUntilVisible:
+    element:
+      id: connection-submit
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: connection-submit
+- extendedWaitUntil:
+    visible:
+      id: connection-status
+      text: '^Connected$'
+    timeout: 180000
+# Connected identity and connection-operation completion are separate app states.
+- runFlow: dismiss-android-permissions.yaml
+- extendedWaitUntil:
+    notVisible:
+      id: app-busy-overlay
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: connection-details
+      enabled: true
+    timeout: 15000
+- tapOn:
+    id: connection-details
+- runFlow:
+    file: dismiss-android-permissions.yaml
+    env:
+      AFTER_DETAILS_TAP: 'true'
+- extendedWaitUntil:
+    visible:
+      id: connection-details-sheet
+    timeout: 15000
+# Full identity lives in the details sheet, not the compact status row.
+- extendedWaitUntil:
+    visible:
+      id: assigned-device-id
+      text: ${MAESTRO_EXPECTED_DEVICE_ID_PATTERN}
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: assigned-hub
+    direction: DOWN
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: assigned-hub
+      text: ${MAESTRO_EXPECTED_HUB_PATTERN}
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: model-id
+    direction: DOWN
+    timeout: 15000
+- assertVisible:
+    id: model-id
+    text: ${MAESTRO_MODEL_ID_PATTERN}
+- scrollUntilVisible:
+    element:
+      id: registration-id
+    direction: DOWN
+    timeout: 15000
+- assertVisible:
+    id: registration-id
+    text: ${MAESTRO_REGISTRATION_ID_PATTERN}
+- scrollUntilVisible:
+    element:
+      id: registry-status
+    direction: DOWN
+    timeout: 15000
+- assertVisible:
+    id: registry-status
+    text: '^Not checked$'
+- scrollUntilVisible:
+    element:
+      id: proof-nonce
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: proof-nonce
+- eraseText
+- inputText: ${MAESTRO_NONCE}
+- pressKey: Enter
+- assertVisible:
+    id: proof-nonce
+    text: ${MAESTRO_NONCE_PATTERN}
+- scrollUntilVisible:
+    element:
+      id: proof-send
+    direction: DOWN
+    timeout: 15000
+- tapOn:
+    id: proof-send
+- scrollUntilVisible:
+    element:
+      id: proof-status
+    direction: DOWN
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: proof-status
+      text: '^Submitted locally$'
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: registry-status
+    direction: UP
+    timeout: 15000
+- assertVisible:
+    id: registry-status
+    text: '^Not checked$'
+- tapOn:
+    id: connection-details-close
+- runFlow: experience-live.yaml
+- stopApp
+- launchApp:
+    clearState: false
+    permissions:
+      all: deny
+- runFlow:
+    file: dismiss-quickstep-anr.yaml
+    env:
+      APP_ID: ${MAESTRO_APP_ID}
+- extendedWaitUntil:
+    visible:
+      id: connection-status
+      text: '^Connected$'
+    timeout: 180000
+- extendedWaitUntil:
+    notVisible:
+      id: registration-manual
+    timeout: 180000
+- runFlow: dismiss-android-permissions.yaml
+- extendedWaitUntil:
+    notVisible:
+      id: app-busy-overlay
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: connection-details
+      enabled: true
+    timeout: 15000
+- tapOn:
+    id: connection-details
+- runFlow:
+    file: dismiss-android-permissions.yaml
+    env:
+      AFTER_DETAILS_TAP: 'true'
+- extendedWaitUntil:
+    visible:
+      id: connection-details-sheet
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: assigned-device-id
+      text: ${MAESTRO_EXPECTED_DEVICE_ID_PATTERN}
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: assigned-hub
+    direction: DOWN
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: assigned-hub
+      text: ${MAESTRO_EXPECTED_HUB_PATTERN}
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: model-id
+    direction: DOWN
+    timeout: 15000
+- assertVisible:
+    id: model-id
+    text: ${MAESTRO_MODEL_ID_PATTERN}
+- scrollUntilVisible:
+    element:
+      id: registration-id
+    direction: DOWN
+    timeout: 15000
+- assertVisible:
+    id: registration-id
+    text: ${MAESTRO_REGISTRATION_ID_PATTERN}
+- scrollUntilVisible:
+    element:
+      id: registry-status
+    direction: DOWN
+    timeout: 15000
+- assertVisible:
+    id: registry-status
+    text: '^Not checked$'
+- tapOn:
+    id: connection-details-close
+- runFlow: experience-home.yaml
+- stopApp

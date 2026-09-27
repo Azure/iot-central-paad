@@ -1,5 +1,5 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
@@ -7,23 +7,25 @@
     "isolatedModules": true,
     "sourceMap": true,
     "jsx": "react-native",
-    "lib": ["es6"],
+    "lib": ["es2022"],
     "resolveJsonModule": true,
     "noEmit": true,
     "strict": true,
     "noUnusedLocals": true,
-    "target": "es2017",
+    "target": "es2022",
     "skipLibCheck": true,
-    "baseUrl": "./src",
     "paths": {
-      "tools/*": ["tools/*"],
-      "hooks/*": ["hooks/*"],
-      "properties/*": ["properties/*"],
-      "contexts/*": ["contexts/*"],
-      "sensors/*": ["sensors/*"],
-      "components/*": ["components/*"]
+      "*": ["./src/*"],
+      "tools/*": ["./src/tools/*"],
+      "hooks/*": ["./src/hooks/*"],
+      "properties/*": ["./src/properties/*"],
+      "contexts/*": ["./src/contexts/*"],
+      "sensors/*": ["./src/sensors/*"],
+      "components/*": ["./src/components/*"],
+      "types/*": ["./src/types/*"]
     }
   },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
   "exclude": [
     "node_modules",
     "src/sensors/health/**/*.ts*",

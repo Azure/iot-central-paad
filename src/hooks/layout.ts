@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import {StorageContext, ThemeContext} from 'contexts';
-import {useState, useEffect, useCallback, useContext, useMemo} from 'react';
-import {Appearance, Dimensions, ScaledSize} from 'react-native';
+import {useState, useEffect, useCallback, useContext} from 'react';
+import {useColorScheme, Dimensions, ScaledSize} from 'react-native';
 import {Debug} from 'tools/CustomLogger';
 import {ThemeMode} from 'types';
 import {useTheme as useNavigationTheme} from '@react-navigation/native';
@@ -48,6 +48,7 @@ export function useScreenDimensions() {
 export function useThemeMode() {
   const {mode, set} = useContext(ThemeContext);
   const {themeMode, save} = useContext(StorageContext);
+  const system = useColorScheme();
 
   // if storage changes thememode, let apply to themecontext
   useEffect(() => {
@@ -68,25 +69,18 @@ export function useThemeMode() {
     [set, save],
   );
 
-  const strMode = useMemo(() => {
-    switch (mode) {
-      case ThemeMode.DARK:
-        return 'dark';
-      case ThemeMode.LIGHT:
-        return 'light';
-      default:
-        const str = Appearance.getColorScheme() as string;
-        return str;
-    }
-  }, [mode]);
+  const strMode =
+    mode === ThemeMode.DARK || (mode === ThemeMode.DEVICE && system === 'dark')
+      ? 'dark'
+      : 'light';
   return {mode: strMode, type: ThemeMode[mode].toString(), setThemeMode};
 }
 
 export function useTheme() {
-  const {colors: navColors, dark} = useNavigationTheme();
+  const theme = useNavigationTheme();
 
   return {
-    colors: {...navColors, secondary: '#969696'},
-    dark,
+    ...theme,
+    colors: {...theme.colors, secondary: theme.dark ? '#ABB9B9' : '#596B70'},
   };
 }

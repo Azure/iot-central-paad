@@ -6,6 +6,7 @@ import React, {useEffect} from 'react';
 import {View} from 'react-native';
 import {CheckBox, ListItem} from '@rneui/themed';
 import {StyleDefinition} from 'types';
+import {palette} from '../theme/palette';
 
 export type Option = {
   id: string;
@@ -19,7 +20,8 @@ const Options = React.memo<{
   onChange: OptionChangeCallback;
   defaultId?: string;
 }>(({items, onChange, defaultId}) => {
-  const {colors} = useTheme();
+  const {colors, dark} = useTheme();
+  const appearance = palette(dark);
   const [itemsState, setItems] = React.useState<(Option & {value: boolean})[]>(
     items.map(i => {
       if (defaultId && i.id === defaultId) {
@@ -35,16 +37,32 @@ const Options = React.memo<{
         flex: 1,
       },
       listItem: {
+        minHeight: 64,
         backgroundColor: colors.card,
+        borderBottomColor: appearance.surfaceBorder,
       },
       subTitle: {
-        color: colors.text,
+        color: appearance.muted,
+        fontSize: 13,
+        lineHeight: 19,
       },
       checkBox: {
-        backgroundColor: colors.card,
+        minWidth: 48,
+        minHeight: 48,
+        marginRight: 8,
+        justifyContent: 'center',
+        backgroundColor: 'transparent',
+      },
+      title: {
+        color: colors.text,
+        fontSize: 16,
+        fontWeight: '600',
+      },
+      selectedTitle: {
+        color: appearance.primary,
       },
     }),
-    [colors],
+    [colors, appearance],
   );
 
   useEffect(() => {
@@ -57,9 +75,9 @@ const Options = React.memo<{
 
   return (
     <View style={style.container}>
-      {itemsState.map((item: Option & {value: boolean}, index: number) => (
+      {itemsState.map((item: Option & {value: boolean}) => (
         <ListItem
-          key={`theme-${index}`}
+          key={`theme-${item.id}`}
           bottomDivider
           containerStyle={style.listItem}>
           <CheckBox
@@ -67,8 +85,8 @@ const Options = React.memo<{
             containerStyle={style.checkBox}
             checkedIcon="dot-circle-o"
             uncheckedIcon="circle-o"
-            checkedColor={colors.text}
-            uncheckedColor={colors.text}
+            checkedColor={appearance.primary}
+            uncheckedColor={appearance.controlBorder}
             checked={item.value}
             onPress={() =>
               setItems(current =>
@@ -84,7 +102,8 @@ const Options = React.memo<{
             }
           />
           <ListItem.Content>
-            <ListItem.Title style={{color: colors.text}}>
+            <ListItem.Title
+              style={[style.title, item.value && style.selectedTitle]}>
               {item.name}
             </ListItem.Title>
             {item.details && (

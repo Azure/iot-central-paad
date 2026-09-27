@@ -1,93 +1,62 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {ISensor, DATA_AVAILABLE_EVENT, getRandom} from './internal';
-import Geolocation from '@react-native-community/geolocation';
-import EventEmitter from 'events';
+import * as Location from 'expo-location';
+import {getRandom} from './internal';
+import {ManagedSensor, Subscription} from './managed';
 
-export default class GeoLocation extends EventEmitter implements ISensor {
-  private enabled: boolean;
-  private simulated: boolean;
-  private currentRun: any;
+type Position = {lat: number; lon: number; alt: number | null};
 
-  constructor(public id: string, private interval: number) {
-    super();
-    this.enabled = false;
-    this.simulated = false;
-    this.currentRun = null;
-  }
-
-  enable(val: boolean): void {
-    if (this.enabled === val) {
-      return;
-    }
-    this.enabled = val;
-    if (!this.enabled && this.currentRun) {
-      this.currentRun.unsubscribe();
-    } else {
-      this.run();
-    }
-  }
-  sendInterval(val: number) {
-    if (this.interval === val) {
-      return;
-    }
-    this.interval = val;
-    this.enable(false);
-    this.enable(true);
-  }
-
-  simulate(val: boolean): void {
-    if (this.simulated === val) {
-      return;
-    }
-    this.simulated = val;
-    if (this.simulated && this.enabled && this.currentRun) {
-      this.enable(false);
-      this.enable(true);
-    }
-  }
-
-  async run() {
-    let intId: ReturnType<typeof setInterval>;
-    if (this.simulated) {
-      intId = setInterval(
-        function (this: GeoLocation) {
-          this.emit(DATA_AVAILABLE_EVENT, this.id, {
-            lat: getRandom(),
-            lon: getRandom(),
-            alt: getRandom(),
-          });
-        }.bind(this),
-        this.interval,
-      );
-    } else {
-      intId = setInterval(
-        function (this: GeoLocation) {
-          Geolocation.getCurrentPosition(
-            ({coords}) => {
-              if (coords) {
-                this.emit(DATA_AVAILABLE_EVENT, this.id, {
-                  lat: coords.latitude,
-                  lon: coords.longitude,
-                  alt: coords.altitude,
-                });
-              }
-            },
-            error => {
-              if (error) {
-                // handle error
-              }
-            },
-          );
-        }.bind(this),
-        this.interval,
-      );
-    }
-    this.currentRun = {
-      unsubscribe: () => {
-        clearInterval(intId);
-      },
+export default class GeoLocation extends ManagedSensor<Position> {
+  protected sampleSimulation(): Position {
+    return {
+      lat: getRandom(-90, 90),
+      lon: getRandom(-180, 180),
+      alt: getRandom(),
     };
+  }
+
+  protected async startHardware(
+    emit: (data: Position) => void,
+    unavailable: () => void,
+    active: () => boolean,
+  ): Promise<Subscription> {
+    if (!(await Location.hasServicesEnabledAsync())) {
+      throw new Error('Location services disabled');
+    }
+    if (!active()) {
+      return {remove() {}};
+    }
+    let permission = await Location.getForegroundPermissionsAsync();
+    if (!permission.granted && permission.canAskAgain && active()) {
+      permission = await Location.requestForegroundPermissionsAsync();
+    }
+    if (!permission.granted) {
+      throw new Error('Location permission denied');
+    }
+    if (!active()) {
+      return {remove() {}};
+    }
+    let lastSent = -Infinity;
+    return Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: this.interval,
+        distanceInterval: 0,
+      },
+      ({coords}) => {
+        // iOS does not implement timeInterval, so throttle actual fixes here.
+        const now = Date.now();
+        if (now - lastSent >= this.interval) {
+          lastSent = now;
+          emit({
+            lat: coords.latitude,
+            lon: coords.longitude,
+            alt: coords.altitude,
+          });
+        }
+      },
+      unavailable,
+    );
   }
 }

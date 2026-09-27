@@ -1,0 +1,139 @@
+name: REPLAY - Credential-free iOS startup
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('iOS replay of run {0}', inputs.source_run) || 'Register manual workflow only - no device traffic' }}
+
+on:
+  push:
+    branches: [feature/adr-onboarding]
+    paths: [.github/workflows/replay-ios.yml]
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: Completed owner-dispatched live workflow run ID (attempt 1 only)
+        type: string
+        required: true
+      source_sha:
+        description: Exact binary source commit (40 lowercase hex)
+        type: string
+        required: true
+      ios_driver:
+        description: Credential-free iOS replay driver
+        type: choice
+        options: [maestro, xcuitest]
+        default: maestro
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: replay-ios
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  PAAD_VARIANT: ci
+  EXPO_NO_TELEMETRY: "1"
+  MAESTRO_CLI_NO_ANALYTICS: "1"
+  MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: "true"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  register-manual-entrypoint:
+    if: github.event_name == 'push'
+    runs-on: macos-26
+    timeout-minutes: 5
+    steps:
+      - run: echo 'Manual entrypoint registered. No binary, device traffic or credentials are used by this job.'
+
+  replay:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/feature/adr-onboarding' &&
+      github.repository == 'HangyiWang/iot-central-paad' &&
+      github.actor == github.repository_owner &&
+      github.triggering_actor == github.repository_owner
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      SOURCE_RUN: ${{ inputs.source_run }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      IOS_SIMULATOR_DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - name: Reject unsupported replay drivers
+        env:
+          IOS_REPLAY_DRIVER: ${{ inputs.ios_driver }}
+        run: |
+          if [[ "$IOS_REPLAY_DRIVER" != maestro && "$IOS_REPLAY_DRIVER" != xcuitest ]]; then
+            echo 'Unsupported iOS replay driver.' >&2
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+      - name: Verify exact source run and download only its pre-secret simulator app
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/ci/replay-ios.sh download
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: inputs.ios_driver == 'maestro'
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: bash scripts/ci/install-maestro.sh
+        if: inputs.ios_driver == 'maestro'
+      - name: Replay synthetic startup on a newly owned iPhone simulator
+        if: inputs.ios_driver == 'maestro'
+        timeout-minutes: 15
+        run: bash scripts/ci/replay-ios.sh
+      - name: Upload only credential-free replay diagnostics and binary identity
+        if: ${{ !cancelled() && inputs.ios_driver == 'maestro' && steps.source.outcome == 'success' && hashFiles('build/ci-artifacts/replay-ios/replay-identity.json') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: replay-ios-${{ inputs.source_run }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            build/ci-artifacts/identity.txt
+            build/ci-artifacts/replay-ios/
+          retention-days: 3
+          if-no-files-found: error
+      - uses: ruby/setup-ruby@984c0c890880bbf811283d6f09c4607c62d210a4 # v1
+        if: inputs.ios_driver == 'xcuitest'
+        with:
+          ruby-version: "3.3.8"
+          bundler: "2.5.23"
+          bundler-cache: true
+      - name: Replay native synthetic inputs without Connect or credentials
+        if: inputs.ios_driver == 'xcuitest'
+        timeout-minutes: 25
+        run: node scripts/ci/replay-native-ios.js
+      - name: Remove only this replay's native simulator after external interruption
+        if: always() && inputs.ios_driver == 'xcuitest' && env.IOS_SIMULATOR_UDID != '' && env.PAAD_NATIVE_REPLAY_SIMULATOR_DELETED != '1'
+        run: |
+          [[ "$IOS_SIMULATOR_UDID" =~ ^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$ ]]
+          if ! xcrun simctl shutdown "$IOS_SIMULATOR_UDID" >/dev/null 2>&1; then
+            echo '::warning::Native replay simulator shutdown did not complete; deleting only the owned simulator.'
+          fi
+          if ! xcrun simctl delete "$IOS_SIMULATOR_UDID" >/dev/null 2>&1; then
+            echo '::error::Native replay simulator deletion failed.'
+            exit 1
+          fi
+      - name: Upload only credential-free native replay diagnostics and fixed smoke results
+        if: ${{ !cancelled() && inputs.ios_driver == 'xcuitest' && steps.source.outcome == 'success' && hashFiles('build/ci-artifacts/replay-ios/replay-identity.json') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: replay-ios-${{ inputs.source_run }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            build/ci-artifacts/identity.txt
+            build/ci-artifacts/replay-ios/
+            build/ios-ui-smoke-summary.json
+            build/ios-ui-smoke.log
+          retention-days: 3
+          if-no-files-found: error

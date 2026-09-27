@@ -1,0 +1,87 @@
+appId: ${APP_ID}
+name: Credential-free bundled startup and manual-navigation smoke
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: deny
+- runFlow: dismiss-quickstep-anr.yaml
+- extendedWaitUntil:
+    visible:
+      id: registration-manual
+    timeout: 60000
+- assertVisible:
+    id: app-header-title
+    text: "^Phone as a Device$"
+- assertVisible: "Connect manually"
+- tapOn:
+    id: registration-manual
+- assertVisible: "Manually connect"
+- assertVisible: "Connection info"
+- assertVisible: "Registration ID"
+- assertVisible: "ID scope"
+- tapOn:
+    id: connection-registrationId
+- inputText: "ci-input-fixture"
+- pressKey: Enter
+- assertVisible:
+    id: connection-registrationId
+    text: "^ci-input-fixture$"
+- tapOn:
+    id: connection-scopeId
+- inputText: "0ne00000000"
+- pressKey: Enter
+- assertVisible:
+    id: connection-scopeId
+    text: "^0ne00000000$"
+- scrollUntilVisible:
+    element:
+      id: connection-provisioningHost
+    direction: DOWN
+- tapOn:
+    id: connection-provisioningHost
+- eraseText
+- inputText: "global-canary.azure-devices-provisioning.net"
+- pressKey: Enter
+- assertVisible:
+    id: connection-provisioningHost
+    text: '^global-canary\.azure-devices-provisioning\.net$'
+# Match the real flow: finish the endpoint before focusing the secure input.
+- scrollUntilVisible:
+    element:
+      id: connection-deviceKey
+    direction: UP
+- tapOn:
+    id: connection-deviceKey
+- inputText: "synthetic+not/a-device-key="
+- pressKey: Enter
+- assertVisible:
+    id: connection-provisioningHost
+    text: '^global-canary\.azure-devices-provisioning\.net$'
+- scrollUntilVisible:
+    element:
+      id: connection-submit
+    direction: DOWN
+- assertVisible:
+    id: connection-submit
+# Never submit these deliberately invalid fixtures or send cloud traffic.
+- tapOn:
+    id: registration-back
+# iOS can suggest saving even though these non-account fields opt out of autofill.
+- runFlow: dismiss-ios-password-save.yaml
+- assertVisible: ".*Start here.*"
+- assertVisible: "Connect manually"
+- stopApp
+- launchApp:
+    clearState: false
+    permissions:
+      all: deny
+- runFlow: dismiss-quickstep-anr.yaml
+- extendedWaitUntil:
+    visible:
+      id: registration-manual
+    timeout: 60000
+- assertVisible:
+    id: app-header-title
+    text: "^Phone as a Device$"
+- assertVisible: "Connect manually"

@@ -10,8 +10,11 @@ export const GenericDeviceModel: BleDeviceModel<GenericDeviceData> = {
     return true;
   },
   onScan(device: Device) {
+    if (device.rssi === null || device.rssi === undefined) {
+      return null;
+    }
     return {
-      rssi: device.rssi ?? 0,
+      rssi: device.rssi,
     };
   },
   getItemProps: function (data: any): DeviceItemProps[] {

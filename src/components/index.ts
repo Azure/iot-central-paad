@@ -6,6 +6,8 @@ export {default as Button} from './button';
 export * from './buttonGroup';
 export {default as ButtonGroup} from './buttonGroup';
 export * from './card';
+export {default as ConnectionNotice} from './connectionNotice';
+export * from './connectionNotice';
 export * from './form';
 export {default as Form} from './form';
 export {default as HeaderCloseButton} from './headerCloseButton';

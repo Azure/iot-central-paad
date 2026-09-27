@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {useCallback, useContext, useMemo} from 'react';
+import {useCallback, useContext, useMemo, useState} from 'react';
 import {ThemeContext} from './contexts/theme';
 import React from 'react';
 import {
@@ -10,12 +10,17 @@ import {
   ScrollView,
   Platform,
   Alert,
+  StyleSheet,
   ViewStyle,
   TextStyle,
 } from 'react-native';
 import {StackActions, useNavigation} from '@react-navigation/native';
 import {Icon, ListItem} from '@rneui/themed';
-import {useDeliveryInterval, useSimulation} from './hooks/iotc';
+import {
+  useConnectIoTCentralClient,
+  useDeliveryInterval,
+  useSimulation,
+} from './hooks/iotc';
 import {defaults} from './contexts/defaults';
 import Strings from 'strings';
 import {camelToName, Text} from 'components/typography';
@@ -23,6 +28,10 @@ import {useBoolean, useTheme} from 'hooks';
 import {Literal, Pages, PagesNavigator, ThemeMode} from 'types';
 import {Loader} from 'components/loader';
 import {StorageContext} from 'contexts/storage';
+import {IoTCContext} from 'contexts/iotc';
+import {reportDiagnostic, safeError} from './connection/errors';
+import {cardTint, palette} from './theme/palette';
+import FontCredits, {ConnectionMapCredits} from './components/fontCredits';
 
 const pkg = require('../package.json');
 
@@ -42,10 +51,12 @@ export default function Settings() {
   const {mode} = useContext(ThemeContext);
   const {colors, dark} = useTheme();
   const [deliveryInterval] = useDeliveryInterval();
+  const [, , disconnect] = useConnectIoTCentralClient();
+  const {setError} = useContext(IoTCContext);
   const {clear} = useContext(StorageContext);
-  const [loading] = useBoolean(false);
+  const [loading, setLoading] = useBoolean(false);
   const styles: Literal<ViewStyle | TextStyle> = {
-    container: {flex: 1, marginVertical: 10},
+    container: {flex: 1, backgroundColor: colors.background},
   };
 
   const clearStorage = useCallback(() => {
@@ -56,12 +67,19 @@ export default function Settings() {
         {
           text: 'Proceed',
           onPress: async () => {
-            // IMPORTANT!: clear stored credentials before cleaning client, otherwise device will continue to re-connect
-            await clear();
-            Alert.alert(
-              Strings.Settings.Clear.Success.Title,
-              Strings.Settings.Clear.Success.Text,
-            );
+            setLoading.True();
+            try {
+              disconnect();
+              await clear();
+              Alert.alert(
+                Strings.Settings.Clear.Success.Title,
+                Strings.Settings.Clear.Success.Text,
+              );
+            } catch (failure) {
+              setError(safeError(failure, 'STORAGE_FAILED'));
+            } finally {
+              setLoading.False();
+            }
           },
         },
         {
@@ -74,7 +92,7 @@ export default function Settings() {
         cancelable: false,
       },
     );
-  }, [clear]);
+  }, [clear, disconnect, setLoading, setError]);
 
   const items = useMemo<ProfileItem[]>(
     () => [
@@ -187,23 +205,33 @@ const RightElement = React.memo<{
   colors: any;
   dark: boolean;
 }>(({item, colors, dark}) => {
-  const [enabled, setEnabled] = useBoolean(item.value as boolean);
+  const [pending, setPending] = useState(false);
   const nav = useNavigation<PagesNavigator>();
   if (item.action && item.action.type === 'switch') {
     return (
       <Switch
-        value={enabled}
-        onValueChange={val => {
-          item.action?.fn(val, nav);
-          setEnabled.Toggle();
+        value={Boolean(item.value)}
+        disabled={pending}
+        onValueChange={async val => {
+          setPending(true);
+          try {
+            await item.action?.fn(val, nav);
+          } catch (failure) {
+            reportDiagnostic(failure);
+          } finally {
+            setPending(false);
+          }
         }}
         {...(Platform.OS === 'android' && {
           thumbColor: item.value
-            ? colors.primary
+            ? palette(dark).primary
             : dark
             ? colors.text
             : colors.background,
-          trackColor: {true: colors.border, false: colors.border},
+          trackColor: {
+            true: palette(dark).positiveSurface,
+            false: palette(dark).border,
+          },
         })}
       />
     );
@@ -214,54 +242,109 @@ const RightElement = React.memo<{
 const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
   ({items, colors, dark}) => {
     const nav = useNavigation<PagesNavigator>();
+    const appearance = palette(dark);
 
-    const styles = React.useMemo(
+    const styles = React.useMemo<Literal<ViewStyle | TextStyle>>(
       () => ({
         container: {flex: 1},
+        content: {padding: 20, paddingBottom: 32},
+        group: {
+          borderRadius: 24,
+          overflow: 'hidden',
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: appearance.surfaceBorder,
+          backgroundColor: appearance.surfaceRaised,
+        },
+        row: {
+          backgroundColor: 'transparent',
+          minHeight: 76,
+          paddingHorizontal: 18,
+          borderBottomColor: appearance.surfaceBorder,
+        },
+        icon: {
+          width: 40,
+          height: 40,
+          borderRadius: 14,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
         subtitle: {
-          color: colors.secondary,
+          color: appearance.muted,
+          fontSize: 13,
+          lineHeight: 19,
+          marginTop: 4,
         },
         title: {
           color: colors.text,
+          fontSize: 16,
+          fontWeight: '600',
         },
       }),
-      [colors],
+      [colors, appearance],
     );
 
+    // A pressed row settles onto a gentle tonal fill instead of dimming its text.
+    const rowFeedback = ({pressed}: {pressed: boolean}) =>
+      pressed ? {backgroundColor: appearance.inset} : null;
+
     return (
-      <ScrollView style={styles.container}>
-        {items.map((item, index) => (
-          <ListItem
-            key={`setting-${index}`}
-            bottomDivider
-            containerStyle={{backgroundColor: colors.card}}
-            onPress={
-              item.action && item.action.type !== 'switch'
-                ? item.action.fn.bind(null, nav)
-                : undefined
-            }>
-            {item.icon && (
-              <Icon name={item.icon} type="ionicon" color={colors.text} />
-            )}
-            <ListItem.Content>
-              <ListItem.Title style={styles.title}>{item.title}</ListItem.Title>
-              {item.subtitle && (
-                <ListItem.Subtitle style={styles.subtitle}>
-                  {item.subtitle}
-                </ListItem.Subtitle>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}>
+        <View style={styles.group}>
+          {items.map((item, index) => (
+            <ListItem
+              key={`setting-${index}`}
+              bottomDivider={index < items.length - 1}
+              containerStyle={styles.row}
+              {...(item.action && item.action.type !== 'switch'
+                ? {style: rowFeedback, onPress: item.action.fn.bind(null, nav)}
+                : null)}>
+              {item.icon && (
+                <View
+                  style={[
+                    styles.icon,
+                    {backgroundColor: cardTint(item.title, dark)},
+                  ]}
+                  accessible={false}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants">
+                  <Icon
+                    name={item.icon}
+                    type="ionicon"
+                    size={21}
+                    color={colors.text}
+                  />
+                </View>
               )}
-            </ListItem.Content>
-            {item.action && (
-              <>
-                <RightElement item={item} colors={colors} dark={dark} />
-                {item.action.type === 'expand' && <ListItem.Chevron />}
-              </>
-            )}
-            {item.value && typeof item.value === 'string' && (
-              <Text>{item.value}</Text>
-            )}
-          </ListItem>
-        ))}
+              <ListItem.Content>
+                <ListItem.Title style={styles.title}>
+                  {item.title}
+                </ListItem.Title>
+                {item.subtitle && (
+                  <ListItem.Subtitle style={styles.subtitle}>
+                    {item.subtitle}
+                  </ListItem.Subtitle>
+                )}
+              </ListItem.Content>
+              {item.action && (
+                <>
+                  <RightElement item={item} colors={colors} dark={dark} />
+                  {item.action.type === 'expand' && (
+                    <ListItem.Chevron color={appearance.muted} />
+                  )}
+                </>
+              )}
+              {item.value && typeof item.value === 'string' && (
+                <Text style={{fontSize: 13, color: appearance.muted}}>
+                  {item.value}
+                </Text>
+              )}
+            </ListItem>
+          ))}
+        </View>
+        <FontCredits />
+        <ConnectionMapCredits />
       </ScrollView>
     );
   },

@@ -1,0 +1,103 @@
+name: REPLAY - Credential-free Android startup
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('Android replay of run {0}', inputs.source_run) || 'Register manual workflow only - no device traffic' }}
+
+on:
+  push:
+    branches: [feature/adr-onboarding]
+    paths: [.github/workflows/replay-android.yml]
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: Completed owner-dispatched live workflow run ID (attempt 1 only)
+        type: string
+        required: true
+      source_sha:
+        description: Exact binary source commit (40 lowercase hex)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: replay-android
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  PAAD_VARIANT: ci
+  EXPO_NO_TELEMETRY: "1"
+  MAESTRO_CLI_NO_ANALYTICS: "1"
+  MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: "true"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  register-manual-entrypoint:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - run: echo 'Manual entrypoint registered. No binary, device traffic or credentials are used by this job.'
+
+  replay:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/feature/adr-onboarding' &&
+      github.repository == 'HangyiWang/iot-central-paad' &&
+      github.actor == github.repository_owner &&
+      github.triggering_actor == github.repository_owner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      SOURCE_RUN: ${{ inputs.source_run }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+      - name: Verify exact source run and download only its pre-secret APK
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/ci/replay-android.sh download
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: bash scripts/ci/install-maestro.sh
+      - name: Enable standard runner KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Replay synthetic startup with the live isolated Java home
+        timeout-minutes: 15
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 36
+          target: default
+          arch: x86_64
+          profile: pixel_6
+          cores: 4
+          ram-size: 4096M
+          emulator-boot-timeout: 300
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash scripts/ci/replay-android.sh
+      - name: Upload only credential-free replay diagnostics and binary identity
+        if: ${{ !cancelled() && steps.source.outcome == 'success' && hashFiles('build/ci-artifacts/replay-android/replay-identity.json') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: replay-android-${{ inputs.source_run }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            build/ci-artifacts/identity.txt
+            build/ci-artifacts/replay-android/
+          retention-days: 3
+          if-no-files-found: error

@@ -1,0 +1,171 @@
+name: FOUNDATION - Expo 57 bundled native startup
+
+on:
+  push:
+    branches: [modernize/paad-foundation]
+  pull_request:
+    branches: [master, modernize/paad-foundation]
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to exercise
+        type: choice
+        options: [all, android, ios]
+        default: all
+      refresh_pod_lock:
+        description: Explicitly regenerate and upload the CocoaPods lock for review
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  PAAD_VARIANT: ci
+  EXPO_NO_TELEMETRY: "1"
+  MAESTRO_CLI_NO_ANALYTICS: "1"
+  MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: "true"
+  PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  javascript:
+    name: Linux lint and real startup Jest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: bash scripts/ci/identity.sh
+      - run: npx expo install --check
+      - run: node scripts/ci/check-native-config.js
+      - run: npm run lint
+      - run: npm test -- --runInBand
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: foundation-javascript-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/ci-artifacts/
+          retention-days: 3
+          if-no-files-found: warn
+
+  android:
+    name: Android bundled CI APK and Maestro
+    if: github.event_name != 'workflow_dispatch' || inputs.platform != 'ios'
+    needs: javascript
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+          cache: npm
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: npm ci --no-audit --no-fund
+      - run: bash scripts/ci/identity.sh
+      - run: npm run prebuild:ci -- --platform android
+      - name: Install the matched Android SDK and NDK
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" "ndk;27.1.12297006"'
+      - run: bash scripts/ci/build-android.sh
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: bash scripts/ci/install-maestro.sh
+      - name: Enable standard runner KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Credential-free emulator smoke
+        timeout-minutes: 12
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        with:
+          api-level: 36
+          target: default
+          arch: x86_64
+          profile: pixel_6
+          cores: 4
+          ram-size: 4096M
+          emulator-boot-timeout: 300
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash scripts/ci/smoke-android.sh
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: foundation-android-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/ci-artifacts/
+          retention-days: 3
+          if-no-files-found: warn
+
+  ios:
+    name: iOS bundled Simulator and Maestro
+    if: github.event_name != 'workflow_dispatch' || inputs.platform != 'android'
+    needs: javascript
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      IOS_SIMULATOR_DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      RCT_NEW_ARCH_ENABLED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: bash scripts/ci/identity.sh
+      - run: npm run prebuild:ci -- --platform ios
+      - uses: ruby/setup-ruby@984c0c890880bbf811283d6f09c4607c62d210a4 # v1
+        with:
+          ruby-version: "3.3.8"
+          bundler: "2.5.23"
+          bundler-cache: true
+      - run: cp Gemfile.lock build/ci-artifacts/Gemfile.lock
+      - name: Install locked CocoaPods dependencies deliberately
+        env:
+          PAAD_REFRESH_POD_LOCK: ${{ github.event_name == 'workflow_dispatch' && inputs.refresh_pod_lock && '1' || '0' }}
+        run: bash scripts/ci/install-pods.sh
+      - run: bash scripts/ci/build-ios.sh
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: bash scripts/ci/install-maestro.sh
+      - name: Credential-free simulator smoke
+        timeout-minutes: 12
+        run: bash scripts/ci/smoke-ios.sh
+      - name: Stop CI simulator
+        if: always() && env.IOS_SIMULATOR_STARTED == '1'
+        run: DEVELOPER_DIR="$IOS_SIMULATOR_DEVELOPER_DIR" xcrun simctl shutdown "$IOS_SIMULATOR_UDID"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: foundation-ios-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/ci-artifacts/
+          retention-days: 3
+          if-no-files-found: warn

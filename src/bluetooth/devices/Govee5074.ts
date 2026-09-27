@@ -19,7 +19,7 @@ export const Govee5074Model: BleDeviceModel<Govee5074Data> = {
     }
 
     const buf = Buffer.from(device.manufacturerData, 'base64');
-    if (buf.toString('ascii').includes('INTELLI_ROCKS')) {
+    if (buf.length < 8 || buf.toString('ascii').includes('INTELLI_ROCKS')) {
       return null;
     }
 
@@ -42,7 +42,7 @@ export const Govee5074Model: BleDeviceModel<Govee5074Data> = {
   },
   getItemProps: function (data: Govee5074Data): DeviceItemProps[] {
     const props: DeviceItemProps[] = [
-      data.temperature && {
+      {
         id: 'temp',
         name: 'Temperature',
         enabled: true,
@@ -51,7 +51,7 @@ export const Govee5074Model: BleDeviceModel<Govee5074Data> = {
         value: data.temperature,
         unit: '°C',
       },
-      data.humidity && {
+      {
         id: 'humidity',
         name: 'Humidity',
         enabled: true,
@@ -69,7 +69,7 @@ export const Govee5074Model: BleDeviceModel<Govee5074Data> = {
         value: data.rssi,
         unit: 'dBm',
       },
-      data.battery && {
+      {
         id: 'battery',
         name: 'Battery',
         enabled: true,
@@ -78,7 +78,7 @@ export const Govee5074Model: BleDeviceModel<Govee5074Data> = {
         value: data.battery,
         unit: '%',
       },
-    ].filter(Boolean) as DeviceItemProps[];
+    ];
 
     return props;
   },

@@ -5,6 +5,8 @@ import React from 'react';
 import {View, ViewStyle} from 'react-native';
 import {CheckBox} from '@rneui/themed';
 import {StyleDefinition} from 'types';
+import {useTheme} from '../hooks';
+import {palette} from '../theme/palette';
 
 export type ButtonGroupItem = {
   id: string;
@@ -16,8 +18,11 @@ const styles: StyleDefinition = {
     flex: 1,
   },
   item: {
+    minHeight: 48,
     marginStart: 0,
-    paddingVertical: 0,
+    marginVertical: 0,
+    paddingVertical: 12,
+    justifyContent: 'center',
     backgroundColor: undefined,
     borderWidth: 0,
   },
@@ -33,23 +38,27 @@ interface ButtonGroupProps {
 const ButtonGroup = React.memo<ButtonGroupProps>(
   ({items, onCheckedChange, defaultCheckedId, readonly, containerStyle}) => {
     const ids = items.map(i => i.id);
+    const {dark} = useTheme();
+    const colors = palette(dark);
     const [checked, setChecked] = React.useState<(typeof ids)[number]>(
       defaultCheckedId ?? ids[0],
     );
     return (
-      <View
-        style={[styles.container, containerStyle]}
-        key={`btnGroup-${Math.random()}`}>
-        {items.map((item, index) => (
+      // Stable keys keep press feedback attached to the same control.
+      <View style={[styles.container, containerStyle]}>
+        {items.map(item => (
           <CheckBox
-            key={`chkb-${index}-${Math.random()}`}
+            key={`chkb-${item.id}`}
             containerStyle={styles.item}
             disabled={readonly}
             checkedIcon="dot-circle-o"
             uncheckedIcon="circle-o"
             checked={checked === item.id}
-            checkedColor={readonly ? 'gray' : undefined}
-            uncheckedColor={readonly ? 'gray' : undefined}
+            checkedColor={readonly ? colors.muted : colors.primary}
+            uncheckedColor={readonly ? colors.muted : colors.controlBorder}
+            textStyle={{
+              color: checked === item.id ? colors.primary : colors.text,
+            }}
             title={item.label}
             onPress={() => {
               setChecked(item.id);

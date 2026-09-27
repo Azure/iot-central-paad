@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {LogItem, TimedLog} from '../types';
+import {redactLog} from '../tools/CustomLogger';
+
+export const MAX_LOG_ENTRIES = 500;
 
 interface ILogsContext {
   logs: TimedLog;
@@ -16,18 +19,25 @@ const {Provider} = LogsContext;
 
 const LogsProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
   const [logs, setLogs] = useState<TimedLog>(initialState);
+  const nextId = useRef(0);
   const append = useCallback(
     (logItem: LogItem) => {
-      setLogs(current => [
-        ...current,
-        {logItem, timestamp: new Date(Date.now()).toLocaleString()},
-      ]);
+      const entry = {
+        id: nextId.current++,
+        logItem: {
+          eventName: redactLog(logItem.eventName),
+          eventData: redactLog(logItem.eventData),
+        },
+        timestamp: new Date(Date.now()).toLocaleString(),
+      };
+      setLogs(current => [...current.slice(-(MAX_LOG_ENTRIES - 1)), entry]);
     },
     [setLogs],
   );
   const clear = useCallback(() => {
     setLogs([
       {
+        id: nextId.current++,
         logItem: {
           eventData: 'Application just reset',
           eventName: 'INFO',

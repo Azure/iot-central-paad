@@ -1,422 +1,161 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {RouteProp} from '@react-navigation/native';
 import React from 'react';
-import {WebView} from 'react-native-webview';
+import {RouteProp} from '@react-navigation/native';
+import {ScrollView, StyleSheet, View} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   NavigationParams,
   DATA_AVAILABLE_EVENT,
-  LineChartOptions,
+  SENSOR_UNAVAILABLE_EVENT,
   ChartType,
-  ChartSearchSpan,
-  StyleDefinition,
 } from 'types';
 import {SensorMap} from 'sensors';
-import {StyleSheet, View} from 'react-native';
-import {
-  Name,
-  Text,
-  getRandomColor,
-  LightenDarkenColor,
-} from 'components/typography';
-import {AnimatedCircularProgress} from 'react-native-circular-progress';
+import {Text, camelToName} from 'components/typography';
 import Map from 'components/map';
-import {Loader} from 'components/loader';
-import {useScreenDimensions, useTheme} from 'hooks';
+import {useTheme} from 'hooks';
+import {HistoryChart} from './charts/HistoryChart';
+import {
+  appendSample,
+  emptyHistory,
+  formatValue,
+  HISTORY_LIMIT,
+  readLocation,
+} from './charts/history';
 
-type SeriesData = {
-  [date: string]: {
-    [field: string]: number;
-  };
+type ChartParams = NavigationParams & {
+  chartType: ChartType;
+  telemetryId: string;
+  currentValue: unknown;
 };
 
-type ChartData = {
-  [groupId: string]: {
-    [telemetryId: string]: SeriesData;
-  };
-};
-
-type TelemetryData = {
-  [telemetryId: string]: {
-    values: {
-      timestamp: string;
-      value: number;
-    }[];
-  };
-};
-
-type TelemetryMetaData = {
-  [telemetryId: string]: {
-    displayName: string;
-    color: string;
-  };
-};
-
-const Chart = React.memo<{
-  route: RouteProp<
-    Record<
-      string,
-      NavigationParams & {
-        chartType: ChartType;
-        telemetryId: string;
-        currentValue: any;
-      }
-    >,
-    'Insight'
-  >;
-}>(({route}) => {
-  const {colors, dark} = useTheme();
-  const {screen} = useScreenDimensions();
-  const {chartType, telemetryId, currentValue} = route.params;
-  const [data, setData] = React.useState<TelemetryData>({});
-  const [metadata, setMetadata] = React.useState<TelemetryMetaData>({});
-  const chartRef = React.useRef<WebView>(null);
-  const styles = React.useMemo<StyleDefinition>(
-    () => ({
-      map: {
-        flex: 3,
-        margin: 20,
-        borderRadius: 20,
-        ...(!dark
-          ? {
-              shadowColor: "'rgba(0, 0, 0, 0.14)'",
-              shadowOffset: {
-                width: 0,
-                height: 3,
-              },
-              shadowOpacity: 0.8,
-              shadowRadius: 3.84,
-              elevation: 5,
-            }
-          : {}),
-      },
-      mapContainer: {flex: 1},
-      webView: {flex: 2, justifyContent: 'flex-start'},
-      loading: {
-        position: 'absolute',
-        height: '100%',
-        width: '100%',
-        backgroundColor: colors.background,
-      },
-      summary: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: 40,
-      },
-    }),
-    [colors.background, dark],
+function ChartContent({
+  chartType,
+  telemetryId,
+  currentValue,
+  title,
+}: ChartParams) {
+  const {colors} = useTheme();
+  const insets = useSafeAreaInsets();
+  const sensor = SensorMap[telemetryId];
+  const [history, setHistory] = React.useState(() =>
+    appendSample(emptyHistory(), telemetryId, currentValue, Date.now()),
   );
-  const searchSpan: ChartSearchSpan = React.useMemo(() => {
-    const to = new Date();
-    const from = new Date();
-    from.setMinutes(to.getMinutes() - 10);
-    return {
-      from: from.toISOString(),
-      to: to.toISOString(),
-      bucketSize: '60s',
-    };
-  }, []);
-  const chartOptions: LineChartOptions = React.useMemo(
-    () => ({
-      noAnimate: true,
-      brushHandlesVisible: false,
-      snapBrush: false,
-      interpolationFunction: 'curveMonotoneX',
-      theme: dark ? 'dark' : 'light',
-      offset: 'Local',
-      legend: 'compact',
-      includeDots: true,
-      hideChartControlPanel: true,
-    }),
-    [dark],
+  const [location, setLocation] = React.useState(() =>
+    readLocation(currentValue),
   );
 
-  const chartDataOptions = React.useMemo(
-    () =>
-      Object.keys(metadata).map(telemId => ({
-        alias: metadata[telemId].displayName,
-        color: metadata[telemId].color,
-        searchSpan,
-      })),
-    [metadata, searchSpan],
-  );
-
-  const html = React.useMemo(
-    () => `<html>
-    <head>
-    <script src="https://unpkg.com/tsiclient@latest/tsiclient.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/tsiclient@latest/tsiclient.css">
-    </link>
-    <style>
-        body{
-            background-color:${colors.background};
-        }
-        .tsi-seriesName {
-            width: 100%;
-        }
-        .tsi-seriesName span {
-            font-size: xx-large;
-        }
-        .tsi-lineChartSVG {
-            height: 110% !important;
-        }
-        .tsi-legend.compact {
-            margin-bottom:60px;
-        }
-        .tsi-legend.compact .tsi-seriesLabel .tsi-splitByContainer .tsi-splitByLabel {
-            display: inline-block;
-            margin: 0 4px;
-            padding: 0 4px 1px 4px;
-            margin-top: 1px;
-            height:100%;
-        }
-        .tsi-legend.compact .tsi-seriesLabel .tsi-splitByContainer .tsi-splitByLabel .tsi-seriesName {
-            max-width: fit-content;
-        }
-
-        .tsi-legend.compact .tsi-seriesLabel .tsi-splitByContainer .tsi-splitByLabel .tsi-colorKey {
-            top: 10px;
-            height: 10px;
-        }
-
-        .tsi-lineChart .tsi-lineChartSVG text.standardYAxisText {
-            font-size: xx-large;
-        }
-
-        .tsi-lineChart .tsi-lineChartSVG text {
-            font-size: xx-large;
-        }
-    </style>
-    <script>
-
-        window.onload = function () {
-            tsiClient = new TsiClient();
-            data = [];
-
-            lineChart = new tsiClient.ux.LineChart(document.getElementById('chart1'));
-            lineChart.render(data, ${JSON.stringify(
-              chartOptions,
-            )}, ${JSON.stringify(chartDataOptions)});
-        }
-    </script>
-<body>
-    <div id="chart1" style="width: 100%; height: 1000px; margin-top: 40px;"></div>
-</body>
-</head>
-</html>`,
-    [colors, chartOptions, chartDataOptions],
-  );
-
-  const updateData = React.useCallback(
-    (id: string, value: any) => {
+  React.useEffect(() => {
+    const receive = (id: string, value: unknown) => {
       if (id !== telemetryId) {
         return;
       }
-      if (typeof value !== 'number') {
-        // data is composite
-        setData(current => {
-          Object.keys(value).forEach(fieldId => {
-            if (!metadata[fieldId]) {
-              setMetadata(currentMetadata => ({
-                ...currentMetadata,
-                [fieldId]: {
-                  displayName: `${id}/${fieldId}`,
-                  color: getRandomColor(),
-                },
-              }));
-            }
-            current = {
-              ...current,
-              [fieldId]: {
-                ...current[fieldId],
-                values: [
-                  ...(current[fieldId]?.values ?? []),
-                  {timestamp: new Date().toISOString(), value: value[fieldId]},
-                ],
-              },
-            };
-          });
-          return current;
-        });
+      if (chartType === ChartType.MAP) {
+        setLocation(readLocation(value));
       } else {
-        if (!metadata[id]) {
-          setMetadata(currentMetadata => ({
-            ...currentMetadata,
-            [id]: {
-              displayName: id,
-              color: getRandomColor(),
-            },
-          }));
-        }
-        setData(current => ({
-          ...current,
-          [id]: {
-            ...current[id],
-            values: [
-              ...(current[id]?.values ?? []),
-              {timestamp: new Date().toISOString(), value},
-            ],
-          },
-        }));
+        const timestamp = Date.now();
+        setHistory(previous =>
+          appendSample(previous, telemetryId, value, timestamp),
+        );
       }
-    },
-    [telemetryId, metadata],
-  );
-
-  const getChartCompatibleData = React.useCallback(
-    (telemetryData: TelemetryData) =>
-      Object.keys(telemetryData).reduce<ChartData[]>(
-        (chartData, telemId) => [
-          ...chartData,
-          {
-            [telemId]: {
-              [metadata[telemId].displayName]: telemetryData[
-                telemId
-              ].values.reduce<SeriesData>(
-                (values, value) => ({
-                  ...values,
-                  [value.timestamp]: {
-                    [telemId]: value.value,
-                  },
-                }),
-                {},
-              ),
-            },
-          },
-        ],
-        [],
-      ),
-    [metadata],
-  );
-
-  React.useEffect(() => {
-    const sensor = SensorMap[telemetryId]; // || HealthMap[telemetryId];
-    sensor?.addListener(DATA_AVAILABLE_EVENT, updateData);
-    // init chart with current value
-    if (currentValue !== undefined) {
-      updateData(telemetryId, currentValue);
-    }
-    return () => {
-      sensor?.removeListener(DATA_AVAILABLE_EVENT, updateData);
     };
-  }, [telemetryId, currentValue, updateData]);
+    const unavailable = (id: string) => receive(id, undefined);
+    sensor?.addListener(DATA_AVAILABLE_EVENT, receive);
+    sensor?.addListener(SENSOR_UNAVAILABLE_EVENT, unavailable);
+    return () => {
+      sensor?.removeListener(DATA_AVAILABLE_EVENT, receive);
+      sensor?.removeListener(SENSOR_UNAVAILABLE_EVENT, unavailable);
+    };
+  }, [sensor, telemetryId, chartType]);
 
-  // Init chart or update it with new data
-  React.useEffect(() => {
-    if (Object.keys(data).length === 0) {
-      return;
-    }
-    const run = `
-        if(!tsiClient){
-            tsiClient = new TsiClient();
-        }
-        if(!lineChart){
-            lineChart = new tsiClient.ux.LineChart(document.getElementById('chart1'));
-        }
-        data=${JSON.stringify(getChartCompatibleData(data))};
-        lineChart.render(data, ${JSON.stringify(
-          chartOptions,
-        )}, ${JSON.stringify(chartDataOptions)});
-        true;
-        `;
-    chartRef.current?.injectJavaScript(run);
-  }, [data, chartOptions, chartDataOptions, getChartCompatibleData]);
+  // Metadata is optional: older sensor adapters expose only the event interface.
+  const metadata = sensor as
+    | {unit?: string; simulated?: boolean; name?: string}
+    | undefined;
+  const unit =
+    typeof metadata?.unit === 'string' && metadata.unit.trim()
+      ? metadata.unit
+      : undefined;
+  const source =
+    metadata?.simulated === true
+      ? 'Simulated sensor data'
+      : metadata?.simulated === false
+      ? 'Device sensor data'
+      : 'Simulation status unavailable';
 
-  if (chartType === ChartType.MAP) {
-    return (
-      <View style={styles.mapContainer}>
-        <Map style={styles.map} location={currentValue} />
-        <View style={style.summary}>
-          <Text>
-            <Name>Latitude:</Name> {currentValue.lat}
-          </Text>
-          <Text>
-            <Name>Longitude:</Name> {currentValue.lon}
-          </Text>
-        </View>
-      </View>
-    );
-  }
   return (
-    <>
-      {Object.keys(data).length === 0 ? (
-        <Loader message="" visible={true} />
-      ) : (
-        <View style={style.container}>
-          <View style={style.chart}>
-            <WebView
-              originWhitelist={['*']}
-              containerStyle={styles.webView}
-              ref={chartRef}
-              source={{
-                html,
-              }}
-              startInLoadingState={true}
-              // use theme background color when chart is loading
-              // style allows to cover all webview space as per issue:
-              // https://github.com/react-native-webview/react-native-webview/issues/1031
-              renderLoading={() => <View style={styles.loading} />}
-            />
-            <View style={style.summary}>
-              <View style={styles.summary}>
-                {Object.keys(data).map((telId, i) => {
-                  const telemetry = data[telId];
-                  if (!telemetry) {
-                    return null;
-                  }
-                  const avg =
-                    telemetry.values.map(v => v.value).reduce((a, b) => a + b) /
-                    telemetry.values.length;
-                  const fill = avg > 1 || avg < -1 ? avg : Math.abs(avg * 1000);
-                  return (
-                    <AnimatedCircularProgress
-                      key={`circle - ${i}`}
-                      size={screen.width / 5}
-                      width={5}
-                      fill={fill}
-                      tintColor={metadata[telId].color}
-                      backgroundColor={LightenDarkenColor(
-                        metadata[telId].color,
-                        90,
-                        true,
-                      )}
-                      rotation={360}>
-                      {() => {
-                        const strVal = `${avg}`;
-                        return (
-                          <Text>
-                            {strVal.length > 6
-                              ? `${strVal.substring(0, 6)}...`
-                              : strVal}
-                          </Text>
-                        );
-                      }}
-                    </AnimatedCircularProgress>
-                  );
-                })}
-              </View>
+    <ScrollView
+      style={[styles.screen, {backgroundColor: colors.background}]}
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingBottom: Math.max(insets.bottom, 20),
+          paddingLeft: Math.max(insets.left, 20),
+          paddingRight: Math.max(insets.right, 20),
+        },
+      ]}>
+      <Text accessibilityRole="header" style={styles.title}>
+        {title || metadata?.name || camelToName(telemetryId)}
+      </Text>
+      <Text style={styles.description}>{source}</Text>
+      {chartType === ChartType.MAP ? (
+        location ? (
+          <>
+            <View style={styles.mapFrame}>
+              <Map style={styles.map} location={location} />
             </View>
-          </View>
-        </View>
+            <Text>Latitude: {formatValue(location.lat)}°</Text>
+            <Text>Longitude: {formatValue(location.lon)}°</Text>
+          </>
+        ) : (
+          <Text accessibilityRole="alert" style={styles.empty}>
+            Location unavailable. A valid location fix is needed to show the
+            map.
+          </Text>
+        )
+      ) : (
+        <>
+          <Text style={styles.description}>
+            {unit ? `Unit: ${unit}` : 'Unit unavailable'} · Last {HISTORY_LIMIT}{' '}
+            readings, kept on this screen
+          </Text>
+          {history.unavailable && (
+            <Text accessibilityRole="alert" style={styles.empty}>
+              Latest reading unavailable. No valid numeric value was received.
+              {history.series.length > 0
+                ? ' Earlier readings remain below.'
+                : ''}
+            </Text>
+          )}
+          <HistoryChart history={history} unit={unit} />
+        </>
       )}
-    </>
+    </ScrollView>
   );
-});
+}
 
-const style = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  chart: {
-    flex: 2,
-    marginTop: 30,
-    marginHorizontal: 10,
-  },
-  summary: {
-    flex: 1,
-    padding: 20,
-  },
-});
+export default function Chart({
+  route,
+}: {
+  route: RouteProp<Record<string, ChartParams>, 'Insight'>;
+}) {
+  // A new telemetry route gets one initial sample; stream updates never reseed it.
+  return (
+    <ChartContent
+      key={`${route.params.telemetryId}:${route.params.chartType}`}
+      {...route.params}
+    />
+  );
+}
 
-export default Chart;
+const styles = StyleSheet.create({
+  screen: {flex: 1},
+  content: {paddingTop: 20, gap: 12},
+  title: {fontSize: 24, fontWeight: '600'},
+  description: {fontSize: 15},
+  empty: {paddingVertical: 16},
+  mapFrame: {height: 300, borderRadius: 16, overflow: 'hidden'},
+  map: {flex: 1},
+});

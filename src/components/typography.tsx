@@ -12,6 +12,7 @@ import {
   TextStyle,
 } from 'react-native';
 import {useTheme} from 'hooks';
+import {palette} from '../theme/palette';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -32,42 +33,50 @@ export function normalize(size: number) {
 }
 
 export function Headline(props: Props) {
-  const {children, style} = props;
+  const {children, style, ...otherProps} = props;
   const {colors} = useTheme();
   const headlineStyle = useMemo<StyleProp<TextStyle>>(
     () => [
-      {fontSize: normalize(20), fontWeight: 'bold', color: colors.text},
+      {
+        fontSize: 24,
+        fontWeight: '600',
+        letterSpacing: -0.5,
+        color: colors.text,
+      },
       style,
     ],
     [colors.text, style],
   );
 
-  return <ELText style={headlineStyle}>{children}</ELText>;
+  return (
+    <ELText style={headlineStyle} {...otherProps}>
+      {children}
+    </ELText>
+  );
 }
 
 export function Detail(props: Props) {
-  const {children, style} = props;
-  const {colors} = useTheme();
+  const {children, style, ...otherProps} = props;
+  const {dark} = useTheme();
+  const muted = palette(dark).muted;
 
   const detailStyle = useMemo<StyleProp<TextStyle>>(
-    () => [
-      {fontSize: normalize(12), fontStyle: 'normal', color: colors.text},
-      style,
-    ],
-    [colors.text, style],
+    () => [{fontSize: 13, lineHeight: 19, color: muted}, style],
+    [muted, style],
   );
 
-  return <ELText style={detailStyle}>{children}</ELText>;
+  return (
+    <ELText style={detailStyle} {...otherProps}>
+      {children}
+    </ELText>
+  );
 }
 
 export function Text(props: Props) {
   const {children, style, ...otherProps} = props;
   const {colors} = useTheme();
   const textStyle = useMemo<StyleProp<TextStyle>>(
-    () => [
-      {fontSize: normalize(14), fontStyle: 'normal', color: colors.text},
-      style,
-    ],
+    () => [{fontSize: 15, lineHeight: 22, color: colors.text}, style],
     [colors.text, style],
   );
 
@@ -90,24 +99,27 @@ export function Link(props: Props) {
 }
 
 export function Name(props: Props) {
-  const {children, style} = props;
+  const {children, style, ...otherProps} = props;
   const {colors} = useTheme();
 
   const nameStyle = useMemo<StyleProp<TextStyle>>(
     () => [
       {
-        fontSize: normalize(14),
-        fontWeight: 'bold',
+        fontSize: 16,
+        fontWeight: '600',
         color: colors.text,
-        fontStyle: 'normal',
-        letterSpacing: 1.15,
+        letterSpacing: -0.2,
       },
       style,
     ],
     [colors.text, style],
   );
 
-  return <ELText style={nameStyle}>{children}</ELText>;
+  return (
+    <ELText style={nameStyle} {...otherProps}>
+      {children}
+    </ELText>
+  );
 }
 
 export function camelToName(text: string): string {

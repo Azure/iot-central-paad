@@ -1,20 +1,21 @@
-name: CI
+name: Internal Azure pipeline (manual only)
 
-# Run this workflow every time a commit gets pushed to main or a pull request gets opened against main
+# Kept for maintainers; public PR validation is baseline.yml and needs no Azure access.
 on:
- pull_request:
-   branches: 
-     - master
-  # workflow_dispatch
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-    build:
-        name: Call Azure Pipeline
-        runs-on: macOS-13
-        steps:
-        - name: Azure Pipelines Action
-          uses: Azure/pipelines@354dddefceb0b503a61338ca81e4091eae3bc84f # v1
-          with:
-            azure-devops-project-url: https://msazure.visualstudio.com/One
-            azure-pipeline-name: 'iot-central-paad-pr'
-            azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+  build:
+    name: Call internal Azure Pipeline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Azure Pipelines Action
+        uses: Azure/pipelines@354dddefceb0b503a61338ca81e4091eae3bc84f # v1
+        with:
+          azure-devops-project-url: https://msazure.visualstudio.com/One
+          azure-pipeline-name: iot-central-paad-pr
+          azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}

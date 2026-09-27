@@ -1,493 +1,273 @@
-/* eslint-disable react-native/no-inline-styles */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {RouteProp} from '@react-navigation/native';
+import React, {useState} from 'react';
+import {Animated, StyleSheet} from 'react-native';
+import {
+  NavigatorScreenParams,
+  useIsFocused,
+  useNavigation,
+} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import CardView from 'CardView';
-import {Loader, Name, Detail} from 'components';
-import FileUpload from 'FileUpload';
-import {
-  useLogger,
-  useSensors,
-  useProperties,
-  IIcon,
-  useDeliveryInterval,
-  useSimulation,
-  useIoTCentralClient,
-} from 'hooks';
-import Logs from 'Logs';
-import React, {useCallback, useEffect, useRef} from 'react';
-import {Platform, Alert} from 'react-native';
-import {
-  IIoTCCommand,
-  IIoTCCommandResponse,
-  IIoTCProperty,
-  IOTC_EVENTS,
-  IIoTCClient,
-} from 'react-native-azure-iotcentral-client';
-
-import Strings, {resolveString} from 'strings';
-import {
-  NavigationParams,
-  PagesNavigator,
-  PROPERTY,
-  ScreenNames,
-  Screens,
-  LIGHT_TOGGLE_COMMAND,
-  ENABLE_DISABLE_COMMAND,
-  SET_FREQUENCY_COMMAND,
-  TELEMETRY,
-  DATA_AVAILABLE_EVENT,
-  NavigationScreens,
-  ItemProps,
-} from 'types';
-import {DEFAULT_DELIVERY_INTERVAL} from './sensors';
+import {createStackNavigator, StackScreenProps} from '@react-navigation/stack';
+import {HeaderBackButton} from '@react-navigation/elements';
 import {Icon} from '@rneui/themed';
-import {playTorch} from 'tools/Torch';
+import CardView from 'CardView';
+import {Loader} from 'components';
+import ConnectionSummary from './components/connectionSummary';
+import FileUpload from 'FileUpload';
 import {BluetoothPage} from 'bluetooth/Bluetooth';
+import {DeviceRuntimeProvider, useDeviceRuntime} from './runtime/DeviceRuntime';
+import {ChartType, Pages, PagesNavigator} from 'types';
+import Strings from 'strings';
+import {AVAILABLE_SENSORS} from './sensors';
+import WorkflowHome from './experience/WorkflowHome';
+import Explore from './experience/Explore';
+import Activity, {CommunicationSummary} from './experience/Activity';
+import {useTheme} from 'hooks';
+import {palette} from './theme/palette';
+import {useGentleTransition} from './hooks/motion';
 
-const Tab = createBottomTabNavigator<NavigationScreens>();
+export {executeCommand} from './runtime/DeviceRuntime';
 
-const icons: {
-  [x in ScreenNames]: (props: {
-    focused: boolean;
-    color: string;
-    size: number;
-  }) => React.ReactNode;
-} = {
-  [Screens.TELEMETRY_SCREEN]: ({color, size}) => (
-    <TabBarIcon
-      size={size}
-      color={color}
-      icon={
-        Platform.select({
-          ios: {
-            name: 'stats-chart-outline',
-            type: 'ionicon',
-          },
-          android: {
-            name: 'chart-bar',
-            type: 'material-community',
-          },
-        }) as IIcon
-      }
-    />
-  ),
-  [Screens.PROPERTIES_SCREEN]: ({color, size}) => (
-    <TabBarIcon
-      size={size}
-      color={color}
-      icon={
-        Platform.select({
-          ios: {
-            name: 'create-outline',
-            type: 'ionicon',
-          },
-          android: {
-            name: 'playlist-edit',
-            type: 'material-community',
-          },
-        }) as IIcon
-      }
-    />
-  ),
-  [Screens.HEALTH_SCREEN]: ({color, size}) => (
-    <TabBarIcon
-      size={size}
-      color={color}
-      icon={
-        {
-          name: 'heartbeat',
-          type: 'font-awesome',
-        } as IIcon
-      }
-    />
-  ),
-  [Screens.FILE_UPLOAD_SCREEN]: ({color, size}) => (
-    <TabBarIcon
-      size={size}
-      color={color}
-      icon={
-        Platform.select({
-          ios: {
-            name: 'cloud-upload-outline',
-            type: 'ionicon',
-          },
-          android: {
-            name: 'cloud-upload-outline',
-            type: 'material-community',
-          },
-        }) as IIcon
-      }
-    />
-  ),
-  [Screens.LOGS_SCREEN]: ({color, size}) => (
-    <TabBarIcon
-      size={size}
-      color={color}
-      icon={
-        Platform.select({
-          ios: {
-            name: 'console',
-            type: 'material-community',
-          },
-          android: {
-            name: 'console',
-            type: 'material-community',
-          },
-        }) as IIcon
-      }
-    />
-  ),
-  [Screens.BLUETOOTH_STACK]: ({color, size}) => (
-    <TabBarIcon
-      size={size}
-      color={color}
-      icon={
-        {
-          name: 'bluetooth',
-          type: 'material-community',
-        } as IIcon
-      }
-    />
-  ),
+export type ExploreRoutes = {
+  'Explore tools': undefined;
+  Telemetry: undefined;
+  Properties: undefined;
+  'Image Upload': undefined;
+  Bluetooth: undefined;
 };
+export type ExperienceRoutes = {
+  Home: undefined;
+  Explore: NavigatorScreenParams<ExploreRoutes> | undefined;
+  Activity: undefined;
+};
+const Tab = createBottomTabNavigator<ExperienceRoutes>();
+const Tools = createStackNavigator<ExploreRoutes>();
 
-const Root = React.memo<{
-  route: RouteProp<
-    Record<string, NavigationParams & {previousScreen?: string}>,
-    'Root'
-  >;
-  navigation: PagesNavigator;
-}>(({navigation}) => {
-  const [, append] = useLogger();
-  const [sensors, addSensorListener, removeSensorListener] = useSensors();
-  const [deliveryInterval] = useDeliveryInterval();
-  // const [healths, addHealthListener, removeHealthListener] = useHealth();
-  const {
-    loading: propertiesLoading,
-    properties,
-    updateProperty,
-  } = useProperties();
-  const [simulated] = useSimulation();
-
-  const onConnectionRefresh = useCallback(
-    async (client: IIoTCClient) => {
-      await client.fetchTwin();
-      await client.sendProperty({
-        [PROPERTY]: {
-          __t: 'c',
-          ...properties.reduce((obj, p) => ({...obj, [p.id]: p.value}), {}),
+function ToolSurface({children}: {children: React.ReactNode}) {
+  const focused = useIsFocused();
+  const entrance = useGentleTransition(focused, focused, 460);
+  return (
+    <Animated.View
+      style={[
+        styles.toolSurface,
+        {
+          opacity: entrance.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.82, 1],
+          }),
+          transform: [
+            {
+              translateY: entrance.interpolate({
+                inputRange: [0, 1],
+                outputRange: [8, 0],
+              }),
+            },
+          ],
         },
-      });
-    },
-    [properties],
+      ]}>
+      {children}
+    </Animated.View>
   );
-  const [iotcentralClient] = useIoTCentralClient(onConnectionRefresh);
+}
 
-  const sensorRef = useRef(sensors);
-  // const healthRef = useRef(healths);
-
-  const sendToCentralHandler = useCallback(
-    async (componentName: string, id: string, value: any) => {
-      if (iotcentralClient && iotcentralClient.isConnected()) {
-        await iotcentralClient.sendTelemetry(
-          {[id]: value},
-          {'$.sub': componentName},
-        );
-      }
-    },
-    [iotcentralClient],
-  );
-
-  const onCommandUpdate = useCallback(
-    async (command: IIoTCCommand) => {
-      let data: any;
-      data = JSON.parse(command.requestPayload);
-      Alert.alert(
-        Strings.Client.Commands.Alert.Title,
-        resolveString(Strings.Client.Commands.Alert.Message, command.name),
-      );
-
-      if (command.name === LIGHT_TOGGLE_COMMAND) {
-        await command.reply(
-          IIoTCCommandResponse.SUCCESS,
-          '{"execution":"started"}',
-        );
-        const torchParams = data as {
-          pulses: number;
-          duration: number;
-          delay?: number;
-        };
-        append({
-          eventName: 'INFO',
-          eventData: `Received Light Toggle Command. Light will be turned on for ${
-            torchParams.duration
-          } seconds ${torchParams.pulses} times with ${
-            torchParams.delay ?? 1
-          } seconds between each power.`,
-        });
-        await playTorch(
-          torchParams.pulses,
-          torchParams.duration,
-          torchParams.delay || 1,
-        );
-        append({
-          eventName: 'INFO',
-          eventData: 'End turning on/off light.',
-        });
-        return;
-      }
-      if (data.sensor) {
-        const sensor = sensorRef.current.find(s => s.id === data.sensor);
-        if (sensor) {
-          switch (command.name) {
-            case ENABLE_DISABLE_COMMAND:
-              sensor.enable(data.enable ? data.enable : false);
-              await command.reply(
-                IIoTCCommandResponse.SUCCESS,
-                `{"enabled":${data.enable}}`,
-              );
-              break;
-            case SET_FREQUENCY_COMMAND:
-              sensor.sendInterval(data.interval ? data.interval * 1000 : 5000);
-              await command.reply(
-                IIoTCCommandResponse.SUCCESS,
-                `{"interval":${data.interval}}`,
-              );
-              break;
-          }
+function TelemetryTool() {
+  const {sensors} = useDeviceRuntime();
+  const navigation = useNavigation<PagesNavigator>();
+  return (
+    <ToolSurface>
+      <CardView
+        items={sensors}
+        componentName="Telemetry"
+        onItemLongPress={item => item.enable(!item.enabled)}
+        onItemPress={item =>
+          navigation.navigate(Pages.INSIGHT, {
+            chartType:
+              item.id === AVAILABLE_SENSORS.GEOLOCATION
+                ? ChartType.MAP
+                : ChartType.DEFAULT,
+            currentValue: item.value,
+            telemetryId: item.id,
+            title: item.name,
+            backTitle: 'Telemetry',
+            unit: item.unit,
+            simulated: item.simulated,
+          })
         }
-      }
-    },
-    [append],
+      />
+    </ToolSurface>
   );
+}
 
-  const onPropUpdate = useCallback(
-    async (prop: IIoTCProperty) => {
-      let {name, value} = prop;
-      if (value.__t === 'c') {
-        // inside a component: TODO: change sdk
-        name = Object.keys(value).filter(v => v !== '__t')[0];
-        value = value[name];
-      }
-      console.log(`Prop received ${name}:${JSON.stringify(value)}`);
-      updateProperty(name, value);
-      await prop.ack();
-    },
-    [updateProperty],
+function PropertiesTool() {
+  const {properties, propertiesLoading, submitProperty} = useDeviceRuntime();
+  return (
+    <ToolSurface>
+      {propertiesLoading ? (
+        <Loader message={Strings.Client.Properties.Loading} visible />
+      ) : (
+        <CardView
+          items={properties}
+          componentName="Property"
+          onEdit={submitProperty}
+        />
+      )}
+    </ToolSurface>
   );
+}
 
-  const sendTelemetryHandler = useCallback(
-    (id: string, value: any) => sendToCentralHandler(TELEMETRY, id, value),
-    [sendToCentralHandler],
+function ImageTool() {
+  return (
+    <ToolSurface>
+      <FileUpload />
+    </ToolSurface>
   );
-  // const sendHealthHandler = useCallback(
-  //   (id: string, value: any) => sendToCentralHandler(HEALTH, id, value),
-  //   [sendToCentralHandler],
-  // );
+}
 
-  useEffect(() => {
-    const currentSensorRef = sensorRef.current;
-    // const currentHealthRef = healthRef.current;
-    if (iotcentralClient) {
-      currentSensorRef.forEach(s =>
-        addSensorListener(s.id, DATA_AVAILABLE_EVENT, sendTelemetryHandler),
-      );
-      append({
-        eventName: 'INFO',
-        eventData: 'Sensor initialized.',
-      });
+function BluetoothTool() {
+  return (
+    <ToolSurface>
+      <BluetoothPage />
+    </ToolSurface>
+  );
+}
 
-      // currentHealthRef.forEach(h =>
-      //   addHealthListener(h.id, DATA_AVAILABLE_EVENT, sendHealthHandler),
-      // );
-      // append({
-      //   eventName: 'INFO',
-      //   eventData: 'Health initialized.',
-      // });
+function ToolDirectory({
+  navigation,
+}: StackScreenProps<ExploreRoutes, 'Explore tools'>) {
+  return <Explore onOpen={tool => navigation.navigate(tool)} />;
+}
 
-      append({
-        eventName: 'INFO',
-        eventData: 'Properties initialized.',
-      });
+function ExploreStack() {
+  const {dark} = useTheme();
+  const appearance = palette(dark);
+  return (
+    <Tools.Navigator
+      screenOptions={({navigation}) => ({
+        headerStyle: {backgroundColor: appearance.background},
+        headerTintColor: appearance.text,
+        headerShadowVisible: false,
+        headerBackButtonDisplayMode: 'minimal',
+        animation: 'none',
+        headerLeft: props => (
+          <HeaderBackButton
+            {...props}
+            testID="explore-back"
+            accessibilityLabel={Strings.Core.Back}
+            onPress={() => navigation.goBack()}
+          />
+        ),
+      })}>
+      <Tools.Screen
+        name="Explore tools"
+        component={ToolDirectory}
+        options={{headerShown: false}}
+      />
+      <Tools.Screen name="Telemetry" component={TelemetryTool} />
+      <Tools.Screen name="Properties" component={PropertiesTool} />
+      <Tools.Screen name="Image Upload" component={ImageTool} />
+      <Tools.Screen name="Bluetooth" component={BluetoothTool} />
+    </Tools.Navigator>
+  );
+}
 
-      iotcentralClient.on(IOTC_EVENTS.Commands, onCommandUpdate);
-      iotcentralClient.on(IOTC_EVENTS.Properties, onPropUpdate);
-      iotcentralClient.fetchTwin();
-    }
-
-    return () => {
-      currentSensorRef.forEach(s =>
-        removeSensorListener(s.id, DATA_AVAILABLE_EVENT, sendTelemetryHandler),
-      );
-      // currentHealthRef.forEach(h =>
-      //   removeHealthListener(h.id, DATA_AVAILABLE_EVENT, sendHealthHandler),
-      // );
-    };
-  }, [
-    iotcentralClient,
-    // addHealthListener,
-    addSensorListener,
-    append,
-    onCommandUpdate,
-    onPropUpdate,
-    // removeHealthListener,
-    removeSensorListener,
-    // sendHealthHandler,
-    sendTelemetryHandler,
-    navigation,
-  ]);
-
-  // react to sendinterval change
-  useEffect(() => {
-    if (deliveryInterval !== DEFAULT_DELIVERY_INTERVAL) {
-      sensorRef.current.forEach(sensor =>
-        sensor.sendInterval(deliveryInterval * 1000),
-      );
-    }
-  }, [deliveryInterval]);
-
+function Experience({navigation}: {navigation: PagesNavigator}) {
+  const {sensors} = useDeviceRuntime();
+  const [detailsRequest, requestDetails] = useState(0);
+  const [detailsCovered, setDetailsCovered] = useState(false);
+  const {dark} = useTheme();
+  const appearance = palette(dark);
   return (
     <>
-      {simulated && (
-        <Name style={{textAlign: 'center', marginTop: 5}}>
-          Device: <Detail>{iotcentralClient?.id}</Detail>
-        </Name>
-      )}
+      <ConnectionSummary
+        detailsRequest={detailsRequest}
+        onDetailsVisibilityChange={setDetailsCovered}
+        onManualConnection={() =>
+          navigation.navigate(Pages.REGISTRATION, {screen: 'MANUAL'})
+        }
+      />
       <Tab.Navigator
-        key="tab"
         screenOptions={{
           headerShown: false,
+          animation: 'none',
+          tabBarActiveTintColor: appearance.primary,
+          tabBarInactiveTintColor: appearance.muted,
+          tabBarStyle: {
+            backgroundColor: appearance.surface,
+            borderTopColor: appearance.border,
+            // A hairline separator carries the bar, not a cast shadow.
+            elevation: 0,
+          },
+          tabBarItemStyle: {minHeight: 48},
         }}>
         <Tab.Screen
-          name={Screens.TELEMETRY_SCREEN}
+          name="Home"
           options={{
-            tabBarIcon: icons.Telemetry,
-          }}>
-          {getCardView(sensors, 'Telemetry')}
-        </Tab.Screen>
-        {/* <Tab.Screen
-          name={Screens.HEALTH_SCREEN}
-          options={{
-            tabBarIcon: ({color, size}) => (
-              <TabBarIcon icon={icons.Health} color={color} size={size} />
+            tabBarButtonTestID: 'tab-home',
+            tabBarIcon: ({color, size, focused}) => (
+              <Icon
+                name={focused ? 'home' : 'home-outline'}
+                type="material-community"
+                color={color}
+                size={size}
+              />
             ),
           }}>
-          {getCardView(healths, 'Health', true)}
-        </Tab.Screen> */}
-        <Tab.Screen
-          name={Screens.PROPERTIES_SCREEN}
-          options={{
-            tabBarIcon: icons.Properties,
-          }}>
-          {propertiesLoading
-            ? () => (
-                <Loader
-                  message={Strings.Client.Properties.Loading}
-                  visible={true}
-                  style={{flex: 1, justifyContent: 'center'}}
-                />
-              )
-            : () => (
-                <CardView
-                  items={properties}
-                  componentName="Property"
-                  onEdit={async (item, value) => {
-                    try {
-                      await iotcentralClient?.sendProperty({
-                        [item.id]: value,
-                      });
-                      Alert.alert(
-                        'Property',
-                        resolveString(
-                          Strings.Client.Properties.Delivery.Success,
-                          item.name,
-                        ),
-                        [{text: 'OK'}],
-                      );
-                    } catch (e) {
-                      Alert.alert(
-                        'Property',
-                        resolveString(
-                          Strings.Client.Properties.Delivery.Failure,
-                          item.name,
-                        ),
-                        [{text: 'OK'}],
-                      );
-                    }
-                  }}
-                />
-              )}
+          {({navigation: tabs}) => (
+            <WorkflowHome
+              sensors={sensors}
+              motionVisible={!detailsCovered}
+              onDetails={() => requestDetails(value => value + 1)}
+              onTelemetry={() =>
+                tabs.navigate('Explore', {screen: 'Telemetry', initial: false})
+              }
+              onActivity={() => tabs.navigate('Activity')}
+              communication={<CommunicationSummary />}
+            />
+          )}
         </Tab.Screen>
-
         <Tab.Screen
-          name={Screens.BLUETOOTH_STACK}
-          component={BluetoothPage}
+          name="Explore"
+          component={ExploreStack}
           options={{
-            tabBarIcon: icons.Bluetooth,
+            tabBarButtonTestID: 'tab-explore',
+            tabBarIcon: ({color, size, focused}) => (
+              <Icon
+                name={focused ? 'view-grid' : 'view-grid-outline'}
+                type="material-community"
+                color={color}
+                size={size}
+              />
+            ),
           }}
         />
-
         <Tab.Screen
-          name={Screens.FILE_UPLOAD_SCREEN}
-          component={FileUpload}
+          name="Activity"
+          component={Activity}
           options={{
-            tabBarIcon: icons['Image Upload'],
-          }}
-        />
-        <Tab.Screen
-          name={Screens.LOGS_SCREEN}
-          component={Logs}
-          options={{
-            tabBarIcon: icons.Logs,
+            tabBarButtonTestID: 'tab-activity',
+            tabBarIcon: ({color, size}) => (
+              <Icon
+                name="format-list-bulleted"
+                type="material-community"
+                color={color}
+                size={size}
+              />
+            ),
           }}
         />
       </Tab.Navigator>
     </>
   );
-});
+}
 
-const getCardView = (items: ItemProps[], name: string) => () =>
-  (
-    <CardView
-      items={items}
-      componentName={name}
-      onItemLongPress={item => {
-        item.enable(!item.enabled);
-      }}
-      // TEMP: temporary disabled charts
-      // onItemPress={
-      //   detail
-      //     ? item => {
-      //         navigation.navigate('Insight', {
-      //           chartType:
-      //             item.id === AVAILABLE_SENSORS.GEOLOCATION
-      //               ? ChartType.MAP
-      //               : ChartType.DEFAULT,
-      //           currentValue: item.value,
-      //           telemetryId: item.id,
-      //           title: camelToName(item.id),
-      //           backTitle: 'Telemetry',
-      //         });
-      //       }
-      //     : undefined
-      // }
-    />
+const styles = StyleSheet.create({toolSurface: {flex: 1}});
+
+export default function Home({navigation}: {navigation: PagesNavigator}) {
+  return (
+    <DeviceRuntimeProvider>
+      <Experience navigation={navigation} />
+    </DeviceRuntimeProvider>
   );
-
-const TabBarIcon = React.memo<{icon: IIcon; color: string; size: number}>(
-  ({icon, color, size}) => {
-    return (
-      <Icon
-        name={icon ? icon.name : 'home'}
-        type={icon ? icon.type : 'ionicon'}
-        size={size}
-        color={color}
-      />
-    );
-  },
-);
-
-export default Root;
+}

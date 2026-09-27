@@ -1,85 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import EventEmitter from 'events';
-import DeviceInfo from 'react-native-device-info';
-import {ISensor, DATA_AVAILABLE_EVENT} from './internal';
+import * as ExpoBattery from 'expo-battery';
+import {ManagedSensor, Subscription} from './managed';
 
-export default class Battery extends EventEmitter implements ISensor {
-  private enabled: boolean;
-  private simulated: boolean;
-  private currentRun: any;
-
-  constructor(public id: string, private interval: number) {
-    super();
-    this.enabled = false;
-    this.simulated = false;
-    this.currentRun = null;
+export default class Battery extends ManagedSensor<number> {
+  protected sampleSimulation(): number {
+    return Math.floor(Math.random() * 100);
   }
 
-  enable(val: boolean): void {
-    if (this.enabled === val) {
-      return;
+  protected async startHardware(
+    emit: (data: number) => void,
+    unavailable: () => void,
+    active: () => boolean,
+  ): Promise<Subscription> {
+    if (!(await ExpoBattery.isAvailableAsync())) {
+      throw new Error('Battery unavailable');
     }
-    this.enabled = val;
-    if (!this.enabled && this.currentRun) {
-      this.currentRun.unsubscribe();
-    } else {
-      this.run();
+    if (!active()) {
+      return {remove() {}};
     }
-  }
-
-  sendInterval(val: number) {
-    if (this.interval === val) {
-      return;
-    }
-    this.interval = val;
-    if (this.enabled && this.currentRun) {
-      this.enable(false);
-      this.enable(true);
-    }
-  }
-
-  simulate(val: boolean): void {
-    if (this.simulated === val) {
-      return;
-    }
-    this.simulated = val;
-    if (this.enabled && this.currentRun) {
-      this.enable(false);
-      this.enable(true);
-    }
-  }
-
-  async run() {
-    let intId: ReturnType<typeof setInterval>;
-    if (this.simulated) {
-      intId = setInterval(
-        function (this: Battery) {
-          this.emit(
-            DATA_AVAILABLE_EVENT,
-            this.id,
-            Math.floor(Math.random() * 100),
-          );
-        }.bind(this),
-        this.interval,
-      );
-    } else {
-      intId = setInterval(
-        async function (this: Battery) {
-          this.emit(
-            DATA_AVAILABLE_EVENT,
-            this.id,
-            Math.floor((await DeviceInfo.getBatteryLevel()) * 100),
-          );
-        }.bind(this),
-        this.interval,
-      );
-    }
-    this.currentRun = {
-      unsubscribe: () => {
-        clearInterval(intId);
+    return this.poll(
+      async () => {
+        const level = await ExpoBattery.getBatteryLevelAsync();
+        if (!Number.isFinite(level) || level < 0 || level > 1) {
+          throw new Error('Battery unavailable');
+        }
+        return Math.floor(level * 100);
       },
-    };
+      emit,
+      unavailable,
+    );
   }
 }

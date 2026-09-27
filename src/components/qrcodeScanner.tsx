@@ -1,249 +1,237 @@
-/* eslint-disable react-native/no-inline-styles */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, {useMemo} from 'react';
-import {Platform, StyleSheet, TextStyle, View, ViewStyle} from 'react-native';
-import {Icon} from '@rneui/themed';
-import Scanner from 'react-native-qrcode-scanner';
+import React from 'react';
+import {AppState, AppStateStatus, StyleSheet, View} from 'react-native';
+import {BarcodeScanningResult, Camera, CameraView} from 'expo-camera';
 import {Text} from './typography';
-import {Literal} from 'types';
-import {BarCodeReadEvent} from 'react-native-camera';
+import DetailsAction from './detailsAction';
+import Strings from '../strings';
+import {acquireCamera} from '../tools/Torch';
 
-interface QRCodeScannerProps {
+export type Event = BarcodeScanningResult;
+export type IQRCodeProps = {
   height: number;
   width: number;
   markerSize: number;
-}
-
-export type Event = BarCodeReadEvent;
-interface IQRCodeScanner {
-  reactivate: () => void;
-}
-
-export type IQRCodeProps = QRCodeScannerProps & {
-  onRead: (e: Event) => void | Promise<void>;
+  onRead: (event: Event) => void | Promise<void>;
   onClose?: () => void | Promise<void>;
-  bottomContent?: JSX.Element;
+  bottomContent?: React.ReactNode;
 };
+type State = {active: boolean; error: string | null};
 
-export default class QRCodeScanner
-  extends React.Component<IQRCodeProps, {}>
-  implements IQRCodeScanner
-{
-  public overlayDimension: any;
-  private qrCodeRef: Scanner | null;
-  public onRead: (e: Event) => void | Promise<void>;
-  public onClose: (() => void | Promise<void>) | undefined;
+export default class QRCodeScanner extends React.Component<
+  IQRCodeProps,
+  State
+> {
+  state: State = {active: false, error: null};
+  private mounted = false;
+  private generation = 0;
+  private accepted = true;
+  private ready = false;
+  private release?: () => void;
+  private appState?: {remove(): void};
+  private startupTimer?: ReturnType<typeof setTimeout>;
+  private resumeOnForeground = false;
 
-  private calculateSideWidth(width: number, markerSize: number): number {
-    return (width - markerSize) / 2;
+  componentDidMount() {
+    this.mounted = true;
+    this.appState = AppState.addEventListener('change', this.onAppState);
+    this.resumeOnForeground = AppState.currentState !== 'active';
+    this.reactivate();
   }
 
-  private calculateVerticals(height: number, markerSize: number): number {
-    return (height - markerSize) / 2;
-  }
-
-  constructor(props: IQRCodeProps) {
-    super(props);
-    ({onRead: this.onRead, onClose: this.onClose} = props);
-    this.qrCodeRef = null;
-  }
-
-  public reactivate() {
-    this.qrCodeRef?.reactivate();
-  }
   componentWillUnmount() {
-    this.qrCodeRef = null;
+    this.mounted = false;
+    this.generation++;
+    this.accepted = true;
+    clearTimeout(this.startupTimer);
+    this.appState?.remove();
+    this.release?.();
+    this.release = undefined;
   }
+
+  private onAppState = (state: AppStateStatus) => {
+    if (state !== 'active') {
+      this.resumeOnForeground = this.state.active;
+      this.pause();
+    } else if (this.resumeOnForeground) {
+      this.resumeOnForeground = false;
+      this.reactivate();
+    }
+  };
+
+  private pause = (after?: () => void) => {
+    this.generation++;
+    this.accepted = true;
+    this.ready = false;
+    clearTimeout(this.startupTimer);
+    const release = this.release;
+    this.release = undefined;
+    if (!this.mounted) {
+      release?.();
+      return;
+    }
+    this.setState({active: false}, () => {
+      release?.();
+      after?.();
+    });
+  };
+
+  public reactivate = () => {
+    if (
+      !this.mounted ||
+      this.state.active ||
+      AppState.currentState !== 'active'
+    ) {
+      return;
+    }
+    const generation = ++this.generation;
+    const current = () => this.mounted && generation === this.generation;
+    void (async () => {
+      try {
+        let permission = await Camera.getCameraPermissionsAsync();
+        if (!current()) {
+          return;
+        }
+        if (!permission.granted && permission.canAskAgain) {
+          permission = await Camera.requestCameraPermissionsAsync();
+        }
+        if (!current()) {
+          return;
+        }
+        if (!permission.granted) {
+          throw new Error('Camera permission is required to scan a QR code.');
+        }
+        this.release = acquireCamera('qr');
+        this.accepted = false;
+        this.ready = false;
+        this.setState({active: true, error: null}, () => {
+          this.startupTimer = setTimeout(() => {
+            if (current() && !this.ready) {
+              this.pause(() =>
+                this.setState({
+                  error: 'Camera unavailable. Please connect manually.',
+                }),
+              );
+            }
+          }, 10000);
+        });
+      } catch {
+        if (current()) {
+          this.setState({
+            active: false,
+            error:
+              'Camera unavailable. Allow camera access in Settings, or connect manually.',
+          });
+        }
+      }
+    })();
+  };
+
+  private onRead = (event: Event) => {
+    if (
+      this.accepted ||
+      !this.ready ||
+      !this.state.active ||
+      event.type !== 'qr'
+    ) {
+      return;
+    }
+    // Synchronous gate, before setState/async registration, rejects duplicates.
+    this.accepted = true;
+    this.pause(() => {
+      Promise.resolve()
+        .then(() => this.props.onRead(event))
+        .catch(() => {
+          if (this.mounted) {
+            this.setState({
+              error: 'Unable to read this QR code. Please retry.',
+            });
+          }
+        });
+    });
+  };
+
+  private close = () =>
+    this.pause(() => {
+      void Promise.resolve()
+        .then(() => this.props.onClose?.())
+        .catch(() => {});
+    });
 
   render() {
-    const sideWidth = this.calculateSideWidth(
-      this.props.width,
-      this.props.markerSize,
-    );
-    const verticals = this.calculateVerticals(
-      this.props.height,
-      this.props.markerSize,
-    );
-
+    const {height, width, markerSize, bottomContent, onClose} = this.props;
     return (
-      <Scanner
-        ref={sc => (this.qrCodeRef = sc)}
-        onRead={this.onRead}
-        // //@ts-ignore
-        // flashMode={
-        //   RNCamera.Constants.FlashMode.off
-        // }
-        containerStyle={{
-          marginTop: -80,
-        }}
-        topViewStyle={{
-          position: 'absolute',
-          zIndex: 2,
-          marginLeft:
-            this.props.width > this.props.height ? sideWidth - verticals : 0,
-        }} // hack: margin is needed when in landscape
-        topContent={
+      <View style={{height, width}}>
+        {this.state.active && (
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            barcodeScannerSettings={{barcodeTypes: ['qr']}}
+            onBarcodeScanned={this.onRead}
+            onCameraReady={() => {
+              this.ready = true;
+              clearTimeout(this.startupTimer);
+            }}
+            onMountError={() =>
+              this.pause(() =>
+                this.setState({
+                  error: 'Camera unavailable. Please connect manually.',
+                }),
+              )
+            }
+          />
+        )}
+        <View pointerEvents="box-none" style={styles.overlay}>
           <View
-            style={{
-              position: 'relative',
-              height: this.props.height,
-              width: this.props.width,
-            }}>
-            <View
-              key="left"
-              style={{
-                height: this.props.height + 80,
-                backgroundColor: 'rgba(0,0,0,.5)',
-                width: sideWidth,
-                left: 0,
-                position: 'absolute',
-                top: 0,
-              }}
-            />
-            <View
-              key="right"
-              style={{
-                height: this.props.height + 80,
-                backgroundColor: 'rgba(0,0,0,.5)',
-                width: sideWidth,
-                right: 0,
-                position: 'absolute',
-                top: 0,
-              }}
-            />
-            <View
-              key="top"
-              style={{
-                marginHorizontal: sideWidth,
-                width: this.props.markerSize,
-                backgroundColor: 'rgba(0,0,0,.5)',
-                height: verticals + 40,
-                top: 0,
-                position: 'absolute',
-              }}
-            />
-            <View
-              key="bottom"
-              style={{
-                marginHorizontal: sideWidth,
-                width: this.props.markerSize,
-                backgroundColor: 'rgba(0,0,0,.5)',
-                height: verticals + 40,
-                bottom: -80,
-                position: 'absolute',
-              }}
-            />
-            {this.onClose && (
-              <Icon
-                name="close-circle-outline"
-                type={Platform.select({
-                  ios: 'ionicon',
-                  android: 'material-community',
-                })}
-                size={40}
-                color="black"
-                containerStyle={{
-                  position: 'absolute',
-                  top: verticals - 40,
-                  right: sideWidth - 40,
-                }}
-                onPress={this.onClose}
-              />
-            )}
-          </View>
-        }
-        customMarker={
-          <View>
-            <QRCodeMask width={this.props.markerSize} color={'black'} />
-            <Text style={{...style.center, textAlign: 'center'}}>
-              Move closer to scan
-            </Text>
-          </View>
-        }
-        showMarker={true}
-        bottomContent={this.props.bottomContent}
-        bottomViewStyle={{
-          position: 'absolute',
-          zIndex: 2,
-          bottom: 100,
-        }}
-        cameraStyle={{height: this.props.height + 80, width: this.props.width}}
-      />
+            pointerEvents="none"
+            style={[styles.marker, {height: markerSize, width: markerSize}]}
+          />
+          {this.state.error && (
+            <Text style={styles.message}>{this.state.error}</Text>
+          )}
+          {(!this.state.active || onClose) && (
+            <View style={styles.controls}>
+              {!this.state.active && (
+                <DetailsAction
+                  label={Strings.Core.Retry}
+                  icon="reload"
+                  variant="primary"
+                  block
+                  onPress={this.reactivate}
+                />
+              )}
+              {onClose && (
+                <DetailsAction
+                  label={Strings.Core.Close}
+                  variant="secondary"
+                  block
+                  onPress={this.close}
+                />
+              )}
+            </View>
+          )}
+          {bottomContent}
+        </View>
+      </View>
     );
   }
 }
 
-function QRCodeMask(props: {width: number; color: string}) {
-  const {width: markerWidth, color} = props;
-  const sectorWidth = markerWidth / 5;
-  const styles = useMemo<Literal<ViewStyle | TextStyle>>(
-    () => ({
-      container: {
-        position: 'relative',
-        width: markerWidth,
-        height: markerWidth,
-      },
-      topLeft: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        height: sectorWidth,
-        width: sectorWidth,
-        borderColor: color,
-        borderLeftWidth: 5,
-        borderTopWidth: 5,
-      },
-      topRight: {
-        position: 'absolute',
-        top: 0,
-        left: markerWidth - sectorWidth,
-        height: sectorWidth,
-        width: sectorWidth,
-        borderColor: color,
-        borderRightWidth: 5,
-        borderTopWidth: 5,
-      },
-      bottomLeft: {
-        position: 'absolute',
-        top: markerWidth - sectorWidth,
-        left: 0,
-        height: sectorWidth,
-        width: sectorWidth,
-        borderColor: color,
-        borderLeftWidth: 5,
-        borderBottomWidth: 5,
-      },
-      bottomRight: {
-        position: 'absolute',
-        top: markerWidth - sectorWidth,
-        left: markerWidth - sectorWidth,
-        height: sectorWidth,
-        width: sectorWidth,
-        borderColor: color,
-        borderRightWidth: 5,
-        borderBottomWidth: 5,
-      },
-    }),
-    [color, markerWidth, sectorWidth],
-  );
-  return (
-    <View style={styles.container}>
-      <View key="top-left" style={styles.topLeft} />
-      <View key="top-right" style={styles.topRight} />
-      <View key="bottom-left" style={styles.bottomLeft} />
-      <View key="bottom-right" style={styles.bottomRight} />
-    </View>
-  );
-}
-
-const style = StyleSheet.create({
-  center: {
-    position: 'absolute',
-    top: '50%',
-    bottom: 0,
-    left: 0,
-    right: 0,
+const styles = StyleSheet.create({
+  overlay: {flex: 1, alignItems: 'center', justifyContent: 'center'},
+  controls: {
+    alignSelf: 'stretch',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    gap: 8,
+  },
+  marker: {borderWidth: 3, borderColor: 'white'},
+  message: {
+    textAlign: 'center',
+    backgroundColor: 'white',
+    color: 'black',
+    padding: 12,
   },
 });

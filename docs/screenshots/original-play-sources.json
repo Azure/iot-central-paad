@@ -1,0 +1,23 @@
+{
+  "publisher": "Microsoft Corporation",
+  "listing": "https://play.google.com/store/apps/details?id=com.iot_pnp&hl=en_US",
+  "retrievedOn": "2026-09-23",
+  "description": "Unmodified promotional images from the official Google Play listing. These are not new emulator captures or complete scrolling-page screenshots.",
+  "images": [
+    {
+      "file": "original-play-telemetry.jpg",
+      "page": "Telemetry",
+      "source": "https://play-lh.googleusercontent.com/eKMcSdN6PIe4S1HQK3vUlpMV3BW3NwNulvaHW_26SMWGMNGuhJHA-48WbaOBQKG5qKZv2WcYiG_-xW9b3bCnDQ=s0"
+    },
+    {
+      "file": "original-play-image-upload.jpg",
+      "page": "Image upload",
+      "source": "https://play-lh.googleusercontent.com/arYxtJ6FLvid8TtjVXcv-crU7ROW541Ku73YWB5QaTj7OfcT7liXq6eQuueffhj4lw4jmTqZABKdsmi-MJf8vlg=s0"
+    },
+    {
+      "file": "original-play-registration.jpg",
+      "page": "QR registration",
+      "source": "https://play-lh.googleusercontent.com/kx0lVEbvtuJYeWQ1JVmVXd13FX2eFb5h2Ta_VwlzwFaNSt8oBLteklsSpqGO4YjCSCn9DrjaPcZ578q-BUNd6_c=s0"
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+appId: ${MAESTRO_APP_ID}
+name: Deny only verified Android permission-controller prompts
+env:
+  AFTER_DETAILS_TAP: 'false'
+---
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - evalScript: ${output.androidPermissionDenied = false}
+      # Conditional lookups also cover a prompt arriving after the preceding app tap.
+      # Both denial variants share this one budget in the disposable hosted CI flow.
+      - repeat:
+          times: 4
+          commands:
+            - runFlow:
+                when:
+                  visible:
+                    id: '^com\.(android|google\.android)\.permissioncontroller:id/(permission_deny_button|permission_deny_and_dont_ask_again_button)$'
+                commands:
+                  - tapOn:
+                      id: '^com\.(android|google\.android)\.permissioncontroller:id/(permission_deny_button|permission_deny_and_dont_ask_again_button)$'
+                      retryTapIfNoChange: false
+                  - evalScript: ${output.androidPermissionDenied = true}
+      # Exhaustion or an unsupported permission choice must fail, never grant access.
+      - assertNotVisible:
+          id: '^com\.(android|google\.android)\.permissioncontroller:id/(grant_dialog|permission_message|permission_deny_button|permission_deny_and_dont_ask_again_button|permission_allow_button|permission_allow_foreground_only_button|permission_allow_one_time_button)$'
+      - runFlow:
+          when:
+            true: ${AFTER_DETAILS_TAP === 'true' && output.androidPermissionDenied === true}
+          commands:
+            - evalScript: ${output.androidDetailsSheetSeen = false}
+            # cli-2.10.0 runFlow.visible uses the bounded 7s optional lookup, not a sleep.
+            # Observe asynchronous presentation before deciding whether a retry is needed.
+            - runFlow:
+                when:
+                  visible:
+                    id: connection-details-sheet
+                commands:
+                  - evalScript: ${output.androidDetailsSheetSeen = true}
+            - runFlow:
+                when:
+                  true: ${output.androidDetailsSheetSeen === false}
+                  notVisible:
+                    id: connection-details-sheet
+                commands:
+                  - extendedWaitUntil:
+                      visible:
+                        id: connection-details
+                        enabled: true
+                      timeout: 15000
+                  # Recheck after readiness: a sheet may have appeared during that wait.
+                  - runFlow:
+                      when:
+                        notVisible:
+                          id: connection-details-sheet
+                      commands:
+                        - tapOn:
+                            id: connection-details
+                            retryTapIfNoChange: false

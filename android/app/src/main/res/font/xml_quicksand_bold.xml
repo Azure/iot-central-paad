@@ -1,0 +1,3 @@
+<font-family xmlns:app="http://schemas.android.com/apk/res-auto">
+  <font app:font="@font/quicksand_700bold" app:fontStyle="normal" app:fontWeight="700"/>
+</font-family>

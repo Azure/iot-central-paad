@@ -1,23 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, {useCallback, useState} from 'react';
-import {IoTCCredentials} from 'react-native-azure-iotcentral-client';
+import React, {useCallback, useRef, useState} from 'react';
 import * as Keychain from 'react-native-keychain';
-import {Debug, Log} from '../tools/CustomLogger';
-import {StateUpdater, ThemeMode} from '../types';
+import {DeviceCredentials, decodeCredentials} from '../connection';
+import {ThemeMode} from '../types';
+import {
+  AzureContextSnapshot,
+  parseAzureContext,
+} from '../onboarding/azureContext';
 
 const USERNAME = 'IOTC_PAD_CLIENT';
 
-type IStorageState = {
+export type IStorageState = {
   themeMode: ThemeMode;
   simulated: boolean;
   skipVersion: string | null;
   deliveryInterval: number;
-  credentials:
-    | (IoTCCredentials & {authKey?: string; keyType?: 'group' | 'device'})
-    | null;
+  credentials: DeviceCredentials | null;
   initialized: boolean;
+  azureContext: AzureContextSnapshot | null;
+  azureContextError: boolean;
 };
 
 const initialState: IStorageState = {
@@ -27,91 +30,143 @@ const initialState: IStorageState = {
   initialized: false,
   skipVersion: null,
   deliveryInterval: 5,
+  azureContext: null,
+  azureContextError: false,
 };
 
+export function restoreStoredState(value: unknown): IStorageState {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Stored application data is invalid.');
+  }
+  const saved = value as Record<string, unknown>;
+  const themeMode = saved.themeMode ?? ThemeMode.DEVICE;
+  const simulated = saved.simulated ?? false;
+  const deliveryInterval = saved.deliveryInterval ?? 5;
+  const skipVersion = saved.skipVersion ?? null;
+  if (
+    !Object.values(ThemeMode).includes(themeMode as ThemeMode) ||
+    typeof simulated !== 'boolean' ||
+    typeof deliveryInterval !== 'number' ||
+    !Number.isFinite(deliveryInterval) ||
+    deliveryInterval < 1 ||
+    deliveryInterval > 3600 ||
+    (skipVersion !== null && typeof skipVersion !== 'string')
+  ) {
+    throw new Error('Stored application settings are invalid.');
+  }
+  let azureContext: AzureContextSnapshot | null = null;
+  let azureContextError = saved.azureContextError === true;
+  if (saved.azureContext != null) {
+    try {
+      azureContext = parseAzureContext(JSON.stringify(saved.azureContext));
+      azureContextError = false;
+    } catch {
+      // Optional context must not block credential restoration; the panel surfaces this error.
+      azureContextError = true;
+    }
+  }
+  return {
+    themeMode: themeMode as ThemeMode,
+    simulated,
+    deliveryInterval,
+    skipVersion,
+    credentials: saved.credentials
+      ? decodeCredentials(saved.credentials)
+      : null,
+    initialized: true,
+    azureContext,
+    azureContextError,
+  };
+}
+
 export type IStorageContext = IStorageState & {
-  save: (state: Partial<IStorageState>, store?: boolean) => Promise<void>;
-  read: () => Promise<IStorageState>;
-  clear: () => Promise<void>;
+  save(state: Partial<IStorageState>, store?: boolean): Promise<void>;
+  read(): Promise<IStorageState>;
+  clear(): Promise<void>;
 };
 
 const StorageContext = React.createContext({} as IStorageContext);
-const {Provider} = StorageContext;
-
-const retrieveStorage = async (update: StateUpdater<IStorageState>) => {
-  /**
-   * Credentials must be null if not available. This value means app has been initialized but no credentials are available.
-   */
-  Debug(
-    'Retrieving credentials from storage.',
-    'storage_context',
-    'retrieveStorage',
-  );
-  const data = await Keychain.getGenericPassword();
-  let ret: any = {};
-  if (data && data.password) {
-    const parsed = JSON.parse(data.password) as IStorageState;
-    Debug(
-      `Parsed storage: ${data.password}`,
-      'storage_context',
-      'retrieveStorage',
-    );
-    if (parsed) {
-      if (!parsed.credentials) {
-        parsed.credentials = null;
-      }
-      update(current => {
-        ret = {...current, ...parsed, initialized: true};
-        return ret;
-      });
-    }
-  } else {
-    update(current => {
-      ret = {...current, credentials: null, initialized: true};
-      return ret;
-    });
-  }
-  return ret;
-};
-
-const persist = async (state: IStorageState) => {
-  Log(`Persisting ${JSON.stringify(state)}`);
-  await Keychain.setGenericPassword(USERNAME, JSON.stringify(state));
-};
 
 const StorageProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
-  const [state, setState] = useState<IStorageState>(initialState);
+  const [state, setState] = useState(initialState);
+  const current = useRef(initialState);
+  const pending = useRef<Promise<void>>(Promise.resolve());
+  const replace = useCallback((next: IStorageState) => {
+    current.current = next;
+    setState(next);
+  }, []);
+  const enqueue = useCallback(<T,>(operation: () => Promise<T>): Promise<T> => {
+    const result = pending.current.then(operation);
+    // Callers receive the original rejection; only the scheduling tail recovers.
+    pending.current = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }, []);
 
   const save = useCallback(
-    async (data: Partial<IStorageState>, store: boolean = true) => {
-      let newState;
-      setState(current => {
-        newState = {...current, ...data};
-        return newState;
-      });
-      if (store && newState) {
-        await persist(newState);
-      }
-    },
-    [],
+    (data: Partial<IStorageState>, store = true) =>
+      enqueue(async () => {
+        const next = {...current.current, ...data};
+        if (data.azureContext !== undefined) {
+          if (data.azureContext !== null && !next.credentials) {
+            throw new Error('Azure context requires saved device credentials.');
+          }
+          next.azureContext =
+            data.azureContext === null
+              ? null
+              : parseAzureContext(JSON.stringify(data.azureContext));
+          next.azureContextError = false;
+        }
+        if (data.credentials === null) {
+          next.azureContext = null;
+          next.azureContextError = false;
+        }
+        if (store) {
+          const written = await Keychain.setGenericPassword(
+            USERNAME,
+            JSON.stringify(next),
+          );
+          if (!written) {
+            throw new Error('Secure storage could not be updated.');
+          }
+        }
+        replace(next);
+      }),
+    [enqueue, replace],
   );
 
-  const read = useCallback(async () => {
-    return await retrieveStorage(setState);
-  }, [setState]);
+  const read = useCallback(
+    () =>
+      enqueue(async () => {
+        const data = await Keychain.getGenericPassword();
+        const next = data
+          ? restoreStoredState(JSON.parse(data.password))
+          : {...initialState, initialized: true};
+        replace(next);
+        return next;
+      }),
+    [enqueue, replace],
+  );
 
-  const clear = useCallback(async () => {
-    await Keychain.resetGenericPassword();
-    setState(initialState);
-  }, []);
-  const value = {
-    ...state,
-    save,
-    read,
-    clear,
-  };
+  const clear = useCallback(
+    () =>
+      enqueue(async () => {
+        const cleared = await Keychain.resetGenericPassword();
+        if (!cleared) {
+          throw new Error('Secure storage could not be cleared.');
+        }
+        replace({...initialState, initialized: true});
+      }),
+    [enqueue, replace],
+  );
 
-  return <Provider value={value}>{children}</Provider>;
+  return (
+    <StorageContext.Provider value={{...state, save, read, clear}}>
+      {children}
+    </StorageContext.Provider>
+  );
 };
 
 export {StorageProvider as default, StorageContext};

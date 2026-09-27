@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>How the PAAD app is written, built and run &mdash; a picture for beginners</title>
+    <meta
+      name="description"
+      content="A static, offline illustration of how PAAD's source code becomes an installed native phone app, and what runs inside that app."
+    />
+    <style>
+      /* ------------------------------------------------------------------
+         Self-contained presentation. No web fonts, no images, no scripts
+         or styles are loaded from anywhere else. Colours follow the
+         approved PAAD preview palette: warm neutral paper, white cards,
+         one restrained teal accent.
+         ------------------------------------------------------------------ */
+
+      :root {
+        --bg: #f5f4f0;
+        --surface: #ffffff;
+        --inset: #f0f2ef;
+        --text: #17252a;
+        --muted: #4f6167;
+        --border: #dce3df;
+        --control-border: #788984;
+        --primary: #166b72;
+        --on-primary: #ffffff;
+        --positive: #17634f;
+        --positive-surface: #e3f3eb;
+        --warn: #7d5312;
+        --warn-surface: #fbf2e3;
+        --danger: #8f3325;
+        --danger-surface: #fbecea;
+        --tint0: #eaf5f1;
+        --tint1: #f0edf8;
+        --tint2: #fbefe7;
+        --tint3: #f6f2e4;
+        --accent2: #5a4b86;
+        --shadow: 0 16px 36px rgba(23, 37, 42, 0.1);
+        --sys-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+        --mono-font: ui-monospace, SFMono-Regular, Menlo, Consolas,
+          'Liberation Mono', monospace;
+      }
+
+      [data-theme='dark'] {
+        --bg: #101c20;
+        --surface: #1b2a30;
+        --inset: #24373d;
+        --text: #f0f4f3;
+        --muted: #b7c8ca;
+        --border: #35494e;
+        --control-border: #8ba5aa;
+        --primary: #72d5c2;
+        --on-primary: #142c2a;
+        --positive: #97dfc0;
+        --positive-surface: #233d35;
+        --warn: #e6bc7b;
+        --warn-surface: #3a3122;
+        --danger: #f0a79c;
+        --danger-surface: #3f2826;
+        --tint0: #223a37;
+        --tint1: #313146;
+        --tint2: #3f342e;
+        --tint3: #3a392d;
+        --accent2: #b3a7de;
+        --shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        html:not([data-theme='light']) {
+          --bg: #101c20;
+          --surface: #1b2a30;
+          --inset: #24373d;
+          --text: #f0f4f3;
+          --muted: #b7c8ca;
+          --border: #35494e;
+          --control-border: #8ba5aa;
+          --primary: #72d5c2;
+          --on-primary: #142c2a;
+          --positive: #97dfc0;
+          --positive-surface: #233d35;
+          --warn: #e6bc7b;
+          --warn-surface: #3a3122;
+          --danger: #f0a79c;
+          --danger-surface: #3f2826;
+          --tint0: #223a37;
+          --tint1: #313146;
+          --tint2: #3f342e;
+          --tint3: #3a392d;
+          --accent2: #b3a7de;
+          --shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sys-font);
+        font-size: 15px;
+        line-height: 22px;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 16px 20px 64px;
+      }
+
+      a {
+        color: var(--primary);
+      }
+
+      code,
+      .mono {
+        font-family: var(--mono-font);
+        font-size: 0.92em;
+        background: var(--inset);
+        border-radius: 6px;
+        padding: 1px 5px;
+      }
+
+      :where(a, button, [tabindex]):focus-visible {
+        outline: 3px solid var(--primary);
+        outline-offset: 2px;
+        border-radius: 12px;
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      .skip {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+      }
+
+      .skip:focus {
+        left: 12px;
+        top: 12px;
+        z-index: 20;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--primary);
+        border-radius: 12px;
+      }
+
+      /* ---------------- page header ---------------- */
+
+      .masthead {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 22px;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 25px;
+        line-height: 31px;
+        letter-spacing: -0.3px;
+      }
+
+      h1 span {
+        display: block;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 0.2px;
+      }
+
+      .tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        align-items: center;
+      }
+
+      .control-label {
+        font-size: 11px;
+        line-height: 15px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .control-group {
+        display: flex;
+        gap: 4px;
+        padding: 3px;
+        background: var(--inset);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+      }
+
+      .seg {
+        min-height: 34px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 11px;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .seg[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+      }
+
+      .banner {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        margin: 14px 0 0;
+        padding: 11px 15px;
+        border: 1px solid var(--control-border);
+        border-radius: 16px;
+        background: var(--surface);
+      }
+
+      .banner svg {
+        flex: none;
+        color: var(--primary);
+      }
+
+      .banner p {
+        margin: 0;
+        font-size: 13.5px;
+        line-height: 20px;
+      }
+
+      .stamp {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 9px;
+        border: 1px solid var(--control-border);
+        border-radius: 999px;
+        background: var(--inset);
+        font-size: 11px;
+        line-height: 17px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      nav.crumbs {
+        margin: 12px 0 0;
+        font-size: 13.5px;
+        line-height: 20px;
+        color: var(--muted);
+      }
+
+      nav.crumbs a + a::before {
+        content: '\00a0\00b7\00a0 ';
+        color: var(--muted);
+      }
+
+      h2 {
+        margin: 34px 0 0;
+        font-size: 20px;
+        line-height: 27px;
+        letter-spacing: -0.2px;
+      }
+
+      h3 {
+        margin: 22px 0 0;
+        font-size: 16px;
+        line-height: 23px;
+      }
+
+      .lede {
+        margin: 6px 0 0;
+        max-width: 96ch;
+        font-size: 14.5px;
+        line-height: 22px;
+        color: var(--muted);
+      }
+
+      /* ---------------- walkthrough controls ---------------- */
+
+      .walk {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        margin: 14px 0 0;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+
+      .walk-steps {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .chip {
+        min-height: 34px;
+        min-width: 34px;
+        padding: 0 10px;
+        border: 1px solid var(--control-border);
+        border-radius: 11px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .chip[aria-pressed='true'] {
+        background: var(--primary);
+        color: var(--on-primary);
+        border-color: var(--primary);
+      }
+
+      .chip.wide {
+        font-weight: 600;
+      }
+
+      .walk-read {
+        flex: 1 1 260px;
+        min-width: 220px;
+        margin: 0;
+        font-size: 13px;
+        line-height: 19px;
+        color: var(--muted);
+      }
+
+      /* ---------------- diagram ---------------- */
+
+      .scroller {
+        margin: 12px 0 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 2px 2px 10px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .canvas {
+        position: relative;
+        width: 1200px;
+        height: 1400px;
+        margin: 0 auto;
+      }
+
+      .conn {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .conn .region {
+        fill: var(--inset);
+        stroke: var(--control-border);
+        stroke-width: 1;
+        stroke-dasharray: 5 5;
+        opacity: 0.75;
+      }
+
+      .conn .flow {
+        fill: none;
+        stroke: var(--primary);
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .conn .support {
+        fill: none;
+        stroke: var(--control-border);
+        stroke-width: 1.8;
+        stroke-dasharray: 7 5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .conn .boundary {
+        fill: none;
+        stroke: var(--accent2);
+        stroke-width: 2;
+        stroke-dasharray: 1 5;
+        stroke-linecap: round;
+      }
+
+      .conn .head-flow {
+        fill: var(--primary);
+      }
+
+      .conn .head-support {
+        fill: var(--control-border);
+      }
+
+      .conn .head-boundary {
+        fill: var(--accent2);
+      }
+
+      .lane-label {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11.5px;
+        line-height: 16px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .lane-label em {
+        font-style: normal;
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .node {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 9px 12px;
+        border: 1px solid var(--control-border);
+        border-radius: 16px;
+        background: var(--surface);
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        overflow: hidden;
+      }
+
+      button.node {
+        cursor: pointer;
+      }
+
+      .node[data-own='true'] {
+        border-color: var(--primary);
+        background: var(--tint0);
+      }
+
+      .node[data-kind='tooling'] {
+        background: var(--tint3);
+      }
+
+      .node[data-kind='boundary'] {
+        border-style: dashed;
+        border-color: var(--accent2);
+        background: var(--tint1);
+      }
+
+      .node[data-kind='exit'] {
+        background: var(--inset);
+        border-style: dashed;
+      }
+
+      .node .head {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .badge {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 6px;
+        border-radius: 8px;
+        background: var(--inset);
+        border: 1px solid var(--control-border);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .node .t {
+        font-size: 14.5px;
+        line-height: 19px;
+        font-weight: 700;
+      }
+
+      .node .s {
+        font-size: 12.5px;
+        line-height: 17px;
+        color: var(--muted);
+      }
+
+      .node .s b {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .node ul {
+        margin: 2px 0 0;
+        padding-left: 16px;
+        font-size: 12.5px;
+        line-height: 17px;
+        color: var(--muted);
+      }
+
+      .node.is-active {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary);
+      }
+
+      .node.is-active .badge {
+        background: var(--primary);
+        color: var(--on-primary);
+        border-color: var(--primary);
+      }
+
+      .node.is-active::after {
+        content: 'you are here';
+        position: absolute;
+        right: 0;
+        top: 0;
+        padding: 1px 8px;
+        border-bottom-left-radius: 10px;
+        background: var(--primary);
+        color: var(--on-primary);
+        font-size: 10px;
+        line-height: 15px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+      }
+
+      .tag {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 3px 8px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+        font-size: 11.5px;
+        line-height: 15px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      /* ---------------- legend ---------------- */
+
+      .legend {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+        gap: 10px 20px;
+        margin: 14px 0 0;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+
+      .legend h3 {
+        grid-column: 1 / -1;
+        margin: 0;
+        font-size: 13px;
+        line-height: 18px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .legend-row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 13px;
+        line-height: 19px;
+      }
+
+      .legend-row svg,
+      .legend-row .swatch {
+        flex: none;
+        margin-top: 2px;
+      }
+
+      .swatch {
+        width: 38px;
+        height: 22px;
+        border-radius: 8px;
+        border: 1px solid var(--control-border);
+        background: var(--surface);
+      }
+
+      .swatch.own {
+        border-color: var(--primary);
+        background: var(--tint0);
+      }
+
+      .swatch.tooling {
+        background: var(--tint3);
+      }
+
+      .swatch.boundary {
+        border-style: dashed;
+        border-color: var(--accent2);
+        background: var(--tint1);
+      }
+
+      /* ---------------- explanation cards ---------------- */
+
+      .cards {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+        gap: 14px;
+        margin: 14px 0 0;
+        padding: 0;
+      }
+
+      .card {
+        position: relative;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+
+      .card.is-active {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary);
+      }
+
+      .card h3 {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0;
+        font-size: 15.5px;
+        line-height: 21px;
+      }
+
+      .card p {
+        margin: 8px 0 0;
+        font-size: 13.5px;
+        line-height: 20px;
+      }
+
+      .card .where {
+        margin: 9px 0 0;
+        font-size: 12.5px;
+        line-height: 18px;
+        color: var(--muted);
+      }
+
+      .card .where strong {
+        color: var(--text);
+      }
+
+      .panel {
+        margin: 12px 0 0;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+
+      .panel.warnish {
+        border-color: var(--warn);
+        background: var(--warn-surface);
+      }
+
+      .panel p,
+      .panel li {
+        font-size: 13.5px;
+        line-height: 20px;
+      }
+
+      .panel p {
+        margin: 8px 0 0;
+      }
+
+      .panel > p:first-child,
+      .panel > h3:first-child {
+        margin-top: 0;
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 14px;
+        margin: 12px 0 0;
+      }
+
+      .tablewrap {
+        max-width: 100%;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0 0;
+        font-size: 13.5px;
+        line-height: 19px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      caption {
+        text-align: left;
+        font-size: 13px;
+        line-height: 19px;
+        color: var(--muted);
+        padding: 0 0 6px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        background: var(--inset);
+        font-size: 12.5px;
+        letter-spacing: 0.3px;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      footer {
+        margin: 40px 0 0;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+        font-size: 13px;
+        line-height: 20px;
+        color: var(--muted);
+      }
+
+      .hint {
+        margin: 8px 0 0;
+        font-size: 12.5px;
+        line-height: 18px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 760px) {
+        h1 {
+          font-size: 21px;
+          line-height: 27px;
+        }
+
+        .page {
+          padding: 12px 12px 48px;
+        }
+
+        .scroller {
+          border-radius: 16px;
+        }
+
+        /* Keep wide tables inside the screen instead of stretching the page. */
+        .tablewrap {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+          min-width: 660px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      @media print {
+        :root {
+          --bg: #ffffff;
+          --surface: #ffffff;
+          --inset: #f2f2f2;
+          --shadow: none;
+        }
+
+        body {
+          background: #fff;
+        }
+
+        .tools,
+        .walk,
+        .skip {
+          display: none !important;
+        }
+
+        .scroller {
+          overflow: visible;
+          border: 0;
+          box-shadow: none;
+          height: 900px;
+        }
+
+        .canvas {
+          transform: scale(0.63);
+          transform-origin: top left;
+        }
+
+        .node.is-active,
+        .card.is-active {
+          box-shadow: none;
+        }
+
+        .card,
+        .panel,
+        table {
+          break-inside: avoid;
+        }
+
+        a {
+          color: #000;
+          text-decoration: underline;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#steps">Skip the picture and read the steps in words</a>
+
+    <div class="page">
+      <header class="masthead">
+        <h1>
+          From source code to an installed phone app
+          <span
+            >PAAD &mdash; Phone as a Device &middot; a picture for people who
+            have never built an app</span
+          >
+        </h1>
+        <div class="tools" id="tools" hidden>
+          <div class="control-label" id="theme-label">Appearance</div>
+          <div class="control-group" role="group" aria-labelledby="theme-label">
+            <button class="seg" type="button" data-theme-set="light" aria-pressed="false">
+              Light
+            </button>
+            <button class="seg" type="button" data-theme-set="dark" aria-pressed="false">
+              Dark
+            </button>
+            <button class="seg" type="button" data-theme-set="auto" aria-pressed="true">
+              Auto
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="banner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 11v5" />
+          <path d="M12 8h.01" />
+        </svg>
+        <p>
+          <b>Static illustration.</b><span class="stamp">no live data</span>
+          This page is a drawing of the repository's design. It makes no network
+          requests, shows no real device or Azure identifiers, and does not
+          build, install, change or test anything. Opening it does not alter the
+          native app and does not produce a new phone build.
+        </p>
+      </div>
+
+      <nav class="crumbs" aria-label="Related reading">
+        <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md"
+          >Beginner guide: how the app works and how a phone connects</a
+        >
+        <a href="./paad-phone-to-azure.html"
+          >Companion picture: the phone and Azure, step by step</a
+        >
+        <a href="../../README.md#build-and-run">Build and run instructions</a>
+      </nav>
+
+      <h2 id="map-heading">The whole journey on one map</h2>
+      <p class="lede">
+        Read it from the top down. Written code (lanes A) turns into real
+        Android and iOS projects, build machines turn those projects into
+        installable files (lane B), a person installs and launches the result
+        (lane C), and lane D shows what is actually running inside the app on
+        the phone. Ten numbered stops follow that order.
+      </p>
+
+      <div class="walk" id="walk" hidden>
+        <span class="control-label" id="walk-label">Guided walkthrough</span>
+        <div class="walk-steps" role="group" aria-labelledby="walk-label">
+          <button class="chip wide" type="button" data-step="all" aria-pressed="true">
+            Show all
+          </button>
+          <button class="chip" type="button" data-step="1" aria-pressed="false">1</button>
+          <button class="chip" type="button" data-step="2" aria-pressed="false">2</button>
+          <button class="chip" type="button" data-step="3" aria-pressed="false">3</button>
+          <button class="chip" type="button" data-step="4" aria-pressed="false">4</button>
+          <button class="chip" type="button" data-step="5" aria-pressed="false">5</button>
+          <button class="chip" type="button" data-step="6" aria-pressed="false">6</button>
+          <button class="chip" type="button" data-step="7" aria-pressed="false">7</button>
+          <button class="chip" type="button" data-step="8" aria-pressed="false">8</button>
+          <button class="chip" type="button" data-step="9" aria-pressed="false">9</button>
+          <button class="chip" type="button" data-step="10" aria-pressed="false">10</button>
+          <button class="chip wide" type="button" data-move="prev">Previous</button>
+          <button class="chip wide" type="button" data-move="next">Next</button>
+        </div>
+        <p class="walk-read" id="walk-read" role="status">
+          Every step is shown. Choose a number to outline that stop on the map
+          and its explanation below. Nothing is hidden at any time.
+        </p>
+      </div>
+
+      <div class="scroller" tabindex="0" role="region" aria-labelledby="map-heading">
+        <div class="canvas">
+          <svg
+            class="conn"
+            viewBox="0 0 1200 1400"
+            role="img"
+            aria-labelledby="conn-title conn-desc"
+          >
+            <title id="conn-title">
+              Connecting lines of the PAAD build-and-run map
+            </title>
+            <desc id="conn-desc">
+              Solid teal arrows run downwards from the repository lane to the
+              build lane, then to the install lane, then into the running-app
+              lane. Dashed grey arrows add supporting input such as native
+              module source. Dotted violet lines join the running client to
+              three local boundaries. Every box in the picture is also a
+              labelled text box, and the same ten steps are written out in the
+              list below the picture.
+            </desc>
+            <defs>
+              <marker
+                id="a1-flow"
+                markerUnits="userSpaceOnUse"
+                markerWidth="12"
+                markerHeight="12"
+                refX="6"
+                refY="6"
+                orient="auto"
+              >
+                <path class="head-flow" d="M1 1 L11 6 L1 11 Z" />
+              </marker>
+              <marker
+                id="a1-support"
+                markerUnits="userSpaceOnUse"
+                markerWidth="11"
+                markerHeight="11"
+                refX="5.5"
+                refY="5.5"
+                orient="auto"
+              >
+                <path class="head-support" d="M1 1 L10 5.5 L1 10 Z" />
+              </marker>
+              <marker
+                id="a1-boundary"
+                markerUnits="userSpaceOnUse"
+                markerWidth="11"
+                markerHeight="11"
+                refX="5.5"
+                refY="5.5"
+                orient="auto"
+              >
+                <path class="head-boundary" d="M1 1 L10 5.5 L1 10 Z" />
+              </marker>
+            </defs>
+
+            <rect class="region" x="24" y="56" width="1152" height="268" rx="20" />
+            <rect class="region" x="24" y="348" width="1152" height="188" rx="20" />
+            <rect class="region" x="24" y="560" width="1152" height="300" rx="20" />
+            <rect class="region" x="24" y="884" width="1152" height="500" rx="20" />
+
+            <g class="flow" marker-end="url(#a1-flow)">
+              <path d="M348 162 H386" />
+              <path d="M696 162 H734" />
+              <path d="M876 228 V340 H500 V386" />
+              <path d="M876 340 V386" />
+              <path d="M318 512 V598" />
+              <path d="M876 512 V598" />
+              <path d="M318 708 V726" />
+              <path d="M876 708 V726" />
+              <path d="M594 840 V930" />
+              <path d="M172 1036 V1046" />
+              <path d="M436 1036 V1046" />
+              <path d="M700 1036 V1046" />
+              <path d="M990 1036 V1046" />
+              <path d="M594 1136 V1146" />
+              <path d="M848 1200 H858" />
+            </g>
+
+            <g class="support" marker-end="url(#a1-support)">
+              <path d="M1000 244 V236" />
+            </g>
+
+            <g class="boundary" marker-end="url(#a1-boundary)">
+              <path d="M224 1238 V1250" />
+              <path d="M600 1238 V1250" />
+              <path d="M800 1238 V1244 H970 V1250" />
+            </g>
+          </svg>
+
+          <p class="lane-label" style="left: 40px; top: 66px; width: 1120px">
+            Lane A &mdash; your computer and this repository
+            <em>&mdash; the part a developer writes and owns</em>
+          </p>
+
+          <button
+            class="node"
+            type="button"
+            data-step="1"
+            data-own="true"
+            style="left: 48px; top: 108px; width: 300px; height: 120px"
+          >
+            <span class="head"
+              ><span class="badge">1</span
+              ><span class="t">TypeScript and React source</span></span
+            >
+            <span class="s"
+              >Plain text files describing every screen and rule:
+              <b>App.tsx</b>, <b>Home.tsx</b>, the device runtime and the
+              connection code.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="2"
+            data-own="true"
+            style="left: 396px; top: 108px; width: 300px; height: 120px"
+          >
+            <span class="head"
+              ><span class="badge">2</span
+              ><span class="t">App configuration</span></span
+            >
+            <span class="s"
+              ><b>app.config.js</b>, <b>app.plugin.js</b> and
+              <b>package.json</b>: app name, icons, permissions, minimum OS
+              versions and dependency requirements. Lockfiles record resolved
+              dependency versions.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="3"
+            data-kind="tooling"
+            style="left: 744px; top: 108px; width: 396px; height: 120px"
+          >
+            <span class="head"
+              ><span class="badge">3</span
+              ><span class="t">Expo prebuild writes the native projects</span></span
+            >
+            <span class="s"
+              >Generates a real Android project (Gradle) and a real iOS project
+              (Xcode + CocoaPods) from the configuration. These are ordinary
+              native apps, not a web page in a wrapper.</span
+            >
+          </button>
+
+          <div
+            class="node"
+            data-own="true"
+            style="left: 396px; top: 244px; width: 744px; height: 76px"
+          >
+            <span class="t">Native module written in this repository &mdash; <span class="mono">modules/paad-device</span></span>
+            <span class="s"
+              >Swift (iOS) and Kotlin (Android) code for the restricted secure
+              WebSocket and the torch-availability check. It is folded into the
+              native projects at step 3.</span
+            >
+          </div>
+
+          <p class="lane-label" style="left: 40px; top: 358px; width: 1120px">
+            Lane B &mdash; build machines
+            <em>&mdash; GitHub Actions, not your phone</em>
+          </p>
+
+          <button
+            class="node"
+            type="button"
+            data-step="4"
+            data-kind="tooling"
+            style="left: 48px; top: 392px; width: 540px; height: 120px"
+          >
+            <span class="head"
+              ><span class="badge">4</span
+              ><span class="t">Linux runner &rarr; Android app package (APK)</span></span
+            >
+            <span class="s"
+              >The workflow runs prebuild for Android, then Gradle compiles the
+              project and bundles the JavaScript into one installable
+              file.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="4"
+            data-kind="tooling"
+            style="left: 612px; top: 392px; width: 528px; height: 120px"
+          >
+            <span class="head"
+              ><span class="badge">4</span
+              ><span class="t">macOS runner &rarr; iOS Simulator app</span></span
+            >
+            <span class="s"
+              >Apple's tools only run on macOS. The workflow runs prebuild for
+              iOS, installs the locked CocoaPods dependencies and builds an app
+              for the <b>iOS Simulator</b>.</span
+            >
+          </button>
+
+          <p class="lane-label" style="left: 40px; top: 570px; width: 1120px">
+            Lane C &mdash; install and launch
+            <em>&mdash; a real phone, or a virtual one on a computer</em>
+          </p>
+
+          <button
+            class="node"
+            type="button"
+            data-step="5"
+            style="left: 48px; top: 604px; width: 540px; height: 104px"
+          >
+            <span class="head"
+              ><span class="badge">5</span
+              ><span class="t">Android phone or emulator</span></span
+            >
+            <span class="s"
+              >The built package can be installed on a supported Android device
+              (Android 7 / API 24 or newer) or on an emulator running on
+              Windows, Linux or macOS.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="5"
+            style="left: 612px; top: 604px; width: 528px; height: 104px"
+          >
+            <span class="head"
+              ><span class="badge">5</span
+              ><span class="t">iOS Simulator on a Mac</span></span
+            >
+            <span class="s"
+              >A Simulator build runs on a Mac only and
+              <b>cannot be installed on an iPhone</b>. An iPhone needs a
+              separately signed build (iOS 16.4 or newer).</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="6"
+            style="left: 48px; top: 732px; width: 1092px; height: 108px"
+          >
+            <span class="head"
+              ><span class="badge">6</span
+              ><span class="t">Where does the JavaScript come from when the app starts?</span></span
+            >
+            <span class="s"
+              ><b>Development build:</b> the native app fetches the JavaScript
+              from Metro, a bundler the developer runs on their own computer, so
+              edits appear quickly. &nbsp;<b>Bundled build from step 4:</b> the
+              JavaScript is already inside the installed file, so the app starts
+              on its own with no developer computer involved. Development builds
+              also include tooling and settings that differ from release
+              builds.</span
+            >
+          </button>
+
+          <p class="lane-label" style="left: 40px; top: 894px; width: 1120px">
+            Lane D &mdash; inside the running app
+            <em>&mdash; one app, one runtime, one client</em>
+          </p>
+
+          <button
+            class="node"
+            type="button"
+            data-step="7"
+            data-own="true"
+            style="left: 48px; top: 936px; width: 248px; height: 100px"
+          >
+            <span class="head"
+              ><span class="badge">7</span><span class="t">Home</span></span
+            >
+            <span class="s"
+              >Connection map, anything needing attention, and a short summary
+              of messages in and out.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="7"
+            data-own="true"
+            style="left: 312px; top: 936px; width: 248px; height: 100px"
+          >
+            <span class="head"
+              ><span class="badge">7</span><span class="t">Explore</span></span
+            >
+            <span class="s"
+              >The tools: telemetry sources, properties, image upload,
+              Bluetooth scanning, map preview.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="7"
+            data-own="true"
+            style="left: 576px; top: 936px; width: 248px; height: 100px"
+          >
+            <span class="head"
+              ><span class="badge">7</span><span class="t">Activity</span></span
+            >
+            <span class="s"
+              >Observations this app made about its own calls, plus separate
+              diagnostics logs.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="7"
+            data-own="true"
+            style="left: 840px; top: 936px; width: 300px; height: 100px"
+          >
+            <span class="head"
+              ><span class="badge">7</span
+              ><span class="t">Registration &middot; Connection details &middot; Settings</span></span
+            >
+            <span class="s"
+              >Onboarding form, the identity and status panel, and app
+              preferences such as delivery interval.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="8"
+            data-own="true"
+            style="left: 48px; top: 1052px; width: 1092px; height: 84px"
+          >
+            <span class="head"
+              ><span class="badge">8</span
+              ><span class="t">One shared DeviceRuntime</span></span
+            >
+            <span class="s"
+              >Owns sensor intent, property values, command and desired-property
+              handlers, and in-memory property drafts. Moving between tabs does
+              not intentionally start a second runtime or a second set of
+              handlers.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="9"
+            data-own="true"
+            style="left: 48px; top: 1152px; width: 800px; height: 84px"
+          >
+            <span class="head"
+              ><span class="badge">9</span
+              ><span class="t">One shared device client &mdash; <span class="mono">src/connection</span></span></span
+            >
+            <span class="s"
+              >App-owned code: checks what you typed, refuses unapproved
+              endpoints and redirects, provisions, connects, sends and receives,
+              and performs uploads. Screens use this typed interface rather than
+              the vendor library directly.</span
+            >
+          </button>
+
+          <div
+            class="node"
+            data-kind="exit"
+            style="left: 864px; top: 1152px; width: 276px; height: 84px"
+          >
+            <span class="t">Out to the network &rarr;</span>
+            <span class="s"
+              >Everything the phone sends to Azure leaves here. The companion
+              picture follows it.</span
+            >
+          </div>
+
+          <button
+            class="node"
+            type="button"
+            data-step="10"
+            data-kind="boundary"
+            style="left: 48px; top: 1256px; width: 352px; height: 116px"
+          >
+            <span class="head"
+              ><span class="badge">10</span
+              ><span class="t">Secure local storage</span></span
+            >
+            <span class="s"
+              ><b>react-native-keychain</b> keeps device credentials and
+              settings in platform secure storage. If saving fails, the app
+              reports an error instead of pretending it saved.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="10"
+            data-kind="boundary"
+            style="left: 424px; top: 1256px; width: 352px; height: 116px"
+          >
+            <span class="head"
+              ><span class="badge">10</span
+              ><span class="t">Native hardware and OS permissions</span></span
+            >
+            <span class="s"
+              >Sensors, battery, location, camera and torch, Bluetooth
+              scanning, maps &mdash; plus this repository's secure WebSocket
+              module. Availability is a hardware and permission question, not a
+              cloud one.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="10"
+            data-kind="boundary"
+            style="left: 800px; top: 1256px; width: 340px; height: 116px"
+          >
+            <span class="head"
+              ><span class="badge">10</span
+              ><span class="t">Observation wrapper</span></span
+            >
+            <span class="s"
+              >Records bounded metadata about the existing client's calls, in
+              memory only. It is not an extra cloud client, subscription or
+              monitoring service.</span
+            >
+          </button>
+
+          <div class="tag" style="left: 596px; top: 328px; width: 160px; height: 26px">
+            produces &rarr; step 4
+          </div>
+        </div>
+      </div>
+
+      <p class="hint">
+        The map is wider than most phone screens. Scroll it sideways, or read
+        the same ten steps as text below &mdash; nothing on the map is missing
+        from the text.
+      </p>
+
+      <div class="legend">
+        <h3>Legend</h3>
+        <div class="legend-row">
+          <svg width="52" height="16" viewBox="0 0 52 16" aria-hidden="true" focusable="false">
+            <path d="M2 8 H40" fill="none" stroke="currentColor" stroke-width="2.4" style="color: var(--primary)" />
+            <path d="M40 3 L50 8 L40 13 Z" style="fill: var(--primary)" />
+          </svg>
+          <span
+            ><b>Solid arrow &mdash; &ldquo;produces the next thing&rdquo;.</b>
+            The ordinary build-and-run sequence.</span
+          >
+        </div>
+        <div class="legend-row">
+          <svg width="52" height="16" viewBox="0 0 52 16" aria-hidden="true" focusable="false">
+            <path d="M2 8 H40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="7 5" style="color: var(--control-border)" />
+            <path d="M40 3.5 L49 8 L40 12.5 Z" style="fill: var(--control-border)" />
+          </svg>
+          <span
+            ><b>Dashed arrow &mdash; supporting input.</b> Something folded into
+            a step, such as the repository's own native module source.</span
+          >
+        </div>
+        <div class="legend-row">
+          <svg width="52" height="16" viewBox="0 0 52 16" aria-hidden="true" focusable="false">
+            <path d="M2 8 H40" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="1 5" stroke-linecap="round" style="color: var(--accent2)" />
+            <path d="M40 3.5 L49 8 L40 12.5 Z" style="fill: var(--accent2)" />
+          </svg>
+          <span
+            ><b>Dotted arrow &mdash; a local boundary.</b> Secure storage,
+            operating-system hardware, or bounded in-memory records. Never a
+            cloud service.</span
+          >
+        </div>
+        <div class="legend-row">
+          <span class="swatch own" aria-hidden="true"></span>
+          <span
+            ><b>Teal-tinted box:</b> code this repository writes and owns.</span
+          >
+        </div>
+        <div class="legend-row">
+          <span class="swatch tooling" aria-hidden="true"></span>
+          <span
+            ><b>Sand-tinted box:</b> tooling or a platform the repository
+            configures but does not contain (Expo prebuild, Gradle, Xcode,
+            GitHub Actions).</span
+          >
+        </div>
+        <div class="legend-row">
+          <span class="swatch boundary" aria-hidden="true"></span>
+          <span
+            ><b>Dashed violet box:</b> a boundary the app depends on rather than
+            implements.</span
+          >
+        </div>
+        <div class="legend-row">
+          <span class="swatch" aria-hidden="true"></span>
+          <span
+            ><b>Plain box:</b> a device, a runner or an outcome, such as an
+            installed app package.</span
+          >
+        </div>
+      </div>
+
+      <h2 id="steps">The ten steps in words</h2>
+      <p class="lede">
+        Each card matches one numbered stop on the map. The &ldquo;where to
+        look&rdquo; line names the real file, so a curious reader can open it
+        next to the picture.
+      </p>
+
+      <ol class="cards">
+        <li class="card" data-step="1">
+          <h3><span class="badge">1</span> Somebody writes text files</h3>
+          <p>
+            The app starts life as source code: TypeScript (JavaScript with
+            type checking) using React to describe screens. Nothing here is an
+            app yet &mdash; it is instructions.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/App.tsx"><code>src/App.tsx</code></a> sets up
+            navigation and shared providers;
+            <a href="../../src/Home.tsx"><code>src/Home.tsx</code></a> places
+            Home, Explore and Activity under one runtime.
+          </p>
+        </li>
+
+        <li class="card" data-step="2">
+          <h3><span class="badge">2</span> Configuration describes the app</h3>
+          <p>
+            A separate configuration file states the app's name, icon,
+            identifiers, requested permissions, minimum operating-system
+            versions and build settings. <code>package.json</code> lists library
+            version requirements; <code>package-lock.json</code> locks the
+            resolved JavaScript dependencies.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../app.config.js"><code>app.config.js</code></a>
+            (iOS 16.4 and Android API 24 minimums are set here) and
+            <a href="../../package.json"><code>package.json</code></a>.
+          </p>
+        </li>
+
+        <li class="card" data-step="3">
+          <h3><span class="badge">3</span> Prebuild writes real native projects</h3>
+          <p>
+            Expo's prebuild step turns the configuration into an ordinary
+            Android project and an ordinary iOS project. Native dependencies
+            arrive through Gradle on Android and CocoaPods on iOS. This
+            repository's own native module &mdash; Swift and Kotlin code for a
+            restricted secure WebSocket, plus a torch-availability check &mdash;
+            is included here. That is why a general-purpose host app such as
+            Expo Go is not enough to run PAAD.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../modules/paad-device/README.md"
+              ><code>modules/paad-device/README.md</code></a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="4">
+          <h3><span class="badge">4</span> Build machines compile it</h3>
+          <p>
+            The repository's automated workflow builds on two kinds of machine
+            because Apple's build tools only run on macOS: a Linux runner
+            produces the Android package, and a macOS runner installs the locked
+            CocoaPods dependencies and produces an iOS <b>Simulator</b> app.
+            Both include the JavaScript inside the artifact. EAS &mdash; Expo's
+            hosted build service &mdash; is optional and is not a requirement
+            here.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../.github/workflows/baseline.yml"
+              ><code>.github/workflows/baseline.yml</code></a
+            >
+            (jobs named &ldquo;Android bundled CI APK&rdquo; and &ldquo;iOS
+            bundled Simulator&rdquo;).
+          </p>
+        </li>
+
+        <li class="card" data-step="5">
+          <h3><span class="badge">5</span> Someone installs and launches it</h3>
+          <p>
+            An Android package can be installed on a supported Android phone or
+            on an emulator. An iOS Simulator app runs on a Mac only: it is
+            <b>not</b> an installable iPhone app, and simulator ad-hoc signing
+            is not an Apple distribution identity. Getting onto a physical
+            iPhone is separate, owner-controlled signing and distribution work.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../README.md#build-and-run">README &ndash; build and run</a>
+            and
+            <a href="../ADR-SIMULATOR.md#windows-emulator-with-a-wsl-checkout"
+              >the simulator guide</a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="6">
+          <h3><span class="badge">6</span> Development mode versus a bundled build</h3>
+          <p>
+            A development build asks a bundler called Metro, running on the
+            developer's computer, for the JavaScript each time it starts. A
+            bundled build from step 4 already contains it and starts by itself.
+            An emulator or Simulator is a <b>virtual device</b>, which is a
+            different idea from the app's offline simulation mode: a correctly
+            built virtual device can make real connections with authorised
+            credentials, and missing hardware stays unavailable rather than
+            inventing readings.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md#4-which-app-build-can-i-use"
+              >guide section 4, &ldquo;Which app build can I use?&rdquo;</a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="7">
+          <h3><span class="badge">7</span> The screens you actually see</h3>
+          <p>
+            Home carries the connection map, an attention area when something
+            needs a decision, and a short communication summary. Explore holds
+            the tools. Activity holds observations and diagnostics. Registration,
+            Connection details and Settings surround them. These are different
+            views of <b>one</b> running session, not separate mini-apps.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/Home.tsx"><code>src/Home.tsx</code></a>,
+            <a href="../../src/Registration.tsx"><code>src/Registration.tsx</code></a>,
+            <a href="../../src/Settings.tsx"><code>src/Settings.tsx</code></a>.
+          </p>
+        </li>
+
+        <li class="card" data-step="8">
+          <h3><span class="badge">8</span> One shared runtime</h3>
+          <p>
+            The runtime decides which sensors are wanted, holds property values,
+            registers the handlers for cloud commands and desired properties,
+            and keeps unsent property drafts in memory. Drafts survive moving
+            between tool screens; they are not saved cloud values and are not
+            promised to survive quitting the app.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/runtime/DeviceRuntime.tsx"
+              ><code>src/runtime/DeviceRuntime.tsx</code></a
+            >
+            and
+            <a href="../../src/runtime/propertyDrafts.tsx"
+              ><code>src/runtime/propertyDrafts.tsx</code></a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="9">
+          <h3><span class="badge">9</span> One shared connection client</h3>
+          <p>
+            All screens obtain the same client from a shared context. The
+            app-owned connection layer validates credentials, restricts which
+            hosts may be contacted, refuses redirects, enforces deadlines and
+            cancellation, provisions through the provisioning service, connects
+            to the hub and implements uploads. A vendor compatibility package
+            supplies cryptography helpers and the underlying hub messaging
+            client; its own provisioning, upload, logging and unbounded
+            reconnection loop are deliberately not used.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/hooks/iotc.ts"><code>src/hooks/iotc.ts</code></a>,
+            <a href="../../src/connection/credentials.ts"><code>connection/credentials.ts</code></a>,
+            <a href="../../src/connection/dps.ts"><code>connection/dps.ts</code></a>,
+            <a href="../../src/connection/legacyHub.ts"><code>connection/legacyHub.ts</code></a>,
+            <a href="../../src/connection/upload.ts"><code>connection/upload.ts</code></a>.
+          </p>
+        </li>
+
+        <li class="card" data-step="10">
+          <h3><span class="badge">10</span> Three boundaries, and when writing happens</h3>
+          <p>
+            <b>Secure storage</b> is written at specific moments: after a
+            connection succeeds the credentials are persisted <i>before</i> the
+            newly connected client is adopted, and settings are written when you
+            change them. &ldquo;Forget credentials&rdquo; deletes the local copy
+            and any imported Azure context. A storage failure is reported as an
+            error, not silently ignored.
+          </p>
+          <p>
+            <b>Native hardware</b> is a separate matter from the cloud. Sensors,
+            location, camera and torch, Bluetooth and maps depend on real
+            hardware, operating-system permission and build-time configuration.
+            A denied permission or missing sensor is not a connection fault.
+          </p>
+          <p>
+            <b>Observations</b> wrap the existing client and store a bounded
+            amount of metadata in memory &mdash; up to 120 history rows and
+            64&nbsp;KiB including latest facts, with repeated failures grouped.
+            Payloads, coordinates, image bytes, keys and proof markers are not
+            kept. Diagnostics logs are a separate list.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/contexts/storage.tsx"><code>src/contexts/storage.tsx</code></a>
+            and
+            <a href="../../src/observation/README.md"
+              ><code>src/observation/README.md</code></a
+            >.
+          </p>
+        </li>
+      </ol>
+
+      <h2>Three words people mix up</h2>
+      <div class="grid2">
+        <div class="panel">
+          <h3>React</h3>
+          <p>
+            A library for describing user interfaces as components and updating
+            them when data changes. It is not a phone operating system and not a
+            server.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>React Native</h3>
+          <p>
+            Runs that component code so it drives <b>real</b> Android and iOS
+            controls, and gives JavaScript a way to call native code. This
+            repository uses its New Architecture.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Expo</h3>
+          <p>
+            A toolkit around React Native: compatible native modules,
+            configuration, native-project generation and development tooling.
+            Expo is not a replacement for React Native, and
+            <b>Expo Go is not sufficient</b> for PAAD because it does not
+            contain this repository's custom native module.
+          </p>
+        </div>
+      </div>
+
+      <h2>The dependencies that matter, grouped by purpose</h2>
+      <div class="tablewrap" tabindex="0" role="region" aria-label="Table, scrolls sideways on narrow screens">
+        <table>
+          <caption>
+            A curated list, not the full dependency tree. Versions come from the
+            repository's
+            <a href="../../package.json">package manifest</a>.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Purpose</th>
+              <th scope="col">What PAAD uses</th>
+              <th scope="col">Why it is there</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Foundation</th>
+              <td>React 19.2.3, React Native 0.86.3, Expo SDK 57, TypeScript 6</td>
+              <td>
+                Describe screens, run them natively, and catch type mistakes
+                before the app runs. Type checking does not certify cloud
+                delivery.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Moving between screens</th>
+              <td>React Navigation (stack and bottom tabs), screens, gesture handler, safe-area context</td>
+              <td>
+                Root screens, the bottom tabs and the Explore tool stack, kept
+                usable around notches and system bars.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Look and feel</th>
+              <td>React Native Elements, vector icons, Expo Font with Quicksand</td>
+              <td>
+                Reusable controls, icons and the bundled display font. Changing a
+                bundled font needs a new native build.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Talking to the cloud</th>
+              <td>
+                App-owned <code>src/connection</code> with <code>expo/fetch</code>;
+                contained vendor package <code>react-native-azure-iotcentral-client</code> 1.1.10
+              </td>
+              <td>
+                The app owns validation, provisioning requests, deadlines,
+                endpoint restrictions and uploads. The vendor package supplies
+                credential cryptography and the underlying hub messaging client
+                only.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Restricted secure transport</th>
+              <td>Local module <code>modules/paad-device</code> (Swift + URLSession, Kotlin + OkHttp)</td>
+              <td>
+                Secure WebSockets that refuse redirects and keep system
+                certificate and hostname validation. Repository code, not an Azure
+                SDK.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Keeping secrets locally</th>
+              <td><code>react-native-keychain</code></td>
+              <td>
+                Device credentials, settings and any imported Azure context, in
+                platform secure storage rather than a plain preferences file.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Reading the phone</th>
+              <td>Expo Sensors, Battery and Location; <code>react-native-device-info</code></td>
+              <td>
+                Battery, accelerometer, gyroscope, magnetometer, barometer,
+                permission-aware location, and device facts.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Camera, images and Bluetooth</th>
+              <td>Expo Camera, Expo Image Picker, <code>react-native-ble-plx</code>, permissions support</td>
+              <td>
+                QR scanning, torch presentation, choosing an image to upload, and
+                Bluetooth Low Energy <i>advertisement scanning</i> &mdash; not
+                general pairing or characteristic read/write.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Drawing</th>
+              <td><code>react-native-svg</code>, <code>react-native-maps</code></td>
+              <td>
+                Bundled charts and a native map view. Android map display needs
+                build-time configuration; coordinates still display without it.
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Developer tooling only</th>
+              <td>Jest, React Native Testing Library, ESLint, Prettier</td>
+              <td>
+                Tests, static checks and formatting. They run on a developer or
+                build machine, never on the phone, and they are not cloud
+                services.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>What this picture deliberately does not claim</h2>
+      <div class="panel warnish">
+        <p>
+          <b>It is not a generic &ldquo;app plus backend&rdquo; drawing.</b>
+          PAAD has no invented server of its own. The app talks to Azure
+          services an administrator already runs; there is no PAAD API tier,
+          database or dashboard in this repository.
+        </p>
+        <p>
+          <b>Observation is not cloud monitoring.</b> Activity shows what this
+          app recorded about its own calls. It creates no extra cloud client and
+          proves nothing about what Azure received.
+        </p>
+        <p>
+          <b>Hardware access and cloud connection are separate questions.</b>
+          A working connection does not grant a sensor, and a missing sensor
+          does not break the connection.
+        </p>
+        <p>
+          <b>A successful build is not a cloud test.</b> As of 2026-09-20,
+          Home / Explore / Activity has retained-DPS Android emulator and iOS
+          Simulator acceptance, including fresh cloud proof and cold restoration.
+          The Windows emulator was updated with saved credentials and Azure
+          context retained. The beginner guide and acceptance ledger identify
+          the exact sources, runs and remaining limits &mdash; this is not
+          physical-device acceptance or a physical-iPhone installation package.
+        </p>
+      </div>
+
+      <h2>Sources used for this picture</h2>
+      <div class="panel">
+        <p>
+          Repository files:
+          <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md">the beginner guide</a>,
+          <a href="../../package.json"><code>package.json</code></a>,
+          <a href="../../app.config.js"><code>app.config.js</code></a>,
+          <a href="../../.github/workflows/baseline.yml"><code>.github/workflows/baseline.yml</code></a>,
+          <a href="../../src/App.tsx"><code>src/App.tsx</code></a>,
+          <a href="../../src/Home.tsx"><code>src/Home.tsx</code></a>,
+          <a href="../../src/runtime/DeviceRuntime.tsx"><code>src/runtime/DeviceRuntime.tsx</code></a>,
+          <a href="../../src/hooks/iotc.ts"><code>src/hooks/iotc.ts</code></a>,
+          <a href="../../src/connection/"><code>src/connection/</code></a>,
+          <a href="../../src/contexts/storage.tsx"><code>src/contexts/storage.tsx</code></a>,
+          <a href="../../modules/paad-device/README.md"><code>modules/paad-device/README.md</code></a>,
+          <a href="../../src/observation/README.md"><code>src/observation/README.md</code></a>,
+          <a href="../../README.md#build-and-run">README</a>.
+        </p>
+        <p>
+          Background reading (opens an external site in your browser; this page
+          itself requests nothing):
+          <a href="https://docs.expo.dev/develop/development-builds/introduction/"
+            >Expo development builds and Expo Go</a
+          >.
+        </p>
+      </div>
+
+      <footer>
+        <p>
+          Companion picture:
+          <a href="./paad-phone-to-azure.html"
+            >how a physical phone connects to Azure, step by step</a
+          >. Full written detail:
+          <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md"
+            >PAAD architecture and Azure guide</a
+          >.
+        </p>
+        <p>
+          Static illustration only. No live data, no device or tenant
+          identifiers, no secrets, and no automatic Azure activity. Every name
+          shown is either a public framework name, a repository path, or a
+          deliberately fabricated example.
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      /* Progressive enhancement only. Without JavaScript the page shows every
+         step, every explanation and every legend entry; nothing is hidden. */
+      (function () {
+        'use strict';
+
+        var root = document.documentElement;
+
+        /* ---- appearance ---- */
+        var themeButtons = [].slice.call(
+          document.querySelectorAll('[data-theme-set]')
+        );
+        var tools = document.getElementById('tools');
+        if (tools) tools.hidden = false;
+        function applyTheme(mode) {
+          if (mode === 'auto') {
+            root.removeAttribute('data-theme');
+          } else {
+            root.setAttribute('data-theme', mode);
+          }
+          themeButtons.forEach(function (b) {
+            b.setAttribute(
+              'aria-pressed',
+              b.getAttribute('data-theme-set') === mode ? 'true' : 'false'
+            );
+          });
+        }
+        themeButtons.forEach(function (b) {
+          b.addEventListener('click', function () {
+            applyTheme(b.getAttribute('data-theme-set'));
+          });
+        });
+
+        /* ---- guided walkthrough ---- */
+        var walk = document.getElementById('walk');
+        var readout = document.getElementById('walk-read');
+        var scroller = document.querySelector('.scroller');
+        var stepButtons = [].slice.call(walk.querySelectorAll('[data-step]'));
+        var nodes = [].slice.call(document.querySelectorAll('.canvas [data-step]'));
+        var cards = [].slice.call(document.querySelectorAll('.card[data-step]'));
+        var titles = {};
+        cards.forEach(function (c) {
+          titles[c.getAttribute('data-step')] = c
+            .querySelector('h3')
+            .textContent.replace(/\s+/g, ' ')
+            .trim();
+        });
+        var order = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+        var current = 'all';
+
+        function setStep(step) {
+          current = step;
+          stepButtons.forEach(function (b) {
+            b.setAttribute(
+              'aria-pressed',
+              b.getAttribute('data-step') === step ? 'true' : 'false'
+            );
+          });
+          nodes.forEach(function (n) {
+            var on = step !== 'all' && n.getAttribute('data-step') === step;
+            n.classList.toggle('is-active', on);
+            if (n.tagName === 'BUTTON') {
+              n.setAttribute('aria-pressed', on ? 'true' : 'false');
+            }
+          });
+          cards.forEach(function (c) {
+            c.classList.toggle(
+              'is-active',
+              step !== 'all' && c.getAttribute('data-step') === step
+            );
+          });
+          if (step === 'all') {
+            readout.textContent =
+              'Every step is shown. Choose a number to outline that stop on the map and its explanation below. Nothing is hidden at any time.';
+            return;
+          }
+          readout.textContent =
+            'Outlined: ' +
+            (titles[step] || 'step ' + step) +
+            '. Step ' +
+            step +
+            ' of ' +
+            order.length +
+            '. All other steps stay visible.';
+          var first = nodes.filter(function (n) {
+            return n.getAttribute('data-step') === step;
+          })[0];
+          if (first && scroller && scroller.scrollWidth > scroller.clientWidth) {
+            var target =
+              first.offsetLeft - (scroller.clientWidth - first.offsetWidth) / 2;
+            scroller.scrollLeft = Math.max(0, target);
+          }
+        }
+
+        stepButtons.forEach(function (b) {
+          b.addEventListener('click', function () {
+            setStep(b.getAttribute('data-step'));
+          });
+        });
+
+        [].slice.call(walk.querySelectorAll('[data-move]')).forEach(function (b) {
+          b.addEventListener('click', function () {
+            var dir = b.getAttribute('data-move') === 'next' ? 1 : -1;
+            var index = order.indexOf(current);
+            if (index === -1) {
+              setStep(dir === 1 ? order[0] : order[order.length - 1]);
+              return;
+            }
+            var next = index + dir;
+            if (next < 0 || next >= order.length) {
+              setStep('all');
+            } else {
+              setStep(order[next]);
+            }
+          });
+        });
+
+        nodes.forEach(function (n) {
+          if (n.tagName !== 'BUTTON') {
+            return;
+          }
+          n.setAttribute('aria-pressed', 'false');
+          n.addEventListener('click', function () {
+            var step = n.getAttribute('data-step');
+            setStep(current === step ? 'all' : step);
+          });
+        });
+
+        walk.hidden = false;
+        setStep('all');
+      })();
+    </script>
+  </body>
+</html>

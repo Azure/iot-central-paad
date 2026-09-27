@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">IoT PnP</string>
-    <string name="appCenterCrashes_whenToSendCrashes" moduleConfig="true" translatable="false">DO_NOT_ASK_JAVASCRIPT</string>
-    <string name="appCenterAnalytics_whenToEnableAnalytics" moduleConfig="true" translatable="false">ALWAYS_SEND</string>
+  <string name="app_name">IoT PnP</string>
+  <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
 </resources>

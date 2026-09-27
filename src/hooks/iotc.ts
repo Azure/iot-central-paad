@@ -1,50 +1,61 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {useContext, useState, useRef, useEffect, useCallback} from 'react';
+import {useContext, useRef, useEffect, useCallback} from 'react';
 import {
-  DecryptCredentials,
-  CancellationToken,
-  IIoTCClient,
-  IOTC_CONNECT,
-  IOTC_EVENTS,
-  IoTCCredentials,
-  IoTCClient,
-  IOTC_LOGGING,
-} from 'react-native-azure-iotcentral-client';
+  createDeviceClient,
+  decodeCredentials,
+  ConnectionError,
+  DeviceClient,
+  DeviceCredentials,
+} from '../connection';
+import {safeError} from '../connection/errors';
 import {StorageContext, IoTCContext} from 'contexts';
-import {Debug, EventLogger} from 'tools';
-import {CommonCallback, LOG_DATA} from 'types';
-import {useLogger} from './common';
-import {defaults} from '../contexts/defaults';
-import {IoTCMock} from 'mocks/iotcMock';
+import {CommonCallback} from 'types';
+import {createSimulatedClient} from '../mocks/iotcMock';
+import {secureWebSocket} from '../platform';
+import {getObservationStore, observeClient} from '../observation';
 
 export function useIoTCentralClient(
-  onConnectionRefresh?: (client: IIoTCClient) => void | Promise<void>,
-): [IIoTCClient | null, any, () => void] {
-  const {client, setClient} = useContext(IoTCContext);
+  onConnectionRefresh?: (client: DeviceClient) => void | Promise<void>,
+): [DeviceClient | null, DeviceCredentials | null, () => void] {
+  const {client, setClient, setError} = useContext(IoTCContext);
   const {credentials} = useContext(StorageContext);
-  const previousConnectionStatus = useRef(false);
-
+  const previous = useRef(false);
   const clear = useCallback(() => {
+    client?.cancel();
     setClient(null);
-  }, [setClient]);
-
+  }, [client, setClient]);
   useEffect(() => {
-    if (client && onConnectionRefresh) {
-      const id = setInterval(async () => {
-        const currentConnectionStatus = client.isConnected();
-        if (currentConnectionStatus !== previousConnectionStatus.current) {
-          previousConnectionStatus.current = currentConnectionStatus;
-          if (currentConnectionStatus) {
-            // only if re-connection
-            await onConnectionRefresh(client);
-          }
-        }
-      }, 3000);
-      return () => clearInterval(id);
+    previous.current = false;
+    if (!client || !onConnectionRefresh) {
+      return;
     }
-  }, [client, onConnectionRefresh]);
+    let active = true;
+    let refreshing = false;
+    const id = setInterval(async () => {
+      const connected = client.isConnected();
+      if (connected && !previous.current && !refreshing) {
+        refreshing = true;
+        previous.current = true;
+        try {
+          await onConnectionRefresh(client);
+        } catch (error) {
+          if (active) {
+            setError(safeError(error));
+          }
+        } finally {
+          refreshing = false;
+        }
+      } else {
+        previous.current = connected;
+      }
+    }, 3000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, [client, onConnectionRefresh, setError]);
   return [client, credentials, clear];
 }
 
@@ -54,195 +65,199 @@ export type ConnectionOptions = {
   onSuccess?: CommonCallback;
   onFailure?: CommonCallback;
 };
+export type ConnectionResult = {ok: true} | {ok: false; error: ConnectionError};
 
-/**
- *
- * @returns [
-    connect,
-    cancel,
-    clear,
-    {
-      loading: connecting,
-      client,
-      error,
+export function useConnectIoTCentralClient() {
+  const {
+    client,
+    connecting,
+    setConnecting,
+    setClient,
+    error,
+    setError,
+    stage,
+    setStage,
+    request,
+  } = useContext(IoTCContext);
+  const {save, simulated} = useContext(StorageContext);
+  const clear = useCallback(
+    (options?: {disconnected?: boolean}) => {
+      request.current?.controller.abort();
+      request.current?.client?.cancel();
+      client?.cancel();
+      setClient(null);
+      setConnecting(false);
+      setStage(options?.disconnected ? 'disconnected' : 'idle');
+      setError(null);
     },
-  ];
- */
-export function useConnectIoTCentralClient(): [
-  (credentialsData: any, options?: ConnectionOptions) => Promise<void>,
-  (options?: {clear: boolean}) => Promise<void>,
-  () => void,
-  {loading: boolean; client: IIoTCClient | null; error: any},
-] {
-  const {client, connecting, setConnecting, setClient} =
-    useContext(IoTCContext);
-  const {save: saveCredentials, simulated} = useContext(StorageContext);
-  const [error, setError] = useState<any>(null);
-  const connectRequest = useRef(new CancellationToken());
-  const eventLogger = useRef(new EventLogger(LOG_DATA));
-  const [, append] = useLogger();
-
-  const IoTCentralClient = simulated ? IoTCMock : IoTCClient;
-
-  const clear = useCallback(() => {
-    setClient(null);
-  }, [setClient]);
-
-  const _connect_internal = useCallback(
-    async (credentials: IoTCCredentials) => {
-      let iotc: IIoTCClient;
-      if (credentials.connectionString) {
-        iotc = IoTCentralClient.getFromConnectionString(
-          credentials.connectionString,
-          eventLogger.current,
-        );
-      } else if (
-        credentials.deviceId &&
-        credentials.scopeId &&
-        credentials.deviceKey
-      ) {
-        iotc = new IoTCentralClient(
-          credentials.deviceId,
-          credentials.scopeId,
-          IOTC_CONNECT.DEVICE_KEY,
-          credentials.deviceKey,
-          eventLogger.current,
-        );
-        console.log('setting client');
-        iotc.setLogging(IOTC_LOGGING.ALL);
-      } else {
-        Debug(
-          'Error connecting IoTC Client. Credentials invalid',
-          '_connect_internal',
-          'connect_catch',
-        );
-        setError('Credentials invalid');
-        setConnecting(false);
-        throw 'Credentials invalid';
-      }
-      // iotc.setLogging(IOTC_LOGGING.ALL);
-      try {
-        iotc.setModelId(credentials.modelId ?? defaults.modelId);
-        iotc.on(IOTC_EVENTS.Properties, () => {});
-        // disconnect potential connected client
-        if (client && client.isConnected()) {
-          await client.disconnect();
-        }
-        await iotc.connect({
-          cleanSession: false,
-          timeout: 30,
-          cancellationToken: connectRequest.current,
-        });
-        console.log('connected');
-        setClient(iotc);
-      } catch (err) {
-        console.log('errore');
-        Debug(
-          `Error connecting IoTC Client: ${err}`,
-          '_connect_internal',
-          'connect_catch',
-        );
-        setError(err);
-        setConnecting(false);
-        throw err;
-      }
-    },
-    [setClient, setConnecting, setError, IoTCentralClient, client],
+    [request, client, setClient, setConnecting, setStage, setError],
   );
 
   const connect = useCallback(
-    async (credentialsData: any, options?: ConnectionOptions) => {
-      // Guard against double scanning a code and recieving an error from DPS for trying to connect twice
-      if (connecting) {
-        return;
+    async (
+      input: unknown,
+      options?: ConnectionOptions,
+    ): Promise<ConnectionResult> => {
+      if (request.current) {
+        const busy = new ConnectionError('BUSY');
+        setError(busy);
+        return {ok: false, error: busy};
       }
-
+      const attempt: {controller: AbortController; client?: DeviceClient} = {
+        controller: new AbortController(),
+      };
+      request.current = attempt;
       setConnecting(true);
+      setError(null);
+      setStage('validating');
       try {
-        let credentials;
-        if (options && options.restore) {
-          credentials = credentialsData;
-        } else {
-          credentials = DecryptCredentials(
-            credentialsData,
-            options?.encryptionKey,
-          );
-          console.log(`Decripted: ${JSON.stringify(credentials)}`);
+        const credentials = decodeCredentials(input, options?.encryptionKey);
+        if (client) {
+          await client.disconnect();
+          setClient(null);
         }
-        await _connect_internal(credentials);
-        await saveCredentials({credentials});
-      } catch (err) {
-        console.log(err);
-        setError(err);
-        setConnecting(false);
+        const candidate = observeClient(
+          simulated
+            ? createSimulatedClient(credentials)
+            : createDeviceClient(credentials, {
+                secureWebSocket,
+                onStage(next, failure) {
+                  if (!attempt.controller.signal.aborted) {
+                    if (next === 'error') {
+                      getObservationStore(attempt.client)?.invalidate();
+                    }
+                    setStage(next);
+                    if (failure) {
+                      setError(failure);
+                    }
+                  }
+                },
+              }),
+          simulated,
+        );
+        attempt.client = candidate;
+        await candidate.connect({
+          signal: attempt.controller.signal,
+          cleanSession: true,
+          timeoutMs: 90000,
+        });
+        if (attempt.controller.signal.aborted) {
+          throw new ConnectionError('CANCELLED');
+        }
+        try {
+          await save({credentials});
+        } catch {
+          throw new ConnectionError('STORAGE_FAILED');
+        }
+        if (attempt.controller.signal.aborted) {
+          throw new ConnectionError('CANCELLED');
+        }
+        setClient(candidate);
+        setError(null);
+        setStage('connected');
+        await options?.onSuccess?.();
+        return {ok: true};
+      } catch (failure) {
+        attempt.client?.cancel();
+        const safe = attempt.controller.signal.aborted
+          ? new ConnectionError('CANCELLED')
+          : safeError(failure, 'CONNECT_FAILED');
+        setError(safe.code === 'CANCELLED' ? null : safe);
+        setStage(safe.code === 'CANCELLED' ? 'idle' : 'error');
+        if (safe.code !== 'CANCELLED') {
+          await options?.onFailure?.(safe);
+        }
+        return {ok: false, error: safe};
+      } finally {
+        if (request.current === attempt) {
+          request.current = null;
+          setConnecting(false);
+        }
       }
     },
-    [setConnecting, _connect_internal, saveCredentials, connecting],
+    [
+      request,
+      setConnecting,
+      setError,
+      setStage,
+      client,
+      simulated,
+      save,
+      setClient,
+    ],
   );
 
   const cancel = useCallback(
     async (options?: {clear: boolean}) => {
-      connectRequest.current?.cancel();
-      // cleanup any credentials
+      request.current?.controller.abort();
+      request.current?.client?.cancel();
+      setConnecting(false);
+      setStage('idle');
+      setError(null);
       if (options?.clear) {
-        //clear current credentials. connection will start over
-        await saveCredentials({credentials: null}, options.clear);
-      }
-      if (connecting) {
-        setConnecting(false);
-      }
-      if (error) {
-        setError(null);
+        try {
+          await save({credentials: null});
+          clear();
+        } catch {
+          const failure = new ConnectionError('STORAGE_FAILED');
+          setError(failure);
+          setStage('error');
+          throw failure;
+        }
       }
     },
-    [connecting, error, setError, setConnecting, saveCredentials],
+    [request, setConnecting, setStage, setError, save, clear],
   );
-
-  useEffect(() => {
-    const currentEventLog = eventLogger.current;
-    Debug(
-      'Going through initial useeffect.',
-      'useConnectIoTCentralClient',
-      'iotc.ts:137',
-    );
-    currentEventLog.addListener(LOG_DATA, append);
-  }, [append]);
 
   return [
     connect,
     cancel,
     clear,
-    {
-      loading: connecting,
-      client,
-      error,
-    },
-  ];
+    {loading: connecting, client, error, stage},
+  ] as const;
 }
 
 export function useSimulation(): [boolean, (val: boolean) => Promise<void>] {
   const {save, simulated} = useContext(StorageContext);
-
+  const {client, setClient, setError, setStage, setConnecting, request} =
+    useContext(IoTCContext);
   const setSimulated = useCallback(
-    async (simulatedVal: boolean) => {
-      await save({simulated: simulatedVal});
+    async (value: boolean) => {
+      try {
+        request.current?.controller.abort();
+        request.current?.client?.cancel();
+        client?.cancel();
+        setClient(null);
+        setConnecting(false);
+        setStage('idle');
+        setError(null);
+        await save({simulated: value});
+      } catch (failure) {
+        const safe = safeError(failure, 'STORAGE_FAILED');
+        setError(safe);
+        throw safe;
+      }
     },
-    [save],
+    [client, request, setClient, setStage, setConnecting, save, setError],
   );
   return [simulated, setSimulated];
 }
 
 export function useDeliveryInterval(): [
   number,
-  (interv: number) => Promise<void>,
+  (interval: number) => Promise<void>,
 ] {
-  const {deliveryInterval, save} = useContext(StorageContext);
+  const {save, deliveryInterval} = useContext(StorageContext);
   const setDeliveryInterval = useCallback(
-    async (delInterval: number) => {
-      await save({deliveryInterval: delInterval});
+    async (interval: number) => {
+      if (!Number.isFinite(interval) || interval < 1 || interval > 3600) {
+        throw new Error(
+          'Delivery interval must be between 1 and 3600 seconds.',
+        );
+      }
+      await save({deliveryInterval: interval});
     },
     [save],
   );
-
   return [deliveryInterval, setDeliveryInterval];
 }

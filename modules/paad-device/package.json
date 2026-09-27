@@ -1,0 +1,7 @@
+{
+  "name": "paad-device",
+  "version": "1.0.0",
+  "description": "Local PAAD secure MQTT transport and camera capabilities",
+  "main": "index.ts",
+  "private": true
+}

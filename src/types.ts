@@ -3,11 +3,6 @@
 
 import {StackNavigationProp} from '@react-navigation/stack';
 import {GestureResponderEvent, TextStyle, ViewStyle} from 'react-native';
-import {
-  LineData,
-  LineValue,
-  LineDatasetConfig,
-} from 'react-native-charts-wrapper';
 import {IconProps} from '@rneui/themed';
 
 export const Screens = {
@@ -30,6 +25,12 @@ export const Pages = {
   BLUETOOTH_DETAIL: 'Bluetooth Detail',
 } as const;
 
+export const RegistrationScreens = {
+  EMPTY: 'EMPTY',
+  QR: 'QR',
+  MANUAL: 'MANUAL',
+} as const;
+
 /**
  * NAVIGATION
  */
@@ -47,6 +48,12 @@ export type NavigationParams = {
     type: string;
   };
   previousScreen?: string;
+  screen?: string;
+  telemetryId?: string;
+  currentValue?: any;
+  chartType?: ChartType;
+  unit?: string;
+  simulated?: boolean;
 };
 
 // Type for getting the values of an object (lookup)
@@ -87,23 +94,17 @@ export type PagesNavigator = StackNavigationProp<NavigationPages, PagesNames>;
 export type StateUpdater<T> = React.Dispatch<React.SetStateAction<T>>;
 
 export type LogItem = {eventName: string; eventData: string};
-export type TimedLog = {timestamp: number | string; logItem: LogItem}[];
+export type TimedLog = {
+  id: number;
+  timestamp: number | string;
+  logItem: LogItem;
+}[];
 
 export type StyleDefinition = Literal<ViewStyle | TextStyle>;
 
 /**
  * Chart typings
  */
-
-export type CustomLineDatasetConfig = LineDatasetConfig & {rgbcolor: string};
-export interface ExtendedLineData extends LineData {
-  dataSets: {
-    itemId: string;
-    values?: LineValue[];
-    label?: string;
-    config?: CustomLineDatasetConfig;
-  }[];
-}
 
 export type ItemProps = {
   id: string;
@@ -113,6 +114,15 @@ export type ItemProps = {
   icon?: IconProps;
   enabled: boolean;
   simulated: boolean;
+  availability?: 'checking' | 'available' | 'unavailable';
+  editable?: boolean;
+  presentation?: {
+    description?: string;
+    emptyLabel?: string;
+    placeholder?: string;
+    actionLabel?: string;
+  };
+  retry?(): void;
   enable(value?: boolean): void;
   sendInterval(value: number): void;
   unit?: string;

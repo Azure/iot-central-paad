@@ -1,0 +1,53 @@
+appId: ${MAESTRO_APP_ID}
+name: Inspect the real Home connection map and dismiss each panel
+---
+- tapOn:
+    id: tab-home
+- tapOn:
+    id: home-node-phone
+- assertVisible:
+    id: home-panel-phone
+- assertVisible:
+    id: home-panel-close
+- tapOn:
+    id: home-panel-close
+- assertNotVisible:
+    id: home-panel-close
+- assertVisible:
+    id: home-node-phone
+- tapOn:
+    id: home-node-dps
+- assertVisible:
+    id: home-panel-dps
+- assertVisible:
+    id: home-panel-close
+- tapOn:
+    id: home-panel-close
+- assertNotVisible:
+    id: home-panel-close
+- assertVisible:
+    id: home-node-dps
+- tapOn:
+    id: home-node-hub
+- assertVisible:
+    id: home-panel-hub
+- assertVisible:
+    id: home-panel-close
+- tapOn:
+    id: home-panel-close
+- assertNotVisible:
+    id: home-panel-close
+- assertVisible:
+    id: home-node-hub
+- tapOn:
+    id: home-node-adr
+- assertVisible:
+    id: home-panel-adr
+- assertVisible:
+    id: home-panel-close
+- tapOn:
+    id: home-panel-close
+- assertNotVisible:
+    id: home-panel-close
+- assertVisible:
+    id: home-node-adr

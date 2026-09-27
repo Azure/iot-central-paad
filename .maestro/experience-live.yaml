@@ -1,0 +1,125 @@
+appId: ${MAESTRO_APP_ID}
+name: Real connected Home Explore Activity traversal without media or diagnostic export
+---
+- runFlow: experience-home.yaml
+- tapOn:
+    id: tab-explore
+- assertVisible:
+    id: explore-directory
+- assertVisible:
+    id: explore-tool-telemetry
+- assertVisible:
+    id: explore-tool-properties
+- assertVisible:
+    id: explore-tool-image
+- assertVisible:
+    id: explore-tool-bluetooth
+- tapOn:
+    id: explore-tool-telemetry
+- assertVisible:
+    id: telemetry-tool
+- assertVisible:
+    id: sensor-toggle-accelerometer
+- tapOn:
+    id: explore-back
+- assertVisible:
+    id: explore-directory
+- tapOn:
+    id: explore-tool-properties
+- assertVisible:
+    id: properties-tool
+- assertVisible:
+    id: property-input-readOnlyProp
+- tapOn:
+    id: property-technical-readOnlyProp
+- assertVisible:
+    id: property-name-readOnlyProp
+    text: '^readOnlyProp$'
+- tapOn:
+    id: property-technical-readOnlyProp
+- tapOn:
+    id: property-input-readOnlyProp
+- eraseText
+- inputText: 'paad-unsent-draft'
+- pressKey: Enter
+- tapOn:
+    id: explore-back
+- assertVisible:
+    id: explore-directory
+- tapOn:
+    id: explore-tool-image
+# Selection starts uploading. Inspect only; never open a media picker.
+- assertVisible:
+    id: image-upload-card
+- tapOn:
+    id: explore-back
+- assertVisible:
+    id: explore-directory
+- tapOn:
+    id: explore-tool-properties
+- assertVisible:
+    id: property-input-readOnlyProp
+    text: '^paad-unsent-draft$'
+- tapOn:
+    id: explore-back
+- assertVisible:
+    id: explore-directory
+- tapOn:
+    id: explore-tool-bluetooth
+- runFlow: dismiss-android-permissions.yaml
+- assertVisible:
+    id: bluetooth-tool-title
+    text: '^Nearby devices$'
+- tapOn:
+    id: explore-back
+- assertVisible:
+    id: explore-directory
+- tapOn:
+    id: tab-activity
+- tapOn:
+    id: activity-filter-issues
+- tapOn:
+    id: activity-filter-all
+- tapOn:
+    id: activity-latest
+- tapOn:
+    id: 'activity-toggle-[0-9]+'
+    index: 0
+- assertVisible:
+    id: 'activity-details-[0-9]+'
+- tapOn:
+    id: 'activity-toggle-[0-9]+'
+    index: 0
+- assertNotVisible:
+    id: 'activity-details-[0-9]+'
+- tapOn:
+    id: activity-diagnostics
+- assertVisible:
+    id: logs-list
+- tapOn:
+    id: logs-filter-issues
+- tapOn:
+    id: logs-filter-all
+- tapOn:
+    id: logs-latest
+- tapOn:
+    id: 'log-toggle-[0-9]+'
+    index: 0
+- assertVisible:
+    id: 'log-payload-[0-9]+'
+- tapOn:
+    id: 'log-toggle-[0-9]+'
+    index: 0
+- assertNotVisible:
+    id: 'log-payload-[0-9]+'
+- tapOn:
+    id: activity-observations
+- assertVisible:
+    id: activity-filter-all
+- tapOn:
+    id: tab-home
+- assertVisible:
+    id: home-node-phone
+- assertVisible:
+    id: connection-status
+    text: '^Connected$'

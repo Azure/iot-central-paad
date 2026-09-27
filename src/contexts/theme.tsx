@@ -1,71 +1,83 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import React, {useCallback, useState} from 'react';
-import {Appearance} from 'react-native';
+import React, {useCallback, useMemo, useState} from 'react';
+import {StatusBar, useColorScheme} from 'react-native';
+import {
+  DefaultTheme,
+  DarkTheme,
+  ThemeProvider as NavigationThemeProvider,
+} from '@react-navigation/native';
+import {createTheme, ThemeProvider as UIThemeProvider} from '@rneui/themed';
 import {ThemeMode} from 'types';
-
-interface IThemeContext {
-  mode: ThemeMode;
-  theme: ITheme;
-  set: (mode: ThemeMode) => void;
-}
+import {palette} from '../theme/palette';
 
 export interface ITheme {
   backgroundColor: string;
   textColor: string;
 }
-
-const theme: {[x in ThemeMode]: ITheme} = {
-  // light
-  [ThemeMode.LIGHT]: {
-    backgroundColor: '#FFFFFF',
-    textColor: '#121212',
-  },
-  // dark
-  [ThemeMode.DARK]: {
-    backgroundColor: '#121212',
-    textColor: '#FFFFFF',
-  },
-  [ThemeMode.DEVICE]: {
-    backgroundColor:
-      Appearance.getColorScheme() === 'dark' ? '#121212' : '#FFFFFF',
-    textColor: Appearance.getColorScheme() === 'dark' ? '#FFFFFF' : '#121212',
-  },
-};
-
-const initialState: {mode: ThemeMode; theme: ITheme} = {
-  mode:
-    Appearance.getColorScheme() === 'dark' ? ThemeMode.DARK : ThemeMode.LIGHT,
-  theme:
-    theme[
-      Appearance.getColorScheme() === 'dark' ? ThemeMode.DARK : ThemeMode.LIGHT
-    ],
-};
-
+interface IThemeContext {
+  mode: ThemeMode;
+  theme: ITheme;
+  set(mode: ThemeMode): void;
+}
 const ThemeContext = React.createContext({} as IThemeContext);
-const {Provider} = ThemeContext;
 
 const ThemeProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
-  const [state, setState] = useState<{mode: ThemeMode; theme: ITheme}>(
-    initialState,
+  const [mode, setMode] = useState(ThemeMode.DEVICE);
+  const system = useColorScheme();
+  const dark =
+    mode === ThemeMode.DARK || (mode === ThemeMode.DEVICE && system === 'dark');
+  const navigationTheme = useMemo(() => {
+    const base = dark ? DarkTheme : DefaultTheme;
+    const colors = palette(dark);
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: colors.primary,
+        background: colors.background,
+        card: colors.surface,
+        text: colors.text,
+        border: colors.border,
+      },
+    };
+  }, [dark]);
+  const uiTheme = useMemo(
+    () =>
+      createTheme({
+        mode: dark ? 'dark' : 'light',
+        lightColors: {
+          primary: palette(false).primary,
+          background: palette(false).surface,
+          grey3: palette(false).muted,
+        },
+        darkColors: {
+          primary: palette(true).primary,
+          background: palette(true).surface,
+          grey3: palette(true).muted,
+        },
+      }),
+    [dark],
   );
-
-  const set = useCallback(
-    (themeMode: ThemeMode) => {
-      setState(current => ({
-        ...current,
-        mode: themeMode,
-        theme: theme[themeMode],
-      }));
-    },
-    [setState],
-  );
-
+  const set = useCallback((value: ThemeMode) => setMode(value), []);
   const value = {
-    ...state,
+    mode,
     set,
+    theme: {
+      backgroundColor: navigationTheme.colors.background,
+      textColor: navigationTheme.colors.text,
+    },
   };
-  return <Provider value={value}>{children}</Provider>;
+  return (
+    <ThemeContext.Provider value={value}>
+      <NavigationThemeProvider value={navigationTheme}>
+        <UIThemeProvider theme={uiTheme}>
+          <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
+          {children}
+        </UIThemeProvider>
+      </NavigationThemeProvider>
+    </ThemeContext.Provider>
+  );
 };
 export {ThemeProvider as default, ThemeContext};

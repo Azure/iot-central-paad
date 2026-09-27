@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {"modules": ["PaadDeviceModule"]},
+  "android": {"modules": ["expo.modules.paaddevice.PaadDeviceModule"]}
+}

@@ -1,0 +1,299 @@
+name: LIVE - Dedicated device-only proof (operator Azure verification pending)
+run-name: ${{ github.event_name == 'workflow_dispatch' && 'Authorized mobile-to-Azure proof' || 'Register manual workflow only - no device traffic' }}
+
+on:
+  push:
+    branches: [feature/adr-onboarding]
+    paths: [.github/workflows/live-device.yml]
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Dedicated device platforms
+        type: choice
+        options: [all, android, ios]
+        default: all
+        required: true
+      ios_driver:
+        description: iOS live UI driver (ordinary Maestro smoke is retained)
+        type: choice
+        options: [maestro, xcuitest]
+        default: maestro
+        required: true
+      ios_smoke_only:
+        description: Run only credential-free native iOS smoke (requires ios and xcuitest)
+        type: boolean
+        default: false
+        required: true
+      confirm_live:
+        description: I authorize these dedicated lab device inputs and this exact trusted topic SHA
+        type: boolean
+        default: false
+        required: true
+      expected_sha:
+        description: Exact reviewed feature/adr-onboarding commit SHA (40 lowercase hex)
+        type: string
+        required: true
+      config:
+        description: Nonsecret schemaVersion 1 JSON; see scripts/ci/live-config.js --help
+        type: string
+        required: true
+      diagnostic_public_key:
+        description: Explicitly approved failure-only iOS capture; one-time RSA public key, NEVER a private key
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-device-dedicated-inputs
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  PAAD_VARIANT: ci
+  EXPO_NO_TELEMETRY: "1"
+  MAESTRO_CLI_NO_ANALYTICS: "1"
+  MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: "true"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  register-manual-entrypoint:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - run: echo 'Manual entrypoint registered. No device traffic or secrets are used by this job.'
+  authorization:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Reject anything except explicitly authorized trusted manual requests
+        env:
+          CONFIRM_LIVE: ${{ inputs.confirm_live }}
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          IOS_DRIVER: ${{ inputs.ios_driver }}
+          IOS_SMOKE_ONLY: ${{ inputs.ios_smoke_only }}
+          LIVE_PLATFORM: ${{ inputs.platform }}
+          DIAGNOSTIC_PUBLIC_KEY: ${{ inputs.diagnostic_public_key }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != workflow_dispatch ||
+                "$CONFIRM_LIVE" != true ||
+                "$GITHUB_REF" != refs/heads/feature/adr-onboarding ||
+                "$GITHUB_ACTOR" != "$GITHUB_REPOSITORY_OWNER" ||
+                ! "$GITHUB_SHA" =~ ^[a-f0-9]{40}$ ||
+                "$EXPECTED_SHA" != "$GITHUB_SHA" ]]; then
+            echo 'Live authorization rejected; no device secret was requested.' >&2
+            exit 1
+          fi
+          if [[ -n "$DIAGNOSTIC_PUBLIC_KEY" && ( "$LIVE_PLATFORM" != ios || "$IOS_DRIVER" != xcuitest || "$IOS_SMOKE_ONLY" = true ) ]]; then
+            echo 'Encrypted diagnostics require the explicitly authorized live iOS XCUITest lane.' >&2
+            exit 1
+          fi
+          if [[ "$IOS_SMOKE_ONLY" = true && ( "$LIVE_PLATFORM" != ios || "$IOS_DRIVER" != xcuitest ) ]]; then
+            echo 'Native smoke-only requests require the iOS XCUITest lane.' >&2
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+          cache: npm
+      - name: Validate nonsecret case schema without dependencies
+        env:
+          PAAD_LIVE_CONFIG: ${{ inputs.config }}
+          LIVE_PLATFORM: ${{ inputs.platform }}
+        run: node scripts/ci/live-config.js validate "$LIVE_PLATFORM"
+      - name: Validate optional diagnostic public key
+        env:
+          PAAD_IOS_DIAGNOSTIC_PUBLIC_KEY: ${{ inputs.diagnostic_public_key }}
+        run: node -e 'require("./scripts/ci/encrypted-ios-diagnostic").diagnosticRecipient(process.env.PAAD_IOS_DIAGNOSTIC_PUBLIC_KEY)'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm test -- --runInBand
+
+  android:
+    needs: authorization
+    if: inputs.platform == 'all' || inputs.platform == 'android'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+          cache: npm
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: npm ci --no-audit --no-fund
+      - run: npm run prebuild:ci -- --platform android
+      - name: Install matched SDK and NDK
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" "ndk;27.1.12297006"'
+      - run: bash scripts/ci/identity.sh
+      - run: bash scripts/ci/build-android.sh
+      - name: Publish credential-free Android binary before device input
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: live-build-android-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            build/ci-artifacts/foundation-ci.apk
+            build/ci-artifacts/identity.txt
+          retention-days: 3
+          if-no-files-found: error
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: bash scripts/ci/install-maestro.sh
+      - name: Enable standard runner KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      # Only this post-build step receives the temporary individual device key.
+      - name: Live dedicated Android input (no Azure operator credentials)
+        timeout-minutes: 20
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        env:
+          PAAD_LIVE_CONFIRM: ${{ inputs.confirm_live }}
+          PAAD_LIVE_EXPECTED_SHA: ${{ inputs.expected_sha }}
+          PAAD_LIVE_CONFIG: ${{ inputs.config }}
+          MAESTRO_DEVICE_KEY: ${{ secrets.PAAD_LIVE_ANDROID_DEVICE_KEY }}
+        with:
+          api-level: 36
+          target: default
+          arch: x86_64
+          profile: pixel_6
+          cores: 4
+          ram-size: 4096M
+          emulator-boot-timeout: 300
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash scripts/ci/smoke-live-device.sh android
+      - name: Upload only nonsecret actual-flow summary
+        if: ${{ !cancelled() && hashFiles('build/live-device-summary-android.json') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: live-device-android-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/live-device-summary-android.json
+          retention-days: 3
+          if-no-files-found: error
+
+  ios:
+    needs: authorization
+    if: inputs.platform == 'all' || inputs.platform == 'ios'
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      IOS_SIMULATOR_DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      RCT_NEW_ARCH_ENABLED: "1"
+      PAAD_REFRESH_POD_LOCK: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.19.0"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run prebuild:ci -- --platform ios
+      - uses: ruby/setup-ruby@984c0c890880bbf811283d6f09c4607c62d210a4 # v1
+        with:
+          ruby-version: "3.3.8"
+          bundler: "2.5.23"
+          bundler-cache: true
+      - run: bash scripts/ci/install-pods.sh
+      - run: bash scripts/ci/identity.sh
+      - run: bash scripts/ci/build-ios.sh
+      - name: Publish credential-free Simulator binary before device input
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: live-build-ios-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            build/ci-artifacts/foundation-simulator.app.zip
+            build/ci-artifacts/identity.txt
+          retention-days: 3
+          if-no-files-found: error
+      - name: Build focused native UI runner without device credentials
+        if: inputs.ios_driver == 'xcuitest'
+        run: bash scripts/ci/build-ios-uitests.sh
+      - name: Exercise native synthetic inputs without Connect or device credentials
+        if: inputs.ios_driver == 'xcuitest'
+        timeout-minutes: 25
+        env:
+          PAAD_NATIVE_SMOKE_DIAGNOSTICS: ${{ inputs.ios_smoke_only }}
+        run: node scripts/ci/run-ios-xcuitest.js smoke
+      - name: Publish only fixed native smoke results
+        if: ${{ !cancelled() && inputs.ios_driver == 'xcuitest' && hashFiles('build/ios-ui-smoke-summary.json') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-native-smoke-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/ios-ui-smoke-summary.json
+          retention-days: 3
+          if-no-files-found: error
+      - name: Publish bounded log only from the credential-free native-only run
+        if: ${{ !cancelled() && inputs.ios_smoke_only && hashFiles('build/ios-ui-smoke.log') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-native-smoke-log-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/ios-ui-smoke.log
+          retention-days: 3
+          if-no-files-found: error
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: inputs.ios_driver != 'xcuitest'
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: bash scripts/ci/install-maestro.sh
+        if: inputs.ios_driver != 'xcuitest'
+      - name: Live dedicated iOS input (no Azure operator credentials)
+        if: ${{ !inputs.ios_smoke_only }}
+        timeout-minutes: 20
+        env:
+          PAAD_LIVE_CONFIRM: ${{ inputs.confirm_live }}
+          PAAD_LIVE_EXPECTED_SHA: ${{ inputs.expected_sha }}
+          PAAD_LIVE_CONFIG: ${{ inputs.config }}
+          MAESTRO_DEVICE_KEY: ${{ secrets.PAAD_LIVE_IOS_DEVICE_KEY }}
+          PAAD_IOS_UI_DRIVER: ${{ inputs.ios_driver }}
+          PAAD_IOS_DIAGNOSTIC_PUBLIC_KEY: ${{ inputs.diagnostic_public_key }}
+        run: bash scripts/ci/smoke-live-device.sh ios
+      - name: Remove only this job's dedicated simulator
+        if: always() && env.IOS_SIMULATOR_UDID != '' && env.PAAD_LIVE_SIMULATOR_DELETED != '1'
+        run: |
+          [[ "$IOS_SIMULATOR_UDID" =~ ^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$ ]]
+          if ! xcrun simctl shutdown "$IOS_SIMULATOR_UDID" >/dev/null 2>&1; then
+            echo '::warning::Dedicated simulator shutdown did not complete (it may already be stopped); deleting only the owned simulator.'
+          fi
+          if ! xcrun simctl delete "$IOS_SIMULATOR_UDID" >/dev/null 2>&1; then
+            echo '::error::Dedicated simulator deletion failed.'
+            exit 1
+          fi
+      - name: Publish only the approved encrypted diagnostic
+        if: ${{ !cancelled() && inputs.diagnostic_public_key != '' && hashFiles('build/ios-encrypted-diagnostic.json') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: encrypted-ios-diagnostic-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/ios-encrypted-diagnostic.json
+          retention-days: 1
+          if-no-files-found: error
+      - name: Upload only nonsecret actual-flow summary
+        if: ${{ !cancelled() && hashFiles('build/live-device-summary-ios.json') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: live-device-ios-${{ github.sha }}-${{ github.run_attempt }}
+          path: build/live-device-summary-ios.json
+          retention-days: 3
+          if-no-files-found: error

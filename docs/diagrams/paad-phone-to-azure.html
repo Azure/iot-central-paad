@@ -1,0 +1,2753 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>How a real phone reaches Azure &mdash; a picture for beginners</title>
+    <meta
+      name="description"
+      content="A static, offline illustration of how the PAAD phone app registers with Azure Device Provisioning Service, connects to an IoT Hub, exchanges messages, uploads images, and how that is independently verified."
+    />
+    <style>
+      /* ------------------------------------------------------------------
+         Self-contained presentation. No web fonts, no images, no scripts
+         or styles are loaded from anywhere else. Colours follow the
+         approved PAAD preview palette: warm neutral paper, white cards,
+         one restrained teal accent.
+         ------------------------------------------------------------------ */
+
+      :root {
+        --bg: #f5f4f0;
+        --surface: #ffffff;
+        --inset: #f0f2ef;
+        --text: #17252a;
+        --muted: #4f6167;
+        --border: #dce3df;
+        --control-border: #788984;
+        --primary: #166b72;
+        --on-primary: #ffffff;
+        --positive: #17634f;
+        --positive-surface: #e3f3eb;
+        --warn: #7d5312;
+        --warn-surface: #fbf2e3;
+        --danger: #8f3325;
+        --danger-surface: #fbecea;
+        --tint0: #eaf5f1;
+        --tint1: #f0edf8;
+        --tint2: #fbefe7;
+        --tint3: #f6f2e4;
+        --accent2: #5a4b86;
+        --shadow: 0 16px 36px rgba(23, 37, 42, 0.1);
+        --sys-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+        --mono-font: ui-monospace, SFMono-Regular, Menlo, Consolas,
+          'Liberation Mono', monospace;
+      }
+
+      [data-theme='dark'] {
+        --bg: #101c20;
+        --surface: #1b2a30;
+        --inset: #24373d;
+        --text: #f0f4f3;
+        --muted: #b7c8ca;
+        --border: #35494e;
+        --control-border: #8ba5aa;
+        --primary: #72d5c2;
+        --on-primary: #142c2a;
+        --positive: #97dfc0;
+        --positive-surface: #233d35;
+        --warn: #e6bc7b;
+        --warn-surface: #3a3122;
+        --danger: #f0a79c;
+        --danger-surface: #3f2826;
+        --tint0: #223a37;
+        --tint1: #313146;
+        --tint2: #3f342e;
+        --tint3: #3a392d;
+        --accent2: #b3a7de;
+        --shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        html:not([data-theme='light']) {
+          --bg: #101c20;
+          --surface: #1b2a30;
+          --inset: #24373d;
+          --text: #f0f4f3;
+          --muted: #b7c8ca;
+          --border: #35494e;
+          --control-border: #8ba5aa;
+          --primary: #72d5c2;
+          --on-primary: #142c2a;
+          --positive: #97dfc0;
+          --positive-surface: #233d35;
+          --warn: #e6bc7b;
+          --warn-surface: #3a3122;
+          --danger: #f0a79c;
+          --danger-surface: #3f2826;
+          --tint0: #223a37;
+          --tint1: #313146;
+          --tint2: #3f342e;
+          --tint3: #3a392d;
+          --accent2: #b3a7de;
+          --shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sys-font);
+        font-size: 15px;
+        line-height: 22px;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      .page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 16px 20px 64px;
+      }
+
+      a {
+        color: var(--primary);
+      }
+
+      code,
+      .mono {
+        font-family: var(--mono-font);
+        font-size: 0.92em;
+        background: var(--inset);
+        border-radius: 6px;
+        padding: 1px 5px;
+      }
+
+      :where(a, button, [tabindex]):focus-visible {
+        outline: 3px solid var(--primary);
+        outline-offset: 2px;
+        border-radius: 12px;
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      .skip {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+      }
+
+      .skip:focus {
+        left: 12px;
+        top: 12px;
+        z-index: 20;
+        padding: 10px 14px;
+        background: var(--surface);
+        border: 1px solid var(--primary);
+        border-radius: 12px;
+      }
+
+      /* ---------------- page header ---------------- */
+
+      .masthead {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 22px;
+        align-items: flex-start;
+        justify-content: space-between;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 25px;
+        line-height: 31px;
+        letter-spacing: -0.3px;
+      }
+
+      h1 span {
+        display: block;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 0.2px;
+      }
+
+      .tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        align-items: center;
+      }
+
+      .control-label {
+        font-size: 11px;
+        line-height: 15px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .control-group {
+        display: flex;
+        gap: 4px;
+        padding: 3px;
+        background: var(--inset);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+      }
+
+      .seg {
+        min-height: 34px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 11px;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .seg[aria-pressed='true'] {
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+      }
+
+      .banner {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        margin: 14px 0 0;
+        padding: 11px 15px;
+        border: 1px solid var(--control-border);
+        border-radius: 16px;
+        background: var(--surface);
+      }
+
+      .banner svg {
+        flex: none;
+        color: var(--primary);
+      }
+
+      .banner p {
+        margin: 0;
+        font-size: 13.5px;
+        line-height: 20px;
+      }
+
+      .stamp {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 9px;
+        border: 1px solid var(--control-border);
+        border-radius: 999px;
+        background: var(--inset);
+        font-size: 11px;
+        line-height: 17px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      nav.crumbs {
+        margin: 12px 0 0;
+        font-size: 13.5px;
+        line-height: 20px;
+        color: var(--muted);
+      }
+
+      nav.crumbs a + a::before {
+        content: '\00a0\00b7\00a0 ';
+        color: var(--muted);
+      }
+
+      h2 {
+        margin: 34px 0 0;
+        font-size: 20px;
+        line-height: 27px;
+        letter-spacing: -0.2px;
+      }
+
+      h3 {
+        margin: 22px 0 0;
+        font-size: 16px;
+        line-height: 23px;
+      }
+
+      .lede {
+        margin: 6px 0 0;
+        max-width: 96ch;
+        font-size: 14.5px;
+        line-height: 22px;
+        color: var(--muted);
+      }
+
+      /* ---------------- walkthrough controls ---------------- */
+
+      .walk {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        margin: 14px 0 0;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+
+      .walk-steps {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .chip {
+        min-height: 34px;
+        min-width: 34px;
+        padding: 0 10px;
+        border: 1px solid var(--control-border);
+        border-radius: 11px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .chip[aria-pressed='true'] {
+        background: var(--primary);
+        color: var(--on-primary);
+        border-color: var(--primary);
+      }
+
+      .chip.wide {
+        font-weight: 600;
+      }
+
+      .walk-read {
+        flex: 1 1 260px;
+        min-width: 220px;
+        margin: 0;
+        font-size: 13px;
+        line-height: 19px;
+        color: var(--muted);
+      }
+
+      /* ---------------- diagram ---------------- */
+
+      .scroller {
+        margin: 12px 0 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 2px 2px 10px;
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .canvas {
+        position: relative;
+        width: 1200px;
+        height: 1390px;
+        margin: 0 auto;
+      }
+
+      .conn {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .conn .region {
+        fill: var(--inset);
+        stroke: var(--control-border);
+        stroke-width: 1;
+        stroke-dasharray: 5 5;
+        opacity: 0.75;
+      }
+
+      .conn .flow {
+        fill: none;
+        stroke: var(--primary);
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .conn .support {
+        fill: none;
+        stroke: var(--control-border);
+        stroke-width: 1.8;
+        stroke-dasharray: 7 5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .conn .boundary {
+        fill: none;
+        stroke: var(--accent2);
+        stroke-width: 2;
+        stroke-dasharray: 1 5;
+        stroke-linecap: round;
+      }
+
+      .conn .head-flow {
+        fill: var(--primary);
+      }
+
+      .conn .head-support {
+        fill: var(--control-border);
+      }
+
+      .conn .head-boundary {
+        fill: var(--accent2);
+      }
+
+      .lane-label {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11.5px;
+        line-height: 16px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .lane-label em {
+        font-style: normal;
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .node {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 9px 12px;
+        border: 1px solid var(--control-border);
+        border-radius: 16px;
+        background: var(--surface);
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        overflow: hidden;
+      }
+
+      button.node {
+        cursor: pointer;
+      }
+
+      .node[data-own='true'] {
+        border-color: var(--primary);
+        background: var(--tint0);
+      }
+
+      .node[data-kind='tooling'] {
+        background: var(--tint3);
+      }
+
+      .node[data-kind='boundary'] {
+        border-style: dashed;
+        border-color: var(--accent2);
+        background: var(--tint1);
+      }
+
+      .node[data-kind='exit'] {
+        background: var(--inset);
+        border-style: dashed;
+      }
+
+      .node .head {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .badge {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 6px;
+        border-radius: 8px;
+        background: var(--inset);
+        border: 1px solid var(--control-border);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .node .t {
+        font-size: 14.5px;
+        line-height: 19px;
+        font-weight: 700;
+      }
+
+      .node .s {
+        font-size: 12.5px;
+        line-height: 17px;
+        color: var(--muted);
+      }
+
+      .node .s b {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .node ul {
+        margin: 2px 0 0;
+        padding-left: 16px;
+        font-size: 12.5px;
+        line-height: 17px;
+        color: var(--muted);
+      }
+
+      .node.is-active {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary);
+      }
+
+      .node.is-active .badge {
+        background: var(--primary);
+        color: var(--on-primary);
+        border-color: var(--primary);
+      }
+
+      .node.is-active::after {
+        content: 'you are here';
+        position: absolute;
+        right: 0;
+        top: 0;
+        padding: 1px 8px;
+        border-bottom-left-radius: 10px;
+        background: var(--primary);
+        color: var(--on-primary);
+        font-size: 10px;
+        line-height: 15px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+      }
+
+      .tag {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 3px 8px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+        font-size: 11.5px;
+        line-height: 15px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+
+      /* ---------------- legend ---------------- */
+
+      .legend {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+        gap: 10px 20px;
+        margin: 14px 0 0;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+
+      .legend h3 {
+        grid-column: 1 / -1;
+        margin: 0;
+        font-size: 13px;
+        line-height: 18px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .legend-row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 13px;
+        line-height: 19px;
+      }
+
+      .legend-row svg,
+      .legend-row .swatch {
+        flex: none;
+        margin-top: 2px;
+      }
+
+      .swatch {
+        width: 38px;
+        height: 22px;
+        border-radius: 8px;
+        border: 1px solid var(--control-border);
+        background: var(--surface);
+      }
+
+      .swatch.own {
+        border-color: var(--primary);
+        background: var(--tint0);
+      }
+
+      .swatch.tooling {
+        background: var(--tint3);
+      }
+
+      .swatch.boundary {
+        border-style: dashed;
+        border-color: var(--accent2);
+        background: var(--tint1);
+      }
+
+      /* ---------------- explanation cards ---------------- */
+
+      .cards {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+        gap: 14px;
+        margin: 14px 0 0;
+        padding: 0;
+      }
+
+      .card {
+        position: relative;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+
+      .card.is-active {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary);
+      }
+
+      .card h3 {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0;
+        font-size: 15.5px;
+        line-height: 21px;
+      }
+
+      .card p {
+        margin: 8px 0 0;
+        font-size: 13.5px;
+        line-height: 20px;
+      }
+
+      .card .where {
+        margin: 9px 0 0;
+        font-size: 12.5px;
+        line-height: 18px;
+        color: var(--muted);
+      }
+
+      .card .where strong {
+        color: var(--text);
+      }
+
+      .panel {
+        margin: 12px 0 0;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+
+      .panel.warnish {
+        border-color: var(--warn);
+        background: var(--warn-surface);
+      }
+
+      .panel p,
+      .panel li {
+        font-size: 13.5px;
+        line-height: 20px;
+      }
+
+      .panel p {
+        margin: 8px 0 0;
+      }
+
+      .panel > p:first-child,
+      .panel > h3:first-child {
+        margin-top: 0;
+      }
+
+      .grid2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 14px;
+        margin: 12px 0 0;
+      }
+
+      .tablewrap {
+        max-width: 100%;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0 0;
+        font-size: 13.5px;
+        line-height: 19px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      caption {
+        text-align: left;
+        font-size: 13px;
+        line-height: 19px;
+        color: var(--muted);
+        padding: 0 0 6px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        background: var(--inset);
+        font-size: 12.5px;
+        letter-spacing: 0.3px;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      footer {
+        margin: 40px 0 0;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+        font-size: 13px;
+        line-height: 20px;
+        color: var(--muted);
+      }
+
+      .hint {
+        margin: 8px 0 0;
+        font-size: 12.5px;
+        line-height: 18px;
+        color: var(--muted);
+      }
+
+      @media (max-width: 760px) {
+        h1 {
+          font-size: 21px;
+          line-height: 27px;
+        }
+
+        .page {
+          padding: 12px 12px 48px;
+        }
+
+        .scroller {
+          border-radius: 16px;
+        }
+
+        /* Keep wide tables inside the screen instead of stretching the page. */
+        .tablewrap {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+          min-width: 660px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      @media print {
+        :root {
+          --bg: #ffffff;
+          --surface: #ffffff;
+          --inset: #f2f2f2;
+          --shadow: none;
+        }
+
+        body {
+          background: #fff;
+        }
+
+        .tools,
+        .walk,
+        .skip {
+          display: none !important;
+        }
+
+        .scroller {
+          overflow: visible;
+          border: 0;
+          box-shadow: none;
+          height: 900px;
+        }
+
+        .canvas {
+          transform: scale(0.63);
+          transform-origin: top left;
+        }
+
+        .node.is-active,
+        .card.is-active {
+          box-shadow: none;
+        }
+
+        .card,
+        .panel,
+        table {
+          break-inside: avoid;
+        }
+
+        a {
+          color: #000;
+          text-decoration: underline;
+        }
+      }
+
+      /* ------------------------------------------------------------------
+         Page-two additions. The shared tokens, cards, legend and print rules
+         above are identical to the companion architecture picture so the two
+         pages read as one set.
+         ------------------------------------------------------------------ */
+
+      .page {
+        max-width: 1356px;
+      }
+
+      .canvas {
+        width: 1300px;
+        height: 1990px;
+      }
+
+      .conn .reuse {
+        fill: none;
+        stroke: var(--primary);
+        stroke-width: 2;
+        stroke-dasharray: 12 4 2 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .conn .opread {
+        fill: none;
+        stroke: var(--accent2);
+        stroke-width: 2;
+        stroke-dasharray: 2 5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .conn .head-reuse {
+        fill: var(--primary);
+      }
+
+      .conn .head-opread {
+        fill: var(--accent2);
+      }
+
+      .node[data-kind='azure'] {
+        background: var(--tint3);
+        border-color: var(--control-border);
+      }
+
+      .node[data-kind='adr'] {
+        border-style: dashed;
+        border-color: var(--accent2);
+        background: var(--tint1);
+      }
+
+      .node[data-kind='operator'] {
+        background: var(--inset);
+        border-color: var(--control-border);
+      }
+
+      .node[data-kind='verify'] {
+        background: var(--tint2);
+        border-color: var(--warn);
+      }
+
+      .node[data-kind='group'] {
+        background: transparent;
+        border-style: dashed;
+        border-color: var(--primary);
+      }
+
+      .node .kicker {
+        font-size: 10.5px;
+        line-height: 14px;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .node.phone {
+        flex-direction: row;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .node.phone .pic {
+        flex: none;
+        color: var(--primary);
+      }
+
+      .node.phone .words {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .node.group-title {
+        justify-content: flex-start;
+      }
+
+      .swatch.azure {
+        background: var(--tint3);
+      }
+
+      .swatch.adr {
+        border-style: dashed;
+        border-color: var(--accent2);
+        background: var(--tint1);
+      }
+
+      .swatch.verify {
+        background: var(--tint2);
+        border-color: var(--warn);
+      }
+
+      .swatch.operator {
+        background: var(--inset);
+      }
+
+      /* ---------------- the three-scenario inset ---------------- */
+
+      .insets {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 14px;
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .inset {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 14px 16px 16px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+      }
+
+      .inset h3 {
+        margin: 0;
+      }
+
+      .inset svg {
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--inset);
+      }
+
+      .inset p {
+        margin: 0;
+        font-size: 13.5px;
+        line-height: 20px;
+        color: var(--muted);
+      }
+
+      .mini .box {
+        fill: var(--surface);
+        stroke: var(--control-border);
+        stroke-width: 1;
+      }
+
+      .mini .box-own {
+        fill: var(--tint0);
+        stroke: var(--primary);
+      }
+
+      .mini .box-azure {
+        fill: var(--tint3);
+        stroke: var(--control-border);
+      }
+
+      .mini .box-adr {
+        fill: var(--tint1);
+        stroke: var(--accent2);
+        stroke-dasharray: 5 4;
+      }
+
+      .mini .box-off {
+        fill: none;
+        stroke: var(--control-border);
+        stroke-dasharray: 3 4;
+      }
+
+      .mini .line {
+        fill: none;
+        stroke: var(--primary);
+        stroke-width: 2;
+      }
+
+      .mini .line-dash {
+        fill: none;
+        stroke: var(--control-border);
+        stroke-width: 1.6;
+        stroke-dasharray: 6 4;
+      }
+
+      .mini text {
+        font-size: 11px;
+        font-weight: 600;
+        fill: var(--text);
+      }
+
+      .mini text.small {
+        font-size: 9.5px;
+        font-weight: 600;
+        fill: var(--muted);
+      }
+
+      .mini .head-mini {
+        fill: var(--primary);
+      }
+
+      /* ---------------- value / secret table ---------------- */
+
+      .pill {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--control-border);
+        font-size: 11.5px;
+        line-height: 17px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .pill.secret {
+        background: var(--danger-surface);
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+
+      .pill.open {
+        background: var(--positive-surface);
+        border-color: var(--positive);
+        color: var(--positive);
+      }
+
+      .masked {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 2px;
+      }
+
+      @media print {
+        .canvas {
+          transform: scale(0.58);
+        }
+
+        .inset {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#steps">Skip the picture and read the steps in words</a>
+
+    <div class="page">
+      <header class="masthead">
+        <h1>
+          One phone, three Azure services, thirteen steps
+          <span
+            >PAAD &mdash; Phone as a Device &middot; how a real phone is
+            onboarded and what actually travels where</span
+          >
+        </h1>
+        <div class="tools" id="tools" hidden>
+          <div class="control-label" id="theme-label">Appearance</div>
+          <div class="control-group" role="group" aria-labelledby="theme-label">
+            <button class="seg" type="button" data-theme-set="light" aria-pressed="false">
+              Light
+            </button>
+            <button class="seg" type="button" data-theme-set="dark" aria-pressed="false">
+              Dark
+            </button>
+            <button class="seg" type="button" data-theme-set="auto" aria-pressed="true">
+              Auto
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="banner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 11v5" />
+          <path d="M12 8h.01" />
+        </svg>
+        <p>
+          <b>Static illustration.</b><span class="stamp">no live data</span>
+          Every name on this page is invented &mdash;
+          <span class="mono">example-phone</span>,
+          <span class="mono">example-hub</span> and the rest. Nothing here is a
+          real device, key, tenant or resource. The page makes no network
+          request, connects to nothing, creates no Azure resource, and does not
+          change the native app or produce a new phone build.
+        </p>
+      </div>
+
+      <nav class="crumbs" aria-label="Related reading">
+        <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md"
+          >Beginner guide: how the app works and how a phone connects</a
+        >
+        <a href="./paad-app-architecture.html"
+          >Companion picture: from source code to an installed app</a
+        >
+        <a href="../ADR-SIMULATOR.md">Operator guide for the namespace setup</a>
+      </nav>
+
+      <h2 id="map-heading">The whole journey on one map</h2>
+      <p class="lede">
+        Read downwards. The left lane is the phone in somebody's hand; the right
+        lane is Azure. A band across the top is what an administrator arranged
+        <em>before</em> the phone was picked up, and a band across the bottom is
+        a different person checking the result with their own Azure access.
+        Thirteen numbered stops follow that order, and every line style means
+        something different &mdash; the legend under the map spells each one
+        out in words as well as in colour.
+      </p>
+
+      <div class="walk" id="walk" hidden>
+        <span class="control-label" id="walk-label">Guided walkthrough</span>
+        <div class="walk-steps" role="group" aria-labelledby="walk-label">
+          <button class="chip wide" type="button" data-step="all" aria-pressed="true">
+            Show all
+          </button>
+          <button class="chip" type="button" data-step="1" aria-pressed="false">1</button>
+          <button class="chip" type="button" data-step="2" aria-pressed="false">2</button>
+          <button class="chip" type="button" data-step="3" aria-pressed="false">3</button>
+          <button class="chip" type="button" data-step="4" aria-pressed="false">4</button>
+          <button class="chip" type="button" data-step="5" aria-pressed="false">5</button>
+          <button class="chip" type="button" data-step="6" aria-pressed="false">6</button>
+          <button class="chip" type="button" data-step="7" aria-pressed="false">7</button>
+          <button class="chip" type="button" data-step="8" aria-pressed="false">8</button>
+          <button class="chip" type="button" data-step="9" aria-pressed="false">9</button>
+          <button class="chip" type="button" data-step="10" aria-pressed="false">10</button>
+          <button class="chip" type="button" data-step="11" aria-pressed="false">11</button>
+          <button class="chip" type="button" data-step="12" aria-pressed="false">12</button>
+          <button class="chip" type="button" data-step="13" aria-pressed="false">13</button>
+          <button class="chip wide" type="button" data-move="prev">Previous</button>
+          <button class="chip wide" type="button" data-move="next">Next</button>
+        </div>
+        <p class="walk-read" id="walk-read" role="status">
+          Every step is shown. Choose a number to outline that stop on the map
+          and its explanation below. Nothing is hidden at any time.
+        </p>
+      </div>
+
+      <div class="scroller" tabindex="0" role="region" aria-labelledby="map-heading">
+        <div class="canvas">
+          <svg
+            class="conn"
+            viewBox="0 0 1300 1990"
+            role="img"
+            aria-labelledby="conn-title conn-desc"
+          >
+            <title id="conn-title">
+              Connecting lines of the phone-to-Azure map
+            </title>
+            <desc id="conn-desc">
+              A band across the top holds the administrator's preparation. Below
+              it, a tall left lane holds the phone and a tall right lane holds
+              the Azure services. Solid teal arrows run down the phone lane and
+              cross to the right lane four times: an HTTPS registration request
+              to the provisioning service, its answer coming back, a two-way
+              messaging connection to the assigned hub, and, much lower, two
+              separate HTTPS arrows for an image upload, one to the hub and one
+              to blob storage. A teal dash-dot line shows that the outbound and
+              inbound message boxes reuse the connection opened earlier instead
+              of opening a new one. Grey dashed lines inside the right lane show
+              that an optional device-registry namespace sits above the
+              provisioning service and the hub as cloud-side configuration, with
+              no phone traffic. A violet dotted line runs from a separate
+              operator band across the bottom, up a channel on the far right,
+              and into three Azure boxes, showing reads made by a different
+              person with their own access. Every box in the picture is also a
+              labelled text box, and all thirteen steps are written out in full
+              below the picture.
+            </desc>
+            <defs>
+              <marker id="a2-flow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">
+                <path class="head-flow" d="M1 1 L11 6 L1 11 Z" />
+              </marker>
+              <marker id="a2-support" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" refX="5.5" refY="5.5" orient="auto">
+                <path class="head-support" d="M1 1 L10 5.5 L1 10 Z" />
+              </marker>
+              <marker id="a2-reuse" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" refX="5.5" refY="5.5" orient="auto">
+                <path class="head-reuse" d="M1 1 L10 5.5 L1 10 Z" />
+              </marker>
+              <marker id="a2-opread" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" refX="5.5" refY="5.5" orient="auto">
+                <path class="head-opread" d="M1 1 L10 5.5 L1 10 Z" />
+              </marker>
+            </defs>
+
+            <rect class="region" x="24" y="56" width="1252" height="150" rx="20" />
+            <rect class="region" x="24" y="240" width="560" height="1490" rx="20" />
+            <rect class="region" x="712" y="240" width="504" height="1490" rx="20" />
+            <rect class="region" x="24" y="1762" width="1252" height="200" rx="20" />
+
+            <g class="flow" marker-end="url(#a2-flow)">
+              <path d="M628 144 H666" />
+
+              <path d="M304 356 V370" />
+              <path d="M304 564 V578" />
+              <path d="M304 686 V700" />
+              <path d="M304 810 V824" />
+              <path d="M304 916 V960" />
+              <path d="M304 1068 V1100" />
+              <path d="M304 1208 V1222" />
+              <path d="M304 1330 V1346" />
+              <path d="M304 1568 V1586" />
+
+              <path d="M560 873 H730" />
+              <path d="M736 1017 H566" />
+              <path d="M560 1150 H730" />
+              <path d="M736 1174 H566" />
+              <path d="M560 1596 H688 V1250 H730" />
+              <path d="M560 1620 H730" />
+
+              <path d="M332 1872 H342" />
+              <path d="M632 1872 H642" />
+              <path d="M932 1872 H942" />
+            </g>
+
+            <g class="support" marker-end="url(#a2-support)">
+              <path d="M480 204 V268" />
+              <path d="M860 564 V804" />
+              <path d="M1150 564 V1100" />
+            </g>
+
+            <g class="reuse" marker-end="url(#a2-reuse)">
+              <path d="M640 1180 V1460 H578" />
+            </g>
+
+            <g class="opread" marker-end="url(#a2-opread)">
+              <path d="M1216 1872 H1255 V470 H1122" />
+              <path d="M1255 1230 H1122" />
+              <path d="M1255 1040 H1122" />
+            </g>
+          </svg>
+
+          <p class="lane-label" style="left: 40px; top: 66px; width: 1230px">
+            Before the phone is picked up
+            <em>&mdash; an administrator, working in an existing Azure setup</em>
+          </p>
+
+          <button
+            class="node"
+            type="button"
+            data-step="1"
+            data-kind="operator"
+            style="left: 48px; top: 100px; width: 580px; height: 104px"
+          >
+            <span class="head"
+              ><span class="badge">1</span
+              ><span class="t">An approved setup already exists</span></span
+            >
+            <span class="s"
+              >Someone confirms an <b>enabled individual enrollment</b>, a
+              reachable provisioning endpoint, an eligible hub, and &mdash; only
+              if images are wanted &mdash; existing upload storage. Then they
+              hand over four values by a safe route.</span
+            >
+          </button>
+
+          <div
+            class="node"
+            data-step="1"
+            data-kind="operator"
+            style="left: 672px; top: 100px; width: 580px; height: 104px"
+          >
+            <span class="t">What is <em>not</em> handed over</span>
+            <span class="s"
+              >No operator sign-in, group key or service/owner key is needed.
+              Subscription and tenant names are not connection inputs.
+              Nothing on this page creates a resource,
+              grants a permission or changes an enrollment.</span
+            >
+          </div>
+
+          <p class="lane-label" style="left: 40px; top: 250px; width: 520px">
+            The phone lane
+            <em>&mdash; one device, one app, one connection</em>
+          </p>
+
+          <div
+            class="node phone"
+            data-own="true"
+            style="left: 48px; top: 276px; width: 512px; height: 80px"
+          >
+            <span class="pic" aria-hidden="true">
+              <svg width="30" height="46" viewBox="0 0 30 46" fill="none" focusable="false">
+                <rect x="1.2" y="1.2" width="27.6" height="43.6" rx="5.4" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="1.8" />
+                <rect x="4.6" y="7.4" width="20.8" height="29.6" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" />
+                <path d="M11.4 4.5 H18.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                <path d="M11.8 41 H18.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                <path d="M8.6 24.5 a6.4 6.4 0 0 1 12.8 0" stroke="currentColor" stroke-width="1.3" fill="none" />
+                <circle cx="15" cy="27.6" r="1.9" fill="currentColor" />
+              </svg>
+            </span>
+            <span class="words">
+              <span class="t">One real phone &mdash; <span class="mono">example-phone</span></span>
+              <span class="s"
+                >An installed native PAAD build. Everything in this lane happens
+                on the device itself.</span
+              >
+            </span>
+          </div>
+
+          <button
+            class="node"
+            type="button"
+            data-step="2"
+            data-own="true"
+            style="left: 48px; top: 376px; width: 512px; height: 188px"
+          >
+            <span class="head"
+              ><span class="badge">2</span
+              ><span class="t">Four values are typed in</span></span
+            >
+            <ul>
+              <li><b>Registration ID</b> &mdash; a name, not a secret (<span class="mono">example-phone-registration</span>)</li>
+              <li><b>ID scope</b> &mdash; which provisioning service, not a subscription (<span class="mono">example-id-scope</span>)</li>
+              <li><b>Device key</b> &mdash; <b>secret</b>, this device only, shown as <span class="masked">&bull;&bull;&bull;&bull;&bull;&bull;</span></li>
+              <li><b>Provisioning hostname</b> &mdash; a public address, default <span class="mono">global.azure-devices-provisioning.net</span></li>
+            </ul>
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="3"
+            data-own="true"
+            style="left: 48px; top: 584px; width: 512px; height: 102px"
+          >
+            <span class="head"
+              ><span class="badge">3</span
+              ><span class="t">The app checks them before using them</span></span
+            >
+            <span class="s"
+              >Shape and format are checked, the address must be a supported
+              Azure endpoint, and service or owner strings are refused. A bad
+              value stops here, with no network call.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="4"
+            data-own="true"
+            style="left: 48px; top: 706px; width: 512px; height: 104px"
+          >
+            <span class="head"
+              ><span class="badge">4</span
+              ><span class="t">The phone makes its own expiring pass</span></span
+            >
+            <span class="s"
+              >Using the device key, the app signs a short-lived token (a
+              <b>SAS</b>) that currently lasts <b>one hour</b>. Azure can check
+              that signature, so the raw key is never sent as the request
+              body. The device clock therefore matters.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="5"
+            data-own="true"
+            style="left: 48px; top: 830px; width: 512px; height: 86px"
+          >
+            <span class="head"
+              ><span class="badge">5</span
+              ><span class="t">&ldquo;Please register me&rdquo;</span></span
+            >
+            <span class="s"
+              >An ordinary web request &mdash; HTTPS <b>PUT</b>, not messaging
+              &mdash; carrying the registration ID and the public phone model.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="6"
+            data-own="true"
+            style="left: 48px; top: 966px; width: 512px; height: 102px"
+          >
+            <span class="head"
+              ><span class="badge">6</span
+              ><span class="t">&ldquo;Is it done yet?&rdquo;</span></span
+            >
+            <span class="s"
+              >While the answer is &ldquo;still assigning&rdquo;, the app asks
+              again with HTTPS <b>GET</b>, respecting the wait the service asks
+              for and its own deadline. It is a bounded wait, not an endless
+              loop.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="7"
+            data-own="true"
+            style="left: 48px; top: 1106px; width: 512px; height: 102px"
+          >
+            <span class="head"
+              ><span class="badge">7</span
+              ><span class="t">The phone opens one messaging connection</span></span
+            >
+            <span class="s"
+              >It signs a second pass, this time for the assigned hub and
+              assigned device, and opens <b>MQTT over secure WebSockets</b>.
+              Redirects are refused and certificate checks stay on.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="8"
+            data-own="true"
+            style="left: 48px; top: 1228px; width: 512px; height: 102px"
+          >
+            <span class="head"
+              ><span class="badge">8</span
+              ><span class="t">Saved first, then adopted</span></span
+            >
+            <span class="s"
+              >Once the connection succeeds, the credentials are written to
+              secure storage <b>before</b> the app starts using the new client.
+              If that write fails it is reported as an error, not ignored.</span
+            >
+          </button>
+
+          <div
+            class="node group-title"
+            data-kind="group"
+            style="left: 36px; top: 1352px; width: 536px; height: 216px"
+          >
+            <span class="kicker">Carried on the connection opened at step 7 &mdash; no second login</span>
+          </div>
+
+          <button
+            class="node"
+            type="button"
+            data-step="9"
+            data-own="true"
+            style="left: 48px; top: 1390px; width: 248px; height: 168px"
+          >
+            <span class="head"
+              ><span class="badge">9</span
+              ><span class="t">Phone &rarr; cloud</span></span
+            >
+            <ul>
+              <li>a request for the device twin</li>
+              <li>reported properties</li>
+              <li>sensor telemetry, once enabled</li>
+              <li>acknowledgements and replies</li>
+            </ul>
+            <span class="s">Sent at <b>QoS&nbsp;0</b>: submitted, not confirmed.</span>
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="10"
+            data-own="true"
+            style="left: 312px; top: 1390px; width: 248px; height: 168px"
+          >
+            <span class="head"
+              ><span class="badge">10</span
+              ><span class="t">Cloud &rarr; phone</span></span
+            >
+            <ul>
+              <li>the twin's first values</li>
+              <li>later desired-property changes</li>
+              <li>commands, such as a torch pulse</li>
+            </ul>
+            <span class="s">Receiving, running and replying are three separate facts.</span>
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="11"
+            data-own="true"
+            style="left: 48px; top: 1592px; width: 512px; height: 104px"
+          >
+            <span class="head"
+              ><span class="badge">11</span
+              ><span class="t">A picture takes a different road</span></span
+            >
+            <span class="s"
+              >Up to 20&nbsp;MiB of JPEG data. The app asks the hub over HTTPS
+              where to put it, uploads the bytes straight to storage, then tells
+              the hub the result. The bytes never travel as a message.</span
+            >
+          </button>
+
+          <div
+            class="node"
+            data-kind="boundary"
+            style="left: 570px; top: 400px; width: 162px; height: 124px"
+          >
+            <span class="t">No line crosses here</span>
+            <span class="s"
+              >No Azure operator sign-in and no direct phone connection to this
+              namespace.</span
+            >
+          </div>
+
+          <p class="lane-label" style="left: 728px; top: 250px; width: 480px">
+            The Azure lane
+            <em>&mdash; existing services, not created by the phone</em>
+          </p>
+
+          <button
+            class="node"
+            type="button"
+            data-step="12"
+            data-kind="adr"
+            style="left: 736px; top: 376px; width: 380px; height: 188px"
+          >
+            <span class="kicker">Optional &middot; cloud-side only</span>
+            <span class="head"
+              ><span class="badge">12</span
+              ><span class="t">Device registry namespace</span></span
+            >
+            <span class="s"
+              >If the organisation uses one, it sits <b>above</b> provisioning
+              and the hub: service links, eligible-hub configuration and device
+              inventory. No namespace input is needed to connect the phone.</span
+            >
+          </button>
+
+          <div
+            class="tag"
+            style="left: 880px; top: 620px; width: 190px; height: 48px"
+          >
+            configuration only &mdash; no phone traffic on these two lines
+          </div>
+
+          <button
+            class="node"
+            type="button"
+            data-step="5"
+            data-kind="azure"
+            style="left: 736px; top: 810px; width: 380px; height: 136px"
+          >
+            <span class="kicker">Azure service</span>
+            <span class="head"
+              ><span class="badge">5</span
+              ><span class="t">Device Provisioning Service</span></span
+            >
+            <span class="s"
+              ><span class="mono">example-dps</span>, reached at the
+              provisioning hostname. It checks the signed pass against the
+              enrollment for <span class="mono">example-phone-registration</span>
+              and starts an assignment.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="6"
+            data-kind="azure"
+            style="left: 736px; top: 966px; width: 380px; height: 120px"
+          >
+            <span class="head"
+              ><span class="badge">6</span
+              ><span class="t">The answer: where to go, and who you are</span></span
+            >
+            <span class="s"
+              >Assigned hub <span class="mono">example-hub.azure-devices.net</span>
+              and assigned device <span class="mono">example-phone-assigned</span>
+              &mdash; which <b>may differ</b> from the registration ID.</span
+            >
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="7"
+            data-kind="azure"
+            style="left: 736px; top: 1106px; width: 380px; height: 200px"
+          >
+            <span class="kicker">Azure service</span>
+            <span class="head"
+              ><span class="badge">7</span
+              ><span class="t">The assigned IoT Hub</span></span
+            >
+            <span class="s"
+              >The phone's MQTT messaging endpoint. It holds this device's twin,
+              forwards commands and desired values, and accepts
+              telemetry.</span
+            >
+            <ul>
+              <li>one connection, kept open</li>
+              <li>the username carries the public phone model</li>
+              <li>an expired pass means reconnecting, not renewing forever</li>
+            </ul>
+          </button>
+
+          <button
+            class="node"
+            type="button"
+            data-step="11"
+            data-kind="azure"
+            style="left: 736px; top: 1592px; width: 380px; height: 104px"
+          >
+            <span class="kicker">Azure storage, arranged in advance</span>
+            <span class="t">Blob storage container</span>
+            <span class="s"
+              >Receives the image bytes directly, using the limited permission
+              the hub just handed out.</span
+            >
+          </button>
+
+          <div class="tag" style="left: 574px; top: 828px; width: 148px; height: 40px">
+            HTTPS PUT &middot; register
+          </div>
+
+          <div class="tag" style="left: 574px; top: 966px; width: 148px; height: 46px">
+            HTTPS GET &middot; bounded polling
+          </div>
+
+          <div class="tag" style="left: 568px; top: 1082px; width: 160px; height: 62px">
+            MQTT over secure WebSocket &middot; TLS port 443
+          </div>
+
+          <div class="tag" style="left: 648px; top: 1380px; width: 84px; height: 60px">
+            the same connection
+          </div>
+
+          <div class="tag" style="left: 590px; top: 1480px; width: 92px; height: 76px">
+            HTTPS &middot; ask, then report
+          </div>
+
+          <div class="tag" style="left: 574px; top: 1628px; width: 148px; height: 40px">
+            HTTPS PUT &middot; image bytes
+          </div>
+
+          <div class="tag" style="left: 1130px; top: 1560px; width: 118px; height: 76px">
+            three reads, by a different person
+          </div>
+
+          <p class="lane-label" style="left: 40px; top: 1772px; width: 1230px">
+            Afterwards, somebody else checks
+            <em>&mdash; separate access, separate evidence</em>
+          </p>
+
+          <button
+            class="node"
+            type="button"
+            data-step="13"
+            data-kind="verify"
+            style="left: 48px; top: 1806px; width: 284px; height: 132px"
+          >
+            <span class="head"
+              ><span class="badge">13</span
+              ><span class="t">A fresh marker</span></span
+            >
+            <span class="s"
+              >While really connected, the phone submits a newly agreed marker.
+              Submitted locally is not proof of arrival.</span
+            >
+          </button>
+
+          <div
+            class="node"
+            data-step="13"
+            data-kind="verify"
+            style="left: 348px; top: 1806px; width: 284px; height: 132px"
+          >
+            <span class="kicker">Read 1</span>
+            <span class="t">The assignment</span>
+            <span class="s"
+              >Does provisioning really show
+              <span class="mono">example-phone-registration</span> assigned to
+              that hub and device?</span
+            >
+          </div>
+
+          <div
+            class="node"
+            data-step="13"
+            data-kind="verify"
+            style="left: 648px; top: 1806px; width: 284px; height: 132px"
+          >
+            <span class="kicker">Read 2</span>
+            <span class="t">The hub's own record</span>
+            <span class="s"
+              >Does the device twin show the expected identity, the public
+              model, and the <b>exact</b> fresh marker?</span
+            >
+          </div>
+
+          <div
+            class="node"
+            data-step="13"
+            data-kind="operator"
+            style="left: 948px; top: 1806px; width: 268px; height: 132px"
+          >
+            <span class="kicker">Who does the reading</span>
+            <span class="t">The operator's own computer</span>
+            <span class="s"
+              >Their own Azure access, read-only. <b>Read 3</b> &mdash; the
+              inventory record &mdash; applies only where a namespace is
+              used.</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <p class="hint">
+        The map is wider than most phone screens. Scroll it sideways, or read
+        the same thirteen steps as text below &mdash; nothing on the map is
+        missing from the text.
+      </p>
+
+      <div class="legend">
+        <h3>Legend &mdash; four kinds of line</h3>
+        <div class="legend-row">
+          <svg width="52" height="16" viewBox="0 0 52 16" aria-hidden="true" focusable="false">
+            <path d="M2 8 H40" fill="none" stroke="currentColor" stroke-width="2.4" style="color: var(--primary)" />
+            <path d="M40 3 L50 8 L40 13 Z" style="fill: var(--primary)" />
+          </svg>
+          <span
+            ><b>Solid arrow &mdash; something really happens here.</b> Either a
+            step the phone performs on its own, or actual traffic the phone
+            sends or receives.</span
+          >
+        </div>
+        <div class="legend-row">
+          <svg width="52" height="16" viewBox="0 0 52 16" aria-hidden="true" focusable="false">
+            <path d="M2 8 H40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="7 5" style="color: var(--control-border)" />
+            <path d="M40 3.5 L49 8 L40 12.5 Z" style="fill: var(--control-border)" />
+          </svg>
+          <span
+            ><b>Dashed grey arrow &mdash; arranged in the cloud beforehand.</b>
+            A relationship an administrator configured. No phone traffic travels
+            along these lines.</span
+          >
+        </div>
+        <div class="legend-row">
+          <svg width="52" height="16" viewBox="0 0 52 16" aria-hidden="true" focusable="false">
+            <path d="M2 8 H40" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="12 4 2 4" style="color: var(--primary)" />
+            <path d="M40 3.5 L49 8 L40 12.5 Z" style="fill: var(--primary)" />
+          </svg>
+          <span
+            ><b>Long-dash-and-dot arrow &mdash; the same connection, reused.</b>
+            Steps 9 and 10 do not open anything new; they travel on the
+            connection opened at step 7.</span
+          >
+        </div>
+        <div class="legend-row">
+          <svg width="52" height="16" viewBox="0 0 52 16" aria-hidden="true" focusable="false">
+            <path d="M2 8 H40" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round" style="color: var(--accent2)" />
+            <path d="M40 3.5 L49 8 L40 12.5 Z" style="fill: var(--accent2)" />
+          </svg>
+          <span
+            ><b>Dotted violet arrow &mdash; somebody else looking.</b> A read
+            made by an authorised operator from their own computer. The phone
+            neither makes nor sees these reads.</span
+          >
+        </div>
+        <h3>Legend &mdash; five kinds of box</h3>
+        <div class="legend-row">
+          <span class="swatch own" aria-hidden="true"></span>
+          <span
+            ><b>Teal-tinted box:</b> happens on the phone, in this
+            repository's own code.</span
+          >
+        </div>
+        <div class="legend-row">
+          <span class="swatch azure" aria-hidden="true"></span>
+          <span
+            ><b>Sand-tinted box:</b> an existing Azure service the phone was
+            told to use. The app does not create it.</span
+          >
+        </div>
+        <div class="legend-row">
+          <span class="swatch adr" aria-hidden="true"></span>
+          <span
+            ><b>Violet dashed box:</b> optional and cloud-side. Present only in
+            some organisations, and invisible to the phone.</span
+          >
+        </div>
+        <div class="legend-row">
+          <span class="swatch operator" aria-hidden="true"></span>
+          <span
+            ><b>Grey box:</b> a person doing something outside the app &mdash;
+            an administrator or an operator.</span
+          >
+        </div>
+        <div class="legend-row">
+          <span class="swatch verify" aria-hidden="true"></span>
+          <span
+            ><b>Peach box:</b> evidence gathering, kept deliberately separate
+            from the phone's own claims.</span
+          >
+        </div>
+      </div>
+
+      <h2 id="steps">The thirteen steps in words</h2>
+      <p class="lede">
+        Each card matches one numbered stop on the map. The &ldquo;where to
+        look&rdquo; line names the real file or guide section, so a curious
+        reader can open it next to the picture.
+      </p>
+
+      <ol class="cards">
+        <li class="card" data-step="1">
+          <h3><span class="badge">1</span> Somebody prepares, before the phone is involved</h3>
+          <p>
+            Installing the app does not create anything in Azure. An
+            administrator confirms that an <b>existing</b> setup is approved for
+            this phone: an enabled individual enrollment, its supported
+            provisioning endpoint, a hub the device may use, and &mdash; only if
+            images are wanted &mdash; file-upload storage that already exists.
+            They then deliver just the device's own inputs by a safe route.
+          </p>
+          <p>
+            Nothing in this preparation is a licence to create resources, grant
+            permissions or spend money; each of those would need its own
+            approval.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md#6-administrator-preparation-use-an-approved-existing-setup"
+              >guide section 6, administrator preparation</a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="2">
+          <h3><span class="badge">2</span> Four values, and only four</h3>
+          <p>
+            Three of them are ordinary names and one is a secret. The
+            <b>registration ID</b> identifies the enrollment, the
+            <b>ID scope</b> says which provisioning service to talk to, and the
+            <b>provisioning hostname</b> is a public address. The
+            <b>device key</b> is the secret &mdash; this one device's key, not a
+            group key, not a service or owner key, and not an Azure password.
+          </p>
+          <p>
+            The phone's capability <b>model</b> is filled in automatically and
+            is public information, not a secret and not a serial number.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md#7-phone-user-steps-connect-to-an-existing-setup"
+              >guide section 7, the field-by-field table</a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="3">
+          <h3><span class="badge">3</span> The app checks before it connects</h3>
+          <p>
+            Typed values and scanned codes go through the same decoder. Formats
+            are checked, and the address must be one of the supported Azure
+            endpoints. An arbitrary server or service-policy connection string
+            is refused before any connection request. Redirects are also refused
+            later by the network transport, rather than followed.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/connection/credentials.ts"><code>src/connection/credentials.ts</code></a>.
+          </p>
+        </li>
+
+        <li class="card" data-step="4">
+          <h3><span class="badge">4</span> The phone signs its own temporary pass</h3>
+          <p>
+            Using the device key, the app builds an expiring shared-access
+            signature. Azure can verify that signature without the app ever
+            sending the raw key as the request body, and TLS protects the
+            journey. This authenticates <b>a device</b>, not an Azure
+            administrator.
+          </p>
+          <p>
+            These passes currently last <b>one hour</b>, so the phone's clock
+            matters. Use <b>Reconnect</b> to connect with fresh authorization;
+            the app does not silently renew or retry forever.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/connection/dps.ts"><code>src/connection/dps.ts</code></a>
+            (the expiry is one hour from now) and
+            <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md#8-what-happens-on-the-network-step-by-step"
+              >guide section 8</a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="5">
+          <h3><span class="badge">5</span> Registration is an ordinary web request</h3>
+          <p>
+            This surprises people: the first contact is <b>not</b> messaging. It
+            is an HTTPS <code>PUT</code> to the provisioning service, carrying
+            the registration ID and the phone's public model identifier. The
+            service checks the signed pass against the enrollment.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/connection/dps.ts"><code>src/connection/dps.ts</code></a>
+            builds
+            <code>/&lt;id-scope&gt;/registrations/&lt;registration-id&gt;/register</code>
+            with provisioning API version <code>2019-03-31</code>.
+          </p>
+        </li>
+
+        <li class="card" data-step="6">
+          <h3><span class="badge">6</span> Waiting politely for the answer</h3>
+          <p>
+            Assignment is not instant. While the service says &ldquo;still
+            assigning&rdquo;, the app asks again with HTTPS <code>GET</code>,
+            honouring the wait the service requests and its own overall
+            deadline. This is a bounded wait, not an endless retry loop.
+          </p>
+          <p>
+            The answer names the <b>assigned hub</b> and the
+            <b>assigned device ID</b>. That device ID can be different from the
+            registration ID you typed, and the app keeps both. A saved
+            registration ID is not a promise of tomorrow's assignment: on
+            reconnect the phone can be assigned again.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/connection/dps.ts"><code>src/connection/dps.ts</code></a>
+            &mdash; the polling loop honours the service's retry guidance and
+            checks the returned hostname before trusting it.
+          </p>
+        </li>
+
+        <li class="card" data-step="7">
+          <h3><span class="badge">7</span> One direct connection to the assigned hub</h3>
+          <p>
+            Now messaging begins, and it goes <b>straight to the hub</b> &mdash;
+            provisioning is not in the middle of it. The app signs a second
+            pass, this time for the assigned hub and device, and opens
+            <b>MQTT over secure WebSockets</b> on the ordinary secure-web port,
+            443. The hub username carries the public model identifier and the
+            device API version. Redirects are refused and the system's
+            certificate and hostname checks stay switched on.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/connection/legacyHub.ts"><code>src/connection/legacyHub.ts</code></a>
+            and
+            <a href="../../modules/paad-device/README.md"
+              ><code>modules/paad-device</code></a
+            >, the repository's restricted secure-socket native module.
+          </p>
+        </li>
+
+        <li class="card" data-step="8">
+          <h3><span class="badge">8</span> Saved first, adopted second</h3>
+          <p>
+            The order matters. Only after the connection succeeds are the
+            credentials written into the phone's secure storage, and only
+            <i>then</i> does the app start using the newly connected client. A
+            failed write is reported as an error rather than quietly ignored.
+          </p>
+          <p>
+            <b>Disconnect</b> ends the session but keeps the saved credentials.
+            <b>Reconnect</b> uses them again with a fresh pass.
+            <b>Forget credentials</b> is a separate, confirmed action that
+            removes the local copy and any imported Azure context from this
+            phone. It does not delete an enrollment, a hub device, a registry
+            record or anything already uploaded, and it is not key revocation.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/contexts/storage.tsx"><code>src/contexts/storage.tsx</code></a>
+            and
+            <a href="../../src/hooks/iotc.ts"><code>src/hooks/iotc.ts</code></a>.
+          </p>
+        </li>
+
+        <li class="card" data-step="9">
+          <h3><span class="badge">9</span> What the phone sends out</h3>
+          <p>
+            On that same connection the app asks for the device twin, reports
+            the properties it knows, sends telemetry from whichever sensors are
+            enabled and available, and submits acknowledgements and command
+            replies.
+          </p>
+          <p>
+            All of these are published at <b>QoS&nbsp;0</b>, which in plain
+            English means the app does not wait for the broker to say
+            &ldquo;received&rdquo;. So &ldquo;submitted&rdquo; in the app means
+            <i>the phone handed it over locally</i> &mdash; it is not evidence
+            that Azure stored it.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md#10-submitted-locally-is-not-verified-in-azure"
+              >guide section 10</a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="10">
+          <h3><span class="badge">10</span> What comes back in</h3>
+          <p>
+            The same connection carries the twin's first values, later
+            desired-property changes, and commands such as a torch pulse or a
+            request to change a sensor interval.
+          </p>
+          <p>
+            Three things that look alike are deliberately kept apart:
+            <b>receiving</b> a command, <b>carrying it out</b>, and
+            <b>submitting a reply</b>. Missing torch hardware or permission can
+            produce an error reply. A sensor-enable or interval request can be
+            accepted without proving a fresh reading. A reply the phone sends
+            is still only a submission.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md#9-try-the-tools-and-understand-their-responses"
+              >guide section 9, the tool-by-tool table</a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="11">
+          <h3><span class="badge">11</span> A picture takes a different road</h3>
+          <p>
+            Image bytes are never an MQTT message. The app limits the content to
+            20&nbsp;MiB, then does three HTTPS steps: ask the hub for a place to
+            put the file, <code>PUT</code> the bytes straight into Azure Blob
+            Storage using the limited permission the hub handed out, and finally
+            tell the hub how it went. Both the upload and the notification must
+            succeed.
+          </p>
+          <p>
+            The result is an HTTP outcome, not a messaging acknowledgement, and
+            it says nothing about what happens to the file afterwards. These
+            bytes do not pass through a registry namespace.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../../src/connection/upload.ts"><code>src/connection/upload.ts</code></a>.
+          </p>
+        </li>
+
+        <li class="card" data-step="12">
+          <h3><span class="badge">12</span> The optional namespace, above it all</h3>
+          <p>
+            Some organisations put a device registry namespace above
+            provisioning and the hub. It holds service links, eligible-hub
+            configuration and device inventory. All of that is
+            <b>cloud-side configuration</b>, done by an administrator.
+          </p>
+          <p>
+            The phone's side of the story does not change at all: the same four
+            inputs, the same registration, the same hub connection. No namespace
+            name, subscription or operator sign-in is needed in the connection
+            form, and there is no third connection from the phone. An optional
+            imported snapshot can display namespace and subscription context
+            later; that is not a live registry lookup.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../ADR-SIMULATOR.md">operator guide</a> and
+            <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md#5-choose-the-scenario-not-three-separate-phone-logins"
+              >guide section 5</a
+            >.
+          </p>
+        </li>
+
+        <li class="card" data-step="13">
+          <h3><span class="badge">13</span> Someone else checks, with their own access</h3>
+          <p>
+            The phone can only report what it did. Independent evidence comes
+            from an authorised operator who reads Azure separately. First the
+            phone submits a <b>fresh marker</b> &mdash; a new value agreed for
+            this attempt, never a reused one from an old run. Then the operator
+            reads: the assignment held by provisioning; the hub's own device
+            record, checking the identity, the public model and that
+            <b>exact</b> marker; and, only where a namespace is used, the
+            inventory record whose external device ID matches the actual
+            assigned ID.
+          </p>
+          <p>
+            Seeing the marker in the hub's record proves that this reported
+            value reached that cloud record. It does not prove a downstream
+            system consumed the telemetry, that the phone is still online, or
+            that any physical sensor works. Proving that a <i>new</i> inventory
+            record was created automatically needs authorised before-and-after
+            evidence; finding an already-matching record proves no new creation.
+          </p>
+          <p class="where">
+            <strong>Where to look:</strong>
+            <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md#a-guided-independent-proof"
+              >guide section 10, &ldquo;A guided independent proof&rdquo;</a
+            >
+            and the existing
+            <a href="../../scripts/ci/verify-mobile-proof.js"
+              ><code>scripts/ci/verify-mobile-proof.js</code></a
+            >, which performs bounded read-only checks using an operator's own
+            authorised session.
+          </p>
+        </li>
+      </ol>
+
+      <h2>The four values, and which one is a secret</h2>
+      <p>
+        &ldquo;Open&rdquo; here means not an authentication secret, not permission
+        to publish your environment details. Share even nonsecret identifiers
+        only with appropriate recipients.
+      </p>
+      <div class="tablewrap" tabindex="0" role="region" aria-label="Table, scrolls sideways on narrow screens">
+        <table>
+          <caption>
+            Device-specific examples are invented, not ready-to-paste inputs;
+            public hostnames and the model are real reference values. Use your
+            administrator's approved inputs. Never write a real key into a
+            document, a screenshot, a ticket or a chat message.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">What you are given</th>
+              <th scope="col">Open or secret</th>
+              <th scope="col">What it actually is</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Registration ID</b><br /><span class="mono">example-phone-registration</span></td>
+              <td><span class="pill open">Open</span></td>
+              <td>
+                The enrollment's bootstrap identifier, not a password. DPS
+                returns the actual Hub device ID, which can be the same or
+                different.
+              </td>
+            </tr>
+            <tr>
+              <td><b>ID scope</b><br /><span class="mono">example-id-scope</span></td>
+              <td><span class="pill open">Open</span></td>
+              <td>
+                Says which provisioning instance to talk to. Not a subscription
+                ID, not a tenant ID, not a hub name.
+              </td>
+            </tr>
+            <tr>
+              <td><b>Device key</b><br /><span class="masked">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span></td>
+              <td><span class="pill secret">Secret &mdash; this device only</span></td>
+              <td>
+                The individual enrollment's symmetric secret, supplied in Base64
+                form. It is <b>not</b> a group key, a service or owner key, a
+                ready-made token, or an Azure password. This page deliberately
+                shows no example value, because a group key could create
+                credentials for other devices.
+              </td>
+            </tr>
+            <tr>
+              <td><b>Provisioning hostname</b><br /><span class="mono">global.azure-devices-provisioning.net</span></td>
+              <td><span class="pill open">Open</span></td>
+              <td>
+                A public address, with no <code>https://</code>, port or path.
+                Change it only to the supported endpoint you were given.
+              </td>
+            </tr>
+            <tr>
+              <td><b>Model</b><br /><span class="mono">dtmi:azureiot:PhoneAsADevice;2</span></td>
+              <td><span class="pill open">Open &mdash; filled in for you</span></td>
+              <td>
+                The app's public capability identifier. Nobody types it. It
+                describes what a phone <i>can</i> offer, not what this particular
+                handset actually has.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="scenarios">Three ways an organisation can be set up</h2>
+      <p class="lede">
+        The big map shows the phone path shared by both DPS scenarios; its
+        optional namespace applies only to B. These separate insets show which
+        services are used in each setup. Direct Hub, C, bypasses DPS.
+      </p>
+
+      <ul class="insets">
+        <li class="inset">
+          <h3>A. Classic provisioning and hub</h3>
+          <svg class="mini" viewBox="0 0 300 160" role="img" aria-labelledby="mini-a-t mini-a-d">
+            <title id="mini-a-t">Classic setup</title>
+            <desc id="mini-a-d">
+              The phone makes two connections: first to the provisioning
+              service, then to the IoT hub. A dashed line shows that an
+              administrator linked those two services beforehand.
+            </desc>
+            <defs>
+              <marker id="m-a" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                <path class="head-mini" d="M1 1 L9 5 L1 9 Z" />
+              </marker>
+            </defs>
+            <rect class="box box-own" x="8" y="58" width="76" height="44" rx="10" />
+            <text x="46" y="85" text-anchor="middle">phone</text>
+            <rect class="box box-azure" x="120" y="14" width="84" height="42" rx="10" />
+            <text x="162" y="40" text-anchor="middle">provisioning</text>
+            <rect class="box box-azure" x="200" y="104" width="90" height="42" rx="10" />
+            <text x="245" y="130" text-anchor="middle">IoT hub</text>
+            <path class="line" d="M84 70 L112 46" marker-end="url(#m-a)" />
+            <path class="line" d="M84 92 L192 120" marker-end="url(#m-a)" />
+            <path class="line-dash" d="M162 56 V86 H245 V100" />
+            <text class="small" x="92" y="44">1</text>
+            <text class="small" x="126" y="118">2</text>
+            <text class="small" x="170" y="72">linked in advance</text>
+          </svg>
+          <p>
+            The phone registers, is told which hub to use, and connects there.
+            The optional namespace box in the big map is not used in this case.
+          </p>
+        </li>
+
+        <li class="inset">
+          <h3>B. A registry namespace above them</h3>
+          <svg class="mini" viewBox="0 0 300 160" role="img" aria-labelledby="mini-b-t mini-b-d">
+            <title id="mini-b-t">Namespace-linked setup</title>
+            <desc id="mini-b-d">
+              The phone still makes the same two connections. A dashed box above
+              the two services represents an optional device registry namespace
+              linked to both of them by an administrator. No line runs from the
+              phone to that namespace.
+            </desc>
+            <defs>
+              <marker id="m-b" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                <path class="head-mini" d="M1 1 L9 5 L1 9 Z" />
+              </marker>
+            </defs>
+            <rect class="box box-adr" x="96" y="4" width="180" height="26" rx="9" />
+            <text class="small" x="186" y="21" text-anchor="middle">registry namespace (optional)</text>
+            <rect class="box box-own" x="8" y="66" width="76" height="44" rx="10" />
+            <text x="46" y="93" text-anchor="middle">phone</text>
+            <rect class="box box-azure" x="120" y="44" width="76" height="38" rx="10" />
+            <text class="small" x="158" y="67" text-anchor="middle">provisioning</text>
+            <rect class="box box-azure" x="206" y="110" width="84" height="40" rx="10" />
+            <text x="248" y="135" text-anchor="middle">IoT hub</text>
+            <path class="line" d="M84 80 L112 70" marker-end="url(#m-b)" />
+            <path class="line" d="M84 100 L198 124" marker-end="url(#m-b)" />
+            <path class="line-dash" d="M140 30 V38" />
+            <path class="line-dash" d="M252 30 V104" />
+            <text class="small" x="92" y="64">1</text>
+            <text class="small" x="130" y="126">2</text>
+          </svg>
+          <p>
+            The phone uses the same connection inputs and protocols. Namespace
+            inventory is cloud-side; an operator can confirm it separately or
+            provide a historical context snapshot.
+          </p>
+        </li>
+
+        <li class="inset">
+          <h3>C. Straight to a hub</h3>
+          <svg class="mini" viewBox="0 0 300 160" role="img" aria-labelledby="mini-c-t mini-c-d">
+            <title id="mini-c-t">Direct hub setup</title>
+            <desc id="mini-c-d">
+              The phone is given a device connection string and connects
+              directly to the IoT hub. The provisioning service is drawn greyed
+              out and unused, with no line to it.
+            </desc>
+            <defs>
+              <marker id="m-c" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                <path class="head-mini" d="M1 1 L9 5 L1 9 Z" />
+              </marker>
+            </defs>
+            <rect class="box box-own" x="8" y="58" width="76" height="44" rx="10" />
+            <text x="46" y="85" text-anchor="middle">phone</text>
+            <rect class="box box-off" x="120" y="14" width="84" height="42" rx="10" />
+            <text class="small" x="162" y="33" text-anchor="middle">provisioning</text>
+            <text class="small" x="162" y="47" text-anchor="middle">not used</text>
+            <rect class="box box-azure" x="200" y="88" width="90" height="42" rx="10" />
+            <text x="245" y="114" text-anchor="middle">IoT hub</text>
+            <path class="line" d="M84 84 L192 106" marker-end="url(#m-c)" />
+            <text class="small" x="120" y="106">1</text>
+          </svg>
+          <p>
+            Steps 4 to 6 are skipped: the hub, device ID and key all come from a
+            connection string. Everything after step 7 works the same way. This
+            route on its own establishes no namespace inventory result.
+          </p>
+        </li>
+      </ul>
+
+      <h2>What counts as evidence, and what does not</h2>
+      <div class="grid2">
+        <div class="panel">
+          <h3>The phone's own words</h3>
+          <ul>
+            <li>
+              <b>Submitted</b> means the app handed the message to its
+              connection locally. Outbound messages use QoS&nbsp;0, so no
+              acknowledgement is waited for.
+            </li>
+            <li>
+              An upload's <b>acknowledged</b> outcome is a completed HTTP
+              operation, not a messaging acknowledgement, and not proof of
+              downstream processing.
+            </li>
+            <li>
+              Activity keeps a deliberately small, in-memory record &mdash; up
+              to 120 rows and 64&nbsp;KiB including the latest facts, with
+              repeated failures grouped. Payloads, coordinates, image bytes,
+              keys and proof markers are not kept. Diagnostics logs are a
+              separate list.
+            </li>
+            <li>
+              The absence of an error is not evidence of delivery.
+            </li>
+          </ul>
+        </div>
+        <div class="panel warnish">
+          <h3>Independent evidence</h3>
+          <ul>
+            <li>
+              Comes from an authorised person reading Azure with their own
+              access, not from the phone.
+            </li>
+            <li>
+              Needs a <b>fresh marker</b> for each attempt. A marker reused from
+              an earlier run proves nothing about today.
+            </li>
+            <li>
+              A matching inventory record that already existed does
+              <b>not</b> prove automatic creation. That claim needs authorised
+              before-and-after evidence.
+            </li>
+            <li>
+              Even with an operator's imported snapshot, the app still shows
+              registry status as <b>Not checked</b>, because it never performed
+              a live lookup.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>The optional snapshot: helpful, but historical</h2>
+      <div class="panel">
+        <p>
+          You can use PAAD without importing anything. The app never signs in to
+          Microsoft Entra and never calls registry, management or operator APIs
+          with the device key. Separately, an operator can export approved
+          resource information and hand it over as text.
+        </p>
+        <p>
+          If that text is imported, the app checks its shape and that it belongs
+          to the <i>same</i> assigned device and hub, then shows it as
+          operator-provided context. It is a <b>historical snapshot</b>, not a
+          live lookup and not an authenticated assertion. Removing the snapshot
+          removes only the local copy. Never paste a key, a connection string or
+          an access token into that field.
+        </p>
+      </div>
+
+      <h2>When something goes wrong</h2>
+      <div class="tablewrap" tabindex="0" role="region" aria-label="Table, scrolls sideways on narrow screens">
+        <table>
+          <caption>
+            A short beginner's version. The guide's troubleshooting table is the
+            fuller one.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">What you see</th>
+              <th scope="col">What it usually means</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Credentials rejected</td>
+              <td>
+                A field is in the wrong role or has stray whitespace, or the
+                enrollment does not match. Check with the administrator; never ask
+                for a broader key.
+              </td>
+            </tr>
+            <tr>
+              <td>Authentication refused</td>
+              <td>
+                The enrollment, key or scope do not line up &mdash; or the phone's
+                clock is wrong, which breaks a time-limited pass.
+              </td>
+            </tr>
+            <tr>
+              <td>Provisioning did not complete</td>
+              <td>
+                Step 6 ended without an assignment. An operator needs to inspect
+                allocation and, in the namespace case, service links and
+                permissions. The phone cannot repair cloud configuration.
+              </td>
+            </tr>
+            <tr>
+              <td>Endpoint not approved</td>
+              <td>
+                The address is not a supported Azure endpoint. The answer is the
+                correct hostname, never disabling a security check.
+              </td>
+            </tr>
+            <tr>
+              <td>Connection interrupted</td>
+              <td>
+                An established session dropped: network loss, suspension, or an
+                expired pass. Reconnect. It is not a diagnosis of a wrong key.
+              </td>
+            </tr>
+            <tr>
+              <td>A sensor has no reading, or the torch does nothing</td>
+              <td>
+                Check hardware, permissions and the reported command outcome.
+                A healthy cloud connection does not guarantee a working sensor;
+                a rejected torch request can still produce an error reply.
+              </td>
+            </tr>
+            <tr>
+              <td>Secure transport required</td>
+              <td>
+                The app is not running as a correctly rebuilt native build with
+                this repository's secure transport.
+              </td>
+            </tr>
+            <tr>
+              <td>Offline simulation label is shown</td>
+              <td>
+                There is no live cloud connection at all, so nothing on screen is
+                cloud evidence. This is different from running on an emulator or a
+                simulator, which can make real connections.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>What this picture deliberately does not claim</h2>
+      <div class="panel warnish">
+        <ul>
+          <li>
+            <b>No resource is created.</b> Installing or connecting the app
+            never creates an Azure service, an enrollment, a storage account or a
+            permission.
+          </li>
+          <li>
+            <b>No Azure operator login is needed.</b> Device authentication is
+            separate from an operator account. Subscription and namespace
+            information may appear in an imported context snapshot, but no
+            operator credential or phone-to-registry connection is used.
+          </li>
+          <li>
+            <b>A simulator build is not a signed phone app.</b> An artifact
+            produced for a desktop simulator is a different thing from a signed
+            build installed on real hardware, and a successful build is not a
+            cloud test.
+          </li>
+          <li>
+            <b>This diagram is not live evidence.</b> As of 2026-09-20, the
+            redesigned experience has retained-DPS Android emulator and iOS
+            Simulator acceptance, plus an in-place Windows emulator update.
+            Exact sources, cloud proof, restoration and remaining limits are
+            recorded in the beginner guide and acceptance ledger. Physical-phone
+            acceptance remains separate; this page changes no code, creates
+            no build and verifies nothing.
+          </li>
+          <li>
+            <b>Device and environment examples are invented.</b> Public service
+            hostnames and the phone model identifier are real reference values.
+            No live lab identity, private resource path, key or proof marker
+            appears on this page.
+          </li>
+        </ul>
+      </div>
+
+      <h2>Sources used for this picture</h2>
+      <div class="panel">
+        <ul>
+          <li>
+            <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md"
+              >The beginner guide</a
+            >
+            &mdash; the authority for everything summarised here, especially
+            sections 5 to 11.
+          </li>
+          <li>
+            <a href="../../src/connection/dps.ts"><code>src/connection/dps.ts</code></a>
+            &mdash; the one-hour pass, the HTTPS <code>PUT</code> registration
+            call, and the bounded polling loop.
+          </li>
+          <li>
+            <a href="../../src/connection/legacyHub.ts"><code>src/connection/legacyHub.ts</code></a>
+            &mdash; the hub connection over secure WebSockets.
+          </li>
+          <li>
+            <a href="../../src/connection/upload.ts"><code>src/connection/upload.ts</code></a>
+            &mdash; the 20&nbsp;MiB limit and the ask &rarr; upload &rarr;
+            notify sequence.
+          </li>
+          <li>
+            <a href="../../src/connection/credentials.ts"><code>src/connection/credentials.ts</code></a>
+            and
+            <a href="../../src/contexts/storage.tsx"><code>src/contexts/storage.tsx</code></a>
+            &mdash; validation and the secure-storage boundary.
+          </li>
+          <li>
+            <a href="../ADR-SIMULATOR.md">The operator guide</a> and
+            <a href="../../scripts/ci/verify-mobile-proof.js"
+              ><code>scripts/ci/verify-mobile-proof.js</code></a
+            >
+            &mdash; how independent reads are performed.
+          </li>
+        </ul>
+        <p class="hint">
+          Background reading from Microsoft, for the services themselves:
+          <a href="https://learn.microsoft.com/en-us/azure/iot-dps/concepts-symmetric-key-attestation"
+            >symmetric-key attestation</a
+          >,
+          <a href="https://learn.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-protocols"
+            >hub protocols and ports</a
+          >
+          and
+          <a href="https://learn.microsoft.com/en-us/azure/iot-hub/iot-hub-devguide-file-upload"
+            >file upload</a
+          >. Those pages describe what the services can do in general; this
+          repository's source decides what this app actually does.
+        </p>
+      </div>
+
+      <footer>
+        <p>
+          <b>Static illustration &mdash; no live data.</b> Companion page:
+          <a href="./paad-app-architecture.html"
+            >from source code to an installed phone app</a
+          >. Full explanation:
+          <a href="../PAAD-ARCHITECTURE-AND-AZURE-GUIDE.md"
+            >the beginner guide</a
+          >. This page is offline and self-contained: it loads no script,
+          font, image or style from anywhere else, and contacts no service.
+        </p>
+      </footer>
+    </div>
+    <script>
+      /* Progressive enhancement only. Without JavaScript the page shows every
+         step, every explanation and every legend entry; nothing is hidden. */
+      (function () {
+        'use strict';
+
+        var root = document.documentElement;
+
+        /* ---- appearance ---- */
+        var themeButtons = [].slice.call(
+          document.querySelectorAll('[data-theme-set]')
+        );
+        var tools = document.getElementById('tools');
+        if (tools) tools.hidden = false;
+        function applyTheme(mode) {
+          if (mode === 'auto') {
+            root.removeAttribute('data-theme');
+          } else {
+            root.setAttribute('data-theme', mode);
+          }
+          themeButtons.forEach(function (b) {
+            b.setAttribute(
+              'aria-pressed',
+              b.getAttribute('data-theme-set') === mode ? 'true' : 'false'
+            );
+          });
+        }
+        themeButtons.forEach(function (b) {
+          b.addEventListener('click', function () {
+            applyTheme(b.getAttribute('data-theme-set'));
+          });
+        });
+
+        /* ---- guided walkthrough ---- */
+        var walk = document.getElementById('walk');
+        var readout = document.getElementById('walk-read');
+        var scroller = document.querySelector('.scroller');
+        var stepButtons = [].slice.call(walk.querySelectorAll('[data-step]'));
+        var nodes = [].slice.call(document.querySelectorAll('.canvas [data-step]'));
+        var cards = [].slice.call(document.querySelectorAll('.card[data-step]'));
+        var titles = {};
+        cards.forEach(function (c) {
+          titles[c.getAttribute('data-step')] = c
+            .querySelector('h3')
+            .textContent.replace(/\s+/g, ' ')
+            .trim();
+        });
+        var order = [
+          '1','2','3','4','5','6','7','8','9','10','11','12','13'
+        ];
+        var current = 'all';
+
+        function setStep(step) {
+          current = step;
+          stepButtons.forEach(function (b) {
+            b.setAttribute(
+              'aria-pressed',
+              b.getAttribute('data-step') === step ? 'true' : 'false'
+            );
+          });
+          nodes.forEach(function (n) {
+            var on = step !== 'all' && n.getAttribute('data-step') === step;
+            n.classList.toggle('is-active', on);
+            if (n.tagName === 'BUTTON') {
+              n.setAttribute('aria-pressed', on ? 'true' : 'false');
+            }
+          });
+          cards.forEach(function (c) {
+            c.classList.toggle(
+              'is-active',
+              step !== 'all' && c.getAttribute('data-step') === step
+            );
+          });
+          if (step === 'all') {
+            readout.textContent =
+              'Every step is shown. Choose a number to outline that stop on the map and its explanation below. Nothing is hidden at any time.';
+            return;
+          }
+          readout.textContent =
+            'Outlined: ' +
+            (titles[step] || 'step ' + step) +
+            '. Step ' +
+            step +
+            ' of ' +
+            order.length +
+            '. All other steps stay visible.';
+          var first = nodes.filter(function (n) {
+            return n.getAttribute('data-step') === step;
+          })[0];
+          if (first && scroller && scroller.scrollWidth > scroller.clientWidth) {
+            var target =
+              first.offsetLeft - (scroller.clientWidth - first.offsetWidth) / 2;
+            scroller.scrollLeft = Math.max(0, target);
+          }
+        }
+
+        stepButtons.forEach(function (b) {
+          b.addEventListener('click', function () {
+            setStep(b.getAttribute('data-step'));
+          });
+        });
+
+        [].slice.call(walk.querySelectorAll('[data-move]')).forEach(function (b) {
+          b.addEventListener('click', function () {
+            var dir = b.getAttribute('data-move') === 'next' ? 1 : -1;
+            var index = order.indexOf(current);
+            if (index === -1) {
+              setStep(dir === 1 ? order[0] : order[order.length - 1]);
+              return;
+            }
+            var next = index + dir;
+            if (next < 0 || next >= order.length) {
+              setStep('all');
+            } else {
+              setStep(order[next]);
+            }
+          });
+        });
+
+        nodes.forEach(function (n) {
+          if (n.tagName !== 'BUTTON') {
+            return;
+          }
+          n.setAttribute('aria-pressed', 'false');
+          n.addEventListener('click', function () {
+            var step = n.getAttribute('data-step');
+            setStep(current === step ? 'all' : step);
+          });
+        });
+
+        walk.hidden = false;
+        setStep('all');
+      })();
+    </script>
+  </body>
+</html>
