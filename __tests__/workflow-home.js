@@ -51,6 +51,8 @@ jest.mock('react-native-svg', () => ({
   Stop: 'Stop',
   Rect: 'Rect',
   G: 'G',
+  Circle: 'Circle',
+  Polygon: 'Polygon',
 }));
 jest.mock('@react-native-masked-view/masked-view', () => {
   const ReactModule = require('react');
@@ -172,24 +174,25 @@ const dismiss = () => {
 };
 
 test.each([1, 1.8])(
-  'centers every map label without truncating at font scale %s',
+  'fits icon-and-label nodes without truncating at font scale %s',
   fontScale => {
     dimensions = {...dimensions, fontScale};
     render();
     for (const name of ['adr', 'dps', 'hub', 'phone']) {
+      const horizontal = fontScale > 1.2 || name === 'adr' || name === 'phone';
       const button = control(`home-node-${name}`);
       expect(
         Native.StyleSheet.flatten(button.props.style({pressed: false})),
       ).toMatchObject({
-        minHeight: 60,
+        minHeight: 80,
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 2,
+        gap: horizontal ? 8 : 4,
       });
       for (const label of button.findAllByType('Text')) {
-        expect(Native.StyleSheet.flatten(label.props.style).textAlign).toBe(
-          'center',
-        );
+        expect(
+          Native.StyleSheet.flatten(label.props.style).textAlign ?? 'left',
+        ).toBe(horizontal ? 'left' : 'center');
         expect(label.props.numberOfLines).toBeUndefined();
         expect(label.props.allowFontScaling).not.toBe(false);
       }
@@ -427,7 +430,7 @@ test('draws only one solid two-way connector per service and keeps ADR dashed', 
   const route = id => control(`home-map-phone-${id}-path`);
   expect(control('home-map-namespace-path').props.strokeDasharray).toBe('4 3');
   // Exactly one route and one caret pair per service, and nothing else solid.
-  const solid = tree.root
+  const solid = control('home-map-phone-lines')
     .findAllByType('Path')
     .filter(path => !path.props.strokeDasharray);
   const ids = solid.map(path => path.props.testID).sort();
@@ -498,7 +501,7 @@ test('drops the connected tint and the light when the phone is not connected', (
 });
 
 test.each([false, true])(
-  'tints the phone as the device and ADR as the namespace in dark mode %s',
+  'uses quiet solid Sage surfaces behind every 3D icon in dark mode %s',
   dark => {
     useTheme.mockReturnValue({dark});
     render();
@@ -506,14 +509,16 @@ test.each([false, true])(
     const background = id =>
       Native.StyleSheet.flatten(control(id).props.style({pressed: false}))
         .backgroundColor;
-    expect(background('home-node-phone')).toBe(colors.primary);
-    expect(background('home-node-adr')).toBe(colors.tints[1]);
-    expect(background('home-node-dps')).toBe(colors.surface);
-    expect(background('home-node-hub')).toBe(colors.surface);
-    for (const label of control('home-node-phone').findAllByType('Text'))
-      expect(Native.StyleSheet.flatten(label.props.style).color).toBe(
-        colors.onPrimary,
+    for (const node of ['phone', 'adr', 'dps', 'hub']) {
+      expect(background(`home-node-${node}`)).toBe(surfaceColor(dark));
+      const style = Native.StyleSheet.flatten(
+        control(`home-node-${node}`).props.style({pressed: true}),
       );
+      expect(style.backgroundColor).toBe(surfaceColor(dark, {pressed: true}));
+      expect(style.borderColor).toBe(colors.border);
+    }
+    expect(control('home-icon-iphone')).toBeDefined();
+    expect(content()).toContain(text.PhonePlatforms.ios);
   },
 );
 
@@ -1508,3 +1513,139 @@ test('mirrors a broken direct-Hub route without inventing a DPS lane', () => {
     Native.I18nManager.isRTL = original;
   }
 });
+
+test.each([
+  ['android', false],
+  ['android', true],
+  ['ios', false],
+  ['ios', true],
+])(
+  'keeps %s icons static through connect, disconnect and recovery (dark %s)',
+  (os, dark) => {
+    Native.Platform.OS = os;
+    useTheme.mockReturnValue({dark});
+    render();
+    const phone = os === 'ios' ? 'iphone' : 'android';
+    const art = () =>
+      ['adr', 'dps', 'hub', phone].map(node =>
+        control(`home-icon-${node}`)
+          .findByType('Svg')
+          .findAll(n => ['Path', 'Polygon', 'Rect', 'Circle'].includes(n.type))
+          .map(n => n.props),
+      );
+    const baseline = art();
+    const geometry = control('home-map-phone-hub-path').props.d;
+    const colors = palette(dark);
+    const motion = () =>
+      useGentleTransition.mock.calls
+        .filter(([trigger]) => /:(connected|broken|neutral)$/.test(trigger))
+        .at(-1);
+    const check = (state, color, broken, flowing) => {
+      expect(art()).toEqual(baseline);
+      expect(control('home-map-phone-hub-path').props.d).toBe(geometry);
+      for (const id of ['dps', 'hub']) {
+        expect(control(`home-map-phone-${id}-path`).props.stroke).toBe(color);
+        expect(control(`home-map-phone-${id}-path`).props.strokeDasharray).toBe(
+          broken ? INTERRUPTED_DASH : undefined,
+        );
+        const label = control(`home-map-phone-${id}-label`);
+        expect(Native.StyleSheet.flatten(label.props.style).borderColor).toBe(
+          color,
+        );
+        expect(label.findByType('Text').props.children).toBe(
+          text.PathLabels[id],
+        );
+        expect(
+          tree.root.findAllByProps({testID: `home-map-flow-${id}`}).length > 0,
+        ).toBe(flowing);
+      }
+      expect(motion()[0]).toMatch(new RegExp(`:${state}$`));
+      expect(motion()[1]).toBe(true);
+      expect(control('home-map-namespace-path').props.stroke).toBe(
+        colors.controlBorder,
+      );
+    };
+    expect(control('home-node-phone').props.accessibilityLabel).toContain(
+      text.PhonePlatforms[os],
+    );
+    check('connected', colors.channel, false, true);
+    connection.client = null;
+    connection.error = null;
+    connection.stage = 'disconnected';
+    render();
+    check('broken', colors.danger, true, false);
+    expect(useDecorativeLoop).toHaveBeenLastCalledWith(false);
+    connection.connecting = true;
+    render();
+    check('neutral', colors.controlBorder, false, false);
+    connection.connecting = false;
+    connection.stage = 'connected';
+    connection.client = {identity, isConnected: jest.fn(() => true)};
+    render();
+    check('connected', colors.channel, false, true);
+    drop();
+    render();
+    check('broken', colors.danger, true, false);
+    props.motionVisible = false;
+    render();
+    expect(motion()[1]).toBe(false);
+    expect(art()).toEqual(baseline);
+  },
+);
+
+test.each([false, true])(
+  'centers route labels on measured links in RTL %s',
+  rtl => {
+    const original = Native.I18nManager.isRTL;
+    try {
+      Native.I18nManager.isRTL = rtl;
+      render();
+      act(() =>
+        control('home-map-compact').props.onLayout({
+          nativeEvent: {layout: {width: 320}},
+        }),
+      );
+      const flow = tree.root.findByType(ChannelFlow);
+      expect(
+        flow
+          .findAllByType(Native.View)
+          .some(
+            view =>
+              Native.StyleSheet.flatten(view.props.style)?.direction === 'ltr',
+          ),
+      ).toBe(true);
+      const phoneTitle = control('home-node-phone')
+        .findAllByType('Text')
+        .find(label => label.props.children === text.PhonePlatforms.ios);
+      expect(Native.StyleSheet.flatten(phoneTitle.props.style).textAlign).toBe(
+        rtl ? 'right' : 'left',
+      );
+      for (const channel of tree.root.findByType(ChannelFlow).props.channels) {
+        const label = control(`home-map-phone-${channel.id}-label`);
+        const style = Native.StyleSheet.flatten(label.props.style);
+        expect(style.left + style.width / 2).toBe(
+          (channel.from + channel.to) / 2,
+        );
+        expect(style.left).toBeGreaterThanOrEqual(0);
+        expect(style.left + style.width).toBeLessThanOrEqual(320);
+        expect(label.props.accessibilityElementsHidden).toBe(true);
+      }
+      storage.credentials = {
+        connectionString: `HostName=direct.azure-devices.net;DeviceId=phone;SharedAccessKey=${key}`,
+      };
+      render();
+      expect(
+        tree.root.findAllByProps({testID: 'home-map-phone-dps-label'}),
+      ).toHaveLength(0);
+      expect(control('home-map-phone-hub-label')).toBeDefined();
+      dimensions.fontScale = 1.8;
+      render();
+      expect(
+        tree.root.findAllByProps({testID: 'home-map-phone-hub-label'}),
+      ).toHaveLength(0);
+      expect(content()).toContain(text.PhoneHubPath);
+    } finally {
+      Native.I18nManager.isRTL = original;
+    }
+  },
+);

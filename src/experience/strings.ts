@@ -3,6 +3,9 @@ export const ExperienceStrings = {
     Capability: 'IoT Plug and Play',
     Map: 'Connection',
     MapHint: 'Tap a node to understand its role and this setup.',
+    CloudServices: 'Azure services',
+    PhonePlatforms: {android: 'Android', ios: 'iPhone'},
+    PathLabels: {dps: 'Assignment', hub: 'Messages'},
     MapLegend:
       'Solid: the phone\u2019s two-way links. Grey dashed: cloud coordination.',
     FlowHint: 'The light shows connection state, not message traffic.',

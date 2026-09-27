@@ -1,7 +1,7 @@
 import React from 'react';
 import renderer, {act} from 'react-test-renderer';
 import Constants from 'expo-constants';
-import FontCredits from '../src/components/fontCredits';
+import FontCredits, {ConnectionMapCredits} from '../src/components/fontCredits';
 import Strings from '../src/strings';
 import {StyleSheet} from 'react-native';
 import {palette} from '../src/theme/palette';
@@ -55,6 +55,49 @@ it.each([undefined, '', 42])(
   },
 );
 
+it('distributes artwork provenance and the full Apache license in Settings', () => {
+  const config = require('../app.config')({config: {}});
+  Constants.expoConfig.extra.connectionMapLicense =
+    config.extra.connectionMapLicense;
+  act(() => {
+    tree = renderer.create(<ConnectionMapCredits />);
+  });
+  expect(
+    tree.root.findAllByProps({testID: 'connection-map-license'}),
+  ).toHaveLength(0);
+  act(() =>
+    tree.root
+      .findByProps({testID: 'connection-map-credits-toggle'})
+      .props.onPress(),
+  );
+  const license = tree.root.findByProps({testID: 'connection-map-license'});
+  expect(license.props.selectable).toBe(true);
+  expect(license.props.children).toContain('maskati/azure-icons');
+  expect(license.props.children).toContain('not a Microsoft-hosted');
+  expect(license.props.children).toContain('phone_android');
+  expect(license.props.children).toContain('phone_iphone');
+  expect(license.props.children).toContain(
+    require('fs').readFileSync(
+      require('path').join(__dirname, '..', 'LICENSE.material-icons'),
+      'utf8',
+    ),
+  );
+});
+
+it('reports unavailable artwork licenses instead of silently hiding missing attribution', () => {
+  delete Constants.expoConfig.extra.connectionMapLicense;
+  act(() => {
+    tree = renderer.create(<ConnectionMapCredits />);
+  });
+  act(() =>
+    tree.root
+      .findByProps({testID: 'connection-map-credits-toggle'})
+      .props.onPress(),
+  );
+  expect(
+    tree.root.findByProps({testID: 'connection-map-license'}).props.children,
+  ).toBe(Strings.Settings.ConnectionMapArt.Unavailable);
+});
 it('presents the disclosure as a quiet control with a tonal pressed step', () => {
   act(() => {
     tree = renderer.create(<FontCredits />);

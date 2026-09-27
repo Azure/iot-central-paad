@@ -1,0 +1,41 @@
+Connection map artwork
+
+The sage 3D objects surrounding the service marks are PAAD artwork under this
+repository's MIT license. They are not official or endorsed product icons.
+
+Azure IoT Hub and Device Provisioning Services
+Copyright Microsoft Corporation. All rights reserved.
+
+Unmodified SVGs from Microsoft's Azure Public Service Icons V24:
+https://arch-center.azureedge.net/icons/Azure_Public_Service_Icons_V24.zip
+  Icons/iot/10182-icon-service-IoT-Hub.svg
+  Icons/iot/10369-icon-service-Device-Provisioning-Services.svg
+
+Usage terms: https://learn.microsoft.com/en-us/azure/architecture/icons/
+Microsoft permits use in architectural diagrams, training materials or
+documentation. Copying, distribution and display are permitted only for those
+uses unless Microsoft grants explicit permission. Microsoft reserves all other
+rights. Do not crop, flip, rotate, distort or change the product icon shapes.
+PAAD uses these marks unchanged, beside their product names in its explanatory
+connection diagram, not to identify PAAD itself.
+
+Azure Device Registry
+Copyright Microsoft Corporation. All rights reserved.
+
+Unmodified Azure Portal artwork from the community-maintained extraction:
+https://github.com/maskati/azure-icons/blob/main/svg/Microsoft_Azure_DeviceRegistry/DeviceRegistry.svg
+Retrieved 2026-09-27. This is not a Microsoft-hosted architecture-icon download.
+The source cites Microsoft's permissions:
+https://www.microsoft.com/en-us/legal/intellectualproperty/copyright/permissions
+
+Google Material Icons
+Copyright Google LLC. Licensed under the Apache License, Version 2.0.
+The full license is included in LICENSE.material-icons.
+
+Sources:
+https://github.com/google/material-design-icons/blob/master/src/hardware/phone_android/materialicons/24px.svg
+https://github.com/google/material-design-icons/blob/master/src/hardware/phone_iphone/materialicons/24px.svg
+
+PAAD adapts these phone silhouettes with sage colours, depth and a device-client
+cue. The iPhone-shaped pictogram is Google's artwork, not an Apple SF Symbol.
+No Apple or Android brand logo is included.

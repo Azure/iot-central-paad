@@ -37,6 +37,7 @@ import {detailStyles} from '../theme/detailStyles';
 import {projectSetup} from './setupProjection';
 import {ExperienceStrings} from './strings';
 import ChannelFlow, {Channel, ChannelId} from './ChannelFlow';
+import ConnectionMapIcon from './ConnectionMapIcon';
 import {useDecorativeLoop, useGentleTransition} from '../hooks/motion';
 import {usePressSettle} from '../hooks/press';
 
@@ -55,7 +56,7 @@ const text = ExperienceStrings.Home;
 const MAP_BORDER = 1;
 const MAP_PADDING = 18;
 const SERVICE_GAP = 16;
-const PHONE_WIDTH_PERCENT = 42;
+const PHONE_WIDTH_PERCENT = 62;
 const STACKED_PATH_PADDING = 4;
 /** Room for a lane's own caret, so each end reads as a head and not a stub. */
 const LANE_EDGE = 10;
@@ -154,6 +155,7 @@ export default function WorkflowHome({
   // Both a dropped link and a deliberate disconnect leave the phone off the
   // cloud, so the map draws the same broken connectors; only the words differ.
   const linkBroken = interrupted || manuallyDisconnected;
+  const phonePlatform = Platform.OS === 'ios' ? 'ios' : 'android';
   const flowProgress = useDecorativeLoop(flowing);
   const activityPress = usePressSettle('footer', false, onStage);
   // The caret leads toward the next screen, whichever way reading runs.
@@ -195,6 +197,12 @@ export default function WorkflowHome({
     `${stacked}:${projection.mode}`,
     onStage,
   );
+  const phoneArrival = useGentleTransition(
+    `${stacked}:${projection.mode}:${
+      connected ? 'connected' : linkBroken ? 'broken' : 'neutral'
+    }`,
+    onStage,
+  );
   const attentionArrival = useGentleTransition(
     `${connectionAttention || manuallyDisconnected}:${sensorAttention}`,
     onStage && (connectionAttention || manuallyDisconnected || sensorAttention),
@@ -214,13 +222,13 @@ export default function WorkflowHome({
     ],
   };
   const phoneLineStyle = {
-    opacity: mapArrival.interpolate({
+    opacity: phoneArrival.interpolate({
       inputRange: [0, 0.25, 1],
       outputRange: [0.5, 0.6, 1],
     }),
     transform: [
       {
-        translateY: mapArrival.interpolate({
+        translateY: phoneArrival.interpolate({
           inputRange: [0, 0.25, 1],
           outputRange: [-3, -3, 0],
         }),
@@ -247,62 +255,88 @@ export default function WorkflowHome({
     return () => cancelAnimationFrame(frame);
   }, [panel, finishClose]);
 
-  const node = (key: Node) => (
-    <Pressable
-      ref={element => {
-        openers.current[key] = element;
-      }}
-      testID={`home-node-${key}`}
-      accessibilityRole="button"
-      accessibilityLabel={`${text.Nodes[key].Title}. ${
-        key === 'dps' && projection.mode === 'hub'
-          ? text.DpsNotUsed
-          : text.Nodes[key].Subtitle
-      }`}
-      accessibilityHint={text.OpenPanel}
-      accessibilityState={{expanded: panel === key}}
-      onPress={() => {
-        opener.current = key;
-        setPanel(key);
-      }}
-      style={({pressed}) => [
-        styles.node,
-        stacked && styles.stackedNode,
-        key === 'phone' && styles.phoneNode,
-        key === 'adr' && !stacked && styles.namespaceNode,
-        {
-          backgroundColor: pressed
-            ? key === 'phone'
-              ? colors.positive
-              : colors.border
-            : key === 'phone'
-            ? colors.primary
-            : key === 'adr'
-            ? colors.tints[1]
-            : colors.surface,
-          borderColor: key === 'phone' ? colors.primary : colors.controlBorder,
-        },
-      ]}>
-      <Text
-        style={[
-          styles.nodeTitle,
-          {color: key === 'phone' ? colors.onPrimary : colors.text},
+  const node = (key: Node) => {
+    const horizontal = stacked || key === 'adr' || key === 'phone';
+    return (
+      <Pressable
+        ref={element => {
+          openers.current[key] = element;
+        }}
+        testID={`home-node-${key}`}
+        accessibilityRole="button"
+        accessibilityLabel={`${text.Nodes[key].Title}. ${
+          key === 'phone' ? `${text.PhonePlatforms[phonePlatform]}. ` : ''
+        }${
+          key === 'dps' && projection.mode === 'hub'
+            ? text.DpsNotUsed
+            : text.Nodes[key].Subtitle
+        }`}
+        accessibilityHint={text.OpenPanel}
+        accessibilityState={{expanded: panel === key}}
+        onPress={() => {
+          opener.current = key;
+          setPanel(key);
+        }}
+        style={({pressed}) => [
+          styles.node,
+          horizontal && styles.horizontalNode,
+          stacked && styles.stackedNode,
+          key === 'phone' && styles.phoneNode,
+          key === 'adr' && !stacked && styles.namespaceNode,
+          {
+            backgroundColor: surfaceColor(dark, {pressed}),
+            borderColor: colors.border,
+          },
         ]}>
-        {text.Nodes[key].Title}
-      </Text>
-      <Text
-        style={[
-          detailStyles.supporting,
-          styles.nodeSubtitle,
-          key === 'phone' && styles.deviceSubtitle,
-          {color: key === 'phone' ? colors.onPrimary : colors.muted},
-        ]}>
-        {key === 'dps' && projection.mode === 'hub'
-          ? text.DpsNotUsed
-          : text.Nodes[key].Subtitle}
-      </Text>
-    </Pressable>
-  );
+        <ConnectionMapIcon
+          node={
+            key === 'phone'
+              ? phonePlatform === 'ios'
+                ? 'iphone'
+                : 'android'
+              : key
+          }
+          dark={dark}
+        />
+        <View style={[styles.nodeCopy, horizontal && styles.horizontalCopy]}>
+          {key === 'phone' && (
+            <Text
+              style={[
+                detailStyles.label,
+                styles.phoneEyebrow,
+                I18nManager.isRTL && styles.rtlLabel,
+                {color: colors.muted},
+              ]}>
+              {text.Nodes.phone.Eyebrow}
+            </Text>
+          )}
+          <Text
+            style={[
+              styles.nodeTitle,
+              horizontal && styles.horizontalLabel,
+              horizontal && I18nManager.isRTL && styles.rtlLabel,
+              {color: colors.text},
+            ]}>
+            {key === 'phone'
+              ? text.PhonePlatforms[phonePlatform]
+              : text.Nodes[key].Title}
+          </Text>
+          <Text
+            style={[
+              detailStyles.supporting,
+              styles.nodeSubtitle,
+              horizontal && styles.horizontalLabel,
+              horizontal && I18nManager.isRTL && styles.rtlLabel,
+              {color: colors.muted},
+            ]}>
+            {key === 'dps' && projection.mode === 'hub'
+              ? text.DpsNotUsed
+              : text.Nodes[key].Subtitle}
+          </Text>
+        </View>
+      </Pressable>
+    );
+  };
   const note = (value: string) => (
     <Text style={[detailStyles.supporting, {color: colors.muted}]}>
       {value}
@@ -677,6 +711,18 @@ export default function WorkflowHome({
                   backgroundColor: colors.inset,
                 },
               ]}>
+              <View style={styles.cloudHeading}>
+                <Icon
+                  name="cloud-outline"
+                  type="material-community"
+                  size={14}
+                  color={colors.muted}
+                  accessible={false}
+                />
+                <Text style={[detailStyles.label, {color: colors.muted}]}>
+                  {text.CloudServices}
+                </Text>
+              </View>
               {node('adr')}
               {stacked || !mapReady ? null : (
                 <Animated.View pointerEvents="none" style={namespaceLineStyle}>
@@ -755,6 +801,10 @@ export default function WorkflowHome({
                   interrupted={linkBroken}
                   progress={flowProgress}
                   style={phoneLineStyle}
+                  labels={{
+                    text: text.PathLabels,
+                    background: colors.surfaceRaised,
+                  }}
                 />
               )
             )}
@@ -997,7 +1047,6 @@ const styles = StyleSheet.create({
   root: {flex: 1},
   content: {paddingTop: 16, gap: 12},
   kicker: {textTransform: 'none', letterSpacing: 0.6, marginBottom: -4},
-  deviceSubtitle: {opacity: 0.88},
   card: {padding: 14, gap: 10},
   footer: {
     minHeight: 56,
@@ -1026,15 +1075,27 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   node: {
-    minHeight: 60,
+    minHeight: 80,
     flex: 1,
     borderWidth: 1,
     borderRadius: 14,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 10,
-    gap: 2,
+    gap: 4,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  horizontalNode: {flexDirection: 'row', gap: 8},
+  nodeCopy: {gap: 2, alignSelf: 'stretch'},
+  horizontalCopy: {flex: 1, minWidth: 0, alignSelf: 'center'},
+  horizontalLabel: {textAlign: 'left'},
+  rtlLabel: {textAlign: 'right'},
+  phoneEyebrow: {fontSize: 10, lineHeight: 14},
+  cloudHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 12,
   },
   stackedNode: {flex: 0},
   nodeTitle: {
@@ -1044,7 +1105,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   nodeSubtitle: {textAlign: 'center', lineHeight: 18},
-  namespaceNode: {width: '76%', alignSelf: 'center', flex: 0},
+  namespaceNode: {width: '94%', alignSelf: 'center', flex: 0},
   phoneNode: {flex: 0},
   services: {flexDirection: 'row', gap: SERVICE_GAP},
   // Until a width is measured there is no drawn lane, so the row keeps the

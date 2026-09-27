@@ -2,6 +2,7 @@ import React, {useId} from 'react';
 import {Animated, StyleProp, StyleSheet, View, ViewStyle} from 'react-native';
 import MaskedView from '@react-native-masked-view/masked-view';
 import Svg, {Defs, LinearGradient, Path, Rect, Stop} from 'react-native-svg';
+import {Text} from '../components/typography';
 
 /**
  * The phone's connectors. Each one carries a caret at both ends: the phone and
@@ -18,13 +19,13 @@ import Svg, {Defs, LinearGradient, Path, Rect, Stop} from 'react-native-svg';
  * decorative connection-state indicators, never packets, throughput or
  * delivery.
  */
-export const STRIP_HEIGHT = 44;
+export const STRIP_HEIGHT = 64;
 export const LANE_HEIGHT = 24;
 const LANE_MID = LANE_HEIGHT / 2;
 const TOP = 1;
 const BOTTOM = STRIP_HEIGHT - 1;
-const BEND_IN = 15;
-const BEND_OUT = 29;
+const BEND_IN = 23;
+const BEND_OUT = 41;
 const CORNER = 7;
 const CARET = 5;
 /** The feather matches the static tint exactly, so the light adds no bloom. */
@@ -260,6 +261,7 @@ export default function ChannelFlow({
   interrupted = false,
   progress,
   style,
+  labels,
 }: {
   width: number;
   channels: Channel[];
@@ -273,6 +275,7 @@ export default function ChannelFlow({
   interrupted?: boolean;
   progress: Animated.Value;
   style?: StyleProp<ViewStyle>;
+  labels?: {text: Record<ChannelId, string>; background: string};
 }) {
   const prefix = `flow-${useId().replace(/\W/g, '')}`;
   const {height, route, carets} = channelGeometry(layout);
@@ -340,12 +343,51 @@ export default function ChannelFlow({
               gradientId={`${prefix}-${channel.id}`}
             />
           ))}
+        {layout === 'fork' &&
+          labels &&
+          channels.map(channel => (
+            <View
+              key={`${channel.id}-label`}
+              testID={`home-map-phone-${channel.id}-label`}
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              style={[
+                styles.label,
+                {
+                  left: (channel.from + channel.to) / 2 - 46,
+                  borderColor: color,
+                  backgroundColor: labels.background,
+                },
+              ]}>
+              <Text style={[styles.labelText, {color}]}>
+                {labels.text[channel.id]}
+              </Text>
+            </View>
+          ))}
       </View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  strip: {overflow: 'hidden'},
+  // Routes are already mirrored; native absolute positions must not mirror again.
+  strip: {overflow: 'hidden', direction: 'ltr'},
   band: {position: 'absolute', left: 0, top: 0},
+  label: {
+    position: 'absolute',
+    top: 21,
+    width: 92,
+    borderWidth: 1,
+    borderRadius: 11,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    alignItems: 'center',
+  },
+  labelText: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });

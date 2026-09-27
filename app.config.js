@@ -5,6 +5,12 @@ const fontLicense = fs.readFileSync(
   path.join(__dirname, 'LICENSE.fraunces'),
   'utf8',
 );
+const connectionMapLicense = [
+  'LICENSE.connection-map',
+  'LICENSE.material-icons',
+]
+  .map(file => fs.readFileSync(path.join(__dirname, file), 'utf8'))
+  .join('\n\n');
 const isCI =
   process.env.PAAD_VARIANT === 'ci' ||
   ['true', '1'].includes(process.env.CI) ||
@@ -22,6 +28,7 @@ module.exports = ({config}) => ({
     ...config.extra,
     androidMapsConfigured: Boolean(androidMapsKey),
     headerFontLicense: fontLicense,
+    connectionMapLicense,
   },
   ios: {
     ...config.ios,

@@ -194,6 +194,11 @@ const Strings = {
       Title: 'Fraunces font license',
       Unavailable: 'The bundled font license is unavailable in this build.',
     },
+    ConnectionMapArt: {
+      Title: 'Connection map artwork licenses',
+      Unavailable:
+        'The bundled artwork licenses are unavailable in this build.',
+    },
     Theme: {
       Title: 'Theme',
       Dark: {

@@ -7,6 +7,20 @@ and ADR panels. Dashed namespace links describe Azure-managed relationships,
 not a live deployment audit. Direct-Hub connections bypass DPS. Credentials are
 shown only by category and presence, never as keys or connection strings.
 
+The **Tactile Diorama · Sage** map uses free-standing 3D-style icons, without
+pedestals, in both themes. The phone silhouette and label match Android or iPhone.
+Azure marks stay unchanged on flat front plates; source and usage notices are in
+[`LICENSE.connection-map`](../LICENSE.connection-map) and
+[`LICENSE.material-icons`](../LICENSE.material-icons).
+The same notices and full license are bundled under **Settings > Connection map
+artwork licenses**.
+The icon colours are illustrative, never cloud-health indicators. Only the
+phone's routes change state: neutral grey, green with a decorative light while
+connected, or red and broken after a disconnect/drop. The light stops immediately
+on disconnect; finite route transitions respect reduced motion and background/
+modal visibility. Assignment and Messages labels describe the two-way paths,
+not live traffic. Large text and narrow layouts retain separate labelled lanes.
+
 **Explore** lists Telemetry, Properties, Image upload and Bluetooth. Each opens
 its existing native tool. **Activity** shows typed device-side observations with
 All / Issues, expandable details and an explicit Latest action. Its Diagnostics

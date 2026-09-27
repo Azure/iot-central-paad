@@ -7,14 +7,41 @@ import {palette} from '../theme/palette';
 import {Text} from './typography';
 
 export default function FontCredits() {
+  return (
+    <LicenseCredits
+      id="font"
+      text={Strings.Settings.Font}
+      license={Constants.expoConfig?.extra?.headerFontLicense}
+    />
+  );
+}
+
+export function ConnectionMapCredits() {
+  return (
+    <LicenseCredits
+      id="connection-map"
+      text={Strings.Settings.ConnectionMapArt}
+      license={Constants.expoConfig?.extra?.connectionMapLicense}
+    />
+  );
+}
+
+function LicenseCredits({
+  id,
+  text,
+  license,
+}: {
+  id: string;
+  text: {Title: string; Unavailable: string};
+  license: unknown;
+}) {
   const [expanded, setExpanded] = useState(false);
   const {dark} = useTheme();
   const colors = palette(dark);
-  const license: unknown = Constants.expoConfig?.extra?.headerFontLicense;
   return (
     <View style={styles.container}>
       <Pressable
-        testID="font-credits-toggle"
+        testID={`${id}-credits-toggle`}
         accessibilityRole="button"
         accessibilityState={{expanded}}
         onPress={() => setExpanded(!expanded)}
@@ -26,19 +53,19 @@ export default function FontCredits() {
               pressed && {backgroundColor: colors.inset},
             ]}>
             <Text style={[styles.toggleLabel, {color: colors.primary}]}>
-              {Strings.Settings.Font.Title}
+              {text.Title}
             </Text>
           </View>
         )}
       </Pressable>
       {expanded && (
         <Text
-          testID="font-license"
+          testID={`${id}-license`}
           selectable
           style={[styles.license, {color: colors.muted}]}>
           {typeof license === 'string' && license.length > 0
             ? license
-            : Strings.Settings.Font.Unavailable}
+            : text.Unavailable}
         </Text>
       )}
     </View>

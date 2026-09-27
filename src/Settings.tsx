@@ -31,7 +31,7 @@ import {StorageContext} from 'contexts/storage';
 import {IoTCContext} from 'contexts/iotc';
 import {reportDiagnostic, safeError} from './connection/errors';
 import {cardTint, palette} from './theme/palette';
-import FontCredits from './components/fontCredits';
+import FontCredits, {ConnectionMapCredits} from './components/fontCredits';
 
 const pkg = require('../package.json');
 
@@ -344,6 +344,7 @@ const Root = React.memo<{items: ProfileItem[]; colors: any; dark: boolean}>(
           ))}
         </View>
         <FontCredits />
+        <ConnectionMapCredits />
       </ScrollView>
     );
   },
