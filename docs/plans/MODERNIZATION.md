@@ -44,6 +44,13 @@ Constants, React and React Native remain unchanged. The compatibility check is
 not bypassed; the updated native resolution follows the explicit lock-refresh
 and review process below before ordinary deployment-mode iOS validation.
 
+The explicit refresh run `36341782701`, source
+`a89edda0c76fbaf082c7976be5afabfa3487b3f8`, passed both native build/startup
+lanes. The reviewed lock changes only versions/checksums for Expo,
+ExpoImagePicker, ExpoLocation, ExpoModulesCore, ExpoModulesJSI and
+ExpoModulesWorklets, matching the updated npm resolution. The exact generated
+lock is committed; ordinary builds continue to use deployment mode.
+
 The first refresh attempt, ADR run `35380792854`, rejected the changed
 `ExpoLocation` podspec while still using `pod install`. Explicit refresh now uses
 `pod update --no-repo-update` to resolve the requested new lock for review;

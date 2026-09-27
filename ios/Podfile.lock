@@ -4,7 +4,7 @@ PODS:
   - EXJSONUtils (57.0.2)
   - EXManifests (57.0.2):
     - ExpoModulesCore
-  - Expo (57.0.24):
+  - Expo (57.0.25):
     - ExpoModulesCore
     - ExpoModulesJSI
     - hermes-engine
@@ -192,15 +192,15 @@ PODS:
     - ExpoModulesCore
   - ExpoFont (57.0.4):
     - ExpoModulesCore
-  - ExpoImagePicker (57.0.19):
+  - ExpoImagePicker (57.0.20):
     - ExpoModulesCore
   - ExpoKeepAwake (57.0.2):
     - ExpoModulesCore
-  - ExpoLocation (57.0.19):
+  - ExpoLocation (57.0.20):
     - ExpoModulesCore
   - ExpoLogBox (57.0.4):
     - React-Core
-  - ExpoModulesCore (57.0.18):
+  - ExpoModulesCore (57.0.19):
     - ExpoModulesJSI
     - hermes-engine
     - RCTRequired
@@ -224,10 +224,10 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - ExpoModulesJSI (57.1.0):
+  - ExpoModulesJSI (57.1.1):
     - React-Core
     - ReactCommon
-  - ExpoModulesWorklets (57.0.18):
+  - ExpoModulesWorklets (57.0.19):
     - ExpoModulesCore
     - ExpoModulesJSI
   - ExpoSensors (57.0.3):
@@ -2793,7 +2793,7 @@ SPEC CHECKSUMS:
   EXConstants: 2dc4473aff5574eccaccb9f3eefe6d95247e5d38
   EXJSONUtils: a49e3ef80dff762108e5690c7b2f360675dcf7f6
   EXManifests: 4c53b2602e03ccf44d0b4ff9c5d655b2c5acba3f
-  Expo: c04c9bde6ce9344f6da189e3d594c34884bba88b
+  Expo: 467b8a6845b753adca743c1d2e3d0b93af904db9
   expo-dev-client: 9cd43bb07fb625c51b436d4cb23be2fc932f8d26
   expo-dev-launcher: 05c72f3a22b4c742b06bd36fa391a30a990556a0
   expo-dev-menu: 272e23ced973a0e401c2b9a679595ea6c7c05d78
@@ -2805,13 +2805,13 @@ SPEC CHECKSUMS:
   ExpoDomWebView: beaec034e51bd028428b98bb1f2633ab79c6d095
   ExpoFileSystem: 28778f942725170102f7c6cf4dee05a526ddacd0
   ExpoFont: f8198a952ba2ff53c9b393b5269ea435f232cfc3
-  ExpoImagePicker: 8103235f8451e31ba809c70011abcf5301295a42
+  ExpoImagePicker: 661e13a7616fbcea630cfb9409b7483094978e02
   ExpoKeepAwake: 72af0b3be3615e59bc819d26061ff4e06b155ee0
-  ExpoLocation: 758f198c25f7639684356e0b7f7414200bc2ed33
+  ExpoLocation: 52c126a493087ac247cf213ef9f737c5b298c1d4
   ExpoLogBox: 80957303325cd4439137765c90a87d7f22aaf2ff
-  ExpoModulesCore: 57f7981f5df3782f61265f71fdfc9da7be646317
-  ExpoModulesJSI: 9df8e7c9719f59e8c001ec33611774137fc1484a
-  ExpoModulesWorklets: 986cf72c18400743869b4642d243115f831e404d
+  ExpoModulesCore: 0b3c5e03221f7526a4d8f9d0bc6a348a14e95f8c
+  ExpoModulesJSI: 383849017851b1ebacbd78cfaa32b18b6152585e
+  ExpoModulesWorklets: 8c9a7e3572a420e3e7f93f98453da9c9175edf88
   ExpoSensors: a2f4f23f3648c1124923be5356a0d1737d87bde6
   ExpoSystemUI: 05ee8d4aaba1b6af330f3621e19b39ff9f21e718
   EXUpdatesInterface: 4c96533f11c8cefe879bd506564cc2d537f56804
